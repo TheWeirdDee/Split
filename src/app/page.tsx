@@ -10,13 +10,15 @@ import { Button } from '@/components/common/Button';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 
+import { Pizza, Car, House, PartyPopper, Plane, ShoppingCart } from 'lucide-react';
+
 const useCases = [
-  { emoji: '🍕', label: 'Food' },
-  { emoji: '🚗', label: 'Transport' },
-  { emoji: '🏠', label: 'Rent' },
-  { emoji: '🎉', label: 'Events' },
-  { emoji: '✈️', label: 'Travel' },
-  { emoji: '🛒', label: 'Groceries' },
+  { icon: Pizza, label: 'Food' },
+  { icon: Car, label: 'Transport' },
+  { icon: House, label: 'Rent' },
+  { icon: PartyPopper, label: 'Events' },
+  { icon: Plane, label: 'Travel' },
+  { icon: ShoppingCart, label: 'Groceries' },
 ];
 
 export default function LandingPage() {
@@ -35,7 +37,7 @@ export default function LandingPage() {
                   key={i} 
                   className="bg-surface border border-border px-6 py-3 rounded-full flex items-center gap-3"
                 >
-                  <span className="text-xl">{item.emoji}</span>
+                  <item.icon className="w-5 h-5 text-brand" />
                   <span className="text-sm font-semibold tracking-wide uppercase">{item.label}</span>
                 </div>
               ))}

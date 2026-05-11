@@ -3,24 +3,26 @@
 import React from 'react';
 import { Card } from '../common/Card';
 
+import { Users, FileText, Zap } from 'lucide-react';
+
 const steps = [
   {
     number: '01',
     title: 'Create a group',
     description: 'Set up in 10 seconds. Share an invite link via WhatsApp or QR code.',
-    emoji: '👥'
+    icon: Users
   },
   {
     number: '02',
     title: 'Log expenses',
     description: 'Who paid. Who owes. Auto-calculated shares. No more manual math.',
-    emoji: '🧾'
+    icon: FileText
   },
   {
     number: '03',
     title: 'Settle with cUSD',
     description: 'One tap. Instant. Onchain forever. No need for bank transfers.',
-    emoji: '⚡'
+    icon: Zap
   }
 ];
 
@@ -40,8 +42,8 @@ export const HowItWorks = () => {
             <span className="absolute -top-4 -right-4 dm-mono text-8xl font-bold text-brand/5 group-hover:text-brand/10 transition-colors">
               {step.number}
             </span>
-            <div className="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-3xl mb-4">
-              {step.emoji}
+            <div className="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-brand mb-4">
+              <step.icon className="w-8 h-8" />
             </div>
             <div className="space-y-3">
               <h3 className="clash-display font-bold text-2xl">{step.title}</h3>

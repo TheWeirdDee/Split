@@ -12,14 +12,49 @@ import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { celo } from '@/constants/chains';
 
-const EMOJIS = ['👥', '🍕', '🚗', '🏠', '🎉', '✈️', '🛒', '☕', '🎵', '💰', '🍻', '🍿', '💡', '🎮', '🏀', '🎁', '🎾', '🏖️', '⛰️', '🌮'];
+import { 
+  Users, Pizza, Car, House, PartyPopper, Plane, 
+  ShoppingCart, Coffee, Music, Coins, Beer, 
+  Popcorn, Lightbulb, Gamepad2, Volleyball, 
+  Gift, Mountain, Umbrella, CookingPot, Trophy 
+} from 'lucide-react';
+
+const ICONS = [
+  { id: 'Users', label: 'General' },
+  { id: 'Pizza', label: 'Food' },
+  { id: 'Car', label: 'Transport' },
+  { id: 'House', label: 'Home' },
+  { id: 'PartyPopper', label: 'Events' },
+  { id: 'Plane', label: 'Travel' },
+  { id: 'ShoppingCart', label: 'Shopping' },
+  { id: 'Coffee', label: 'Drinks' },
+  { id: 'Music', label: 'Music' },
+  { id: 'Coins', label: 'Money' },
+  { id: 'Beer', label: 'Social' },
+  { id: 'Popcorn', label: 'Movies' },
+  { id: 'Lightbulb', label: 'Ideas' },
+  { id: 'Gamepad2', label: 'Gaming' },
+  { id: 'Volleyball', label: 'Sports' },
+  { id: 'Gift', label: 'Gifts' },
+  { id: 'Mountain', label: 'Outdoors' },
+  { id: 'Umbrella', label: 'Beach' },
+  { id: 'CookingPot', label: 'Cooking' },
+  { id: 'Trophy', label: 'Competition' },
+];
+
+const IconMap: Record<string, any> = {
+  Users, Pizza, Car, House, PartyPopper, Plane, 
+  ShoppingCart, Coffee, Music, Coins, Beer, 
+  Popcorn, Lightbulb, Gamepad2, Volleyball, 
+  Gift, Mountain, Umbrella, CookingPot, Trophy
+};
 
 export default function CreateGroupPage() {
   const router = useRouter();
   const { address, walletClient, publicClient } = useWallet();
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('👥');
+  const [emoji, setEmoji] = useState('Users');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -85,18 +120,30 @@ export default function CreateGroupPage() {
             <div className="space-y-4">
               <h2 className="clash-display font-bold text-2xl">Pick an emoji</h2>
               <div className="grid grid-cols-5 gap-3">
-                {EMOJIS.map((e) => (
-                  <button
-                    key={e}
-                    onClick={() => setEmoji(e)}
-                    className={cn(
-                      "w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border-2 transition-all",
-                      emoji === e ? "bg-brand/10 border-brand scale-110 shadow-lg shadow-brand/10" : "bg-surface border-border hover:border-text-muted"
-                    )}
-                  >
-                    {e}
-                  </button>
-                ))}
+                {ICONS.map((item) => {
+                  const Icon = IconMap[item.id];
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setEmoji(item.id)}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-2 rounded-2xl border-2 transition-all",
+                        emoji === item.id ? "bg-brand/10 border-brand scale-105 shadow-lg shadow-brand/10" : "bg-surface border-border hover:border-text-muted"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 flex items-center justify-center rounded-xl",
+                        emoji === item.id ? "text-brand" : "text-text-secondary"
+                      )}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             

@@ -3,6 +3,7 @@
 import React from 'react';
 import { CATEGORIES } from '@/constants/categories';
 import { cn } from '@/lib/utils';
+import { GroupIcon } from '../common/GroupIcon';
 
 interface CategoryPickerProps {
   selectedId: string;
@@ -20,11 +21,11 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
           className={cn(
             "flex flex-col items-center justify-center p-3 rounded-xl border transition-all",
             selectedId === cat.id 
-              ? "bg-brand-dim border-brand text-brand" 
+              ? "bg-brand/10 border-brand text-brand" 
               : "bg-surface border-border text-text-secondary hover:border-text-muted"
           )}
         >
-          <span className="text-2xl mb-1">{cat.emoji}</span>
+          <GroupIcon name={cat.iconName} size={24} className="mb-1" />
           <span className="text-[10px] font-medium uppercase tracking-wider">{cat.label}</span>
         </button>
       ))}

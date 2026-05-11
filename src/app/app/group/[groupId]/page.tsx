@@ -11,9 +11,11 @@ import { BalanceRow } from '@/components/app/BalanceRow';
 import { ExpenseCard } from '@/components/app/ExpenseCard';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
-import { Plus, UserPlus, Share2 } from 'lucide-react';
+import { Plus, UserPlus, Share2, PartyPopper, CheckCircle2 } from 'lucide-react';
 import { generateInviteLink, copyToClipboard } from '@/lib/inviteLinks';
 import { cn } from '@/lib/utils';
+
+import { GroupIcon } from '@/components/common/GroupIcon';
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
@@ -42,7 +44,9 @@ export default function GroupDetailPage() {
         {/* Group Header Info */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-4xl">{group?.emoji}</div>
+            <div className="w-12 h-12 bg-surface-2 rounded-xl flex items-center justify-center text-brand">
+              <GroupIcon name={group?.emoji || 'Users'} size={32} />
+            </div>
             <div>
               <h1 className="clash-display font-bold text-xl">{group?.name}</h1>
               <p className="text-xs text-text-muted">{members.length} members</p>
@@ -98,14 +102,16 @@ export default function GroupDetailPage() {
                   );
                 })}
                 {balances.filter(b => b.from.toLowerCase() === address?.toLowerCase() || b.to.toLowerCase() === address?.toLowerCase()).length === 0 && (
-                  <div className="p-8 text-center text-text-muted text-sm">
-                    You're all settled up! 🎉
+                  <div className="p-8 text-center text-text-muted text-sm flex flex-col items-center gap-2">
+                    <PartyPopper className="w-8 h-8 text-brand mb-2" />
+                    You're all settled up!
                   </div>
                 )}
               </Card>
             ) : (
-              <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl">
-                <p className="text-text-muted">Everyone is settled! ✌️</p>
+              <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl flex flex-col items-center gap-2">
+                <CheckCircle2 className="w-8 h-8 text-text-muted mb-2" />
+                <p className="text-text-muted">Everyone is settled!</p>
               </div>
             )}
             

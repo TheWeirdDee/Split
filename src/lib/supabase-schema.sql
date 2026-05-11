@@ -1,7 +1,7 @@
 CREATE TABLE groups (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  emoji TEXT DEFAULT '👥',
+  emoji TEXT DEFAULT 'Users',
   description TEXT,
   created_by TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),

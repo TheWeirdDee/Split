@@ -8,6 +8,8 @@ import { useWallet } from '@/context/WalletContext';
 import { useBalances } from '@/hooks/useBalances';
 import { getUserNetBalance } from '@/lib/balanceEngine';
 
+import { GroupIcon } from '../common/GroupIcon';
+
 interface GroupCardProps {
   group: {
     id: string;
@@ -28,8 +30,8 @@ export const GroupCard = ({ group }: GroupCardProps) => {
     <Link href={`/app/group/${group.id}`}>
       <Card className="flex items-center justify-between hover:scale-[1.01] active:scale-[0.99] transition-transform">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-surface-2 rounded-xl flex items-center justify-center text-2xl">
-            {group.emoji}
+          <div className="w-12 h-12 bg-surface-2 rounded-xl flex items-center justify-center text-brand">
+            <GroupIcon name={group.emoji} size={24} />
           </div>
           <div className="flex flex-col">
             <h3 className="clash-display font-semibold text-text-primary">

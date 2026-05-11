@@ -7,6 +7,7 @@ import { CATEGORIES } from '@/constants/categories';
 import { format } from 'date-fns';
 import { useWallet } from '@/context/WalletContext';
 import { truncateAddress } from '@/lib/utils';
+import { GroupIcon } from '../common/GroupIcon';
 
 interface ExpenseCardProps {
   expense: {
@@ -28,8 +29,8 @@ export const ExpenseCard = ({ expense, userShare }: ExpenseCardProps) => {
   return (
     <Card className="flex items-center justify-between p-3" style={{ borderLeft: `4px solid ${category.color}` }}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-surface-2 rounded-lg flex items-center justify-center text-xl">
-          {category.emoji}
+        <div className="w-10 h-10 bg-surface-2 rounded-lg flex items-center justify-center text-brand">
+          <GroupIcon name={category.iconName} size={20} />
         </div>
         <div className="flex flex-col">
           <h4 className="text-sm font-semibold text-text-primary">

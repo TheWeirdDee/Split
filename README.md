@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Split — MiniPay-Native Expense Splitting
 
-## Getting Started
+**Split bills. Settle instantly. No awkwardness.**  
+Built specifically for the Celo MiniPay ecosystem for the **Proof of Ship Season 2** competition.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Live Application
+
+- **URL:** [https://split-celo.vercel.app](https://split-celo.vercel.app)
+- **Environment:** Optimized for **MiniPay** (Opera Browser on Android/iOS).
+
+---
+
+## Overview
+
+**Split** is a mobile-first web application that allows friend groups to manage shared expenses without the "who owes who" headache. Unlike traditional apps like Splitwise, **Split** is integrated directly into the Celo blockchain, allowing users to settle debts instantly using **cUSD** stablecoins with a single tap.
+
+### Key Features
+
+- **MiniPay Native**: Zero-click wallet connection and automatic network switching.
+- **Group Management**: Create groups, invite friends via WhatsApp/link, and track shared tabs.
+- **On-Chain Settlements**: One-tap cUSD transfers directly through the app shell.
+- **Balance Engine**: Sophisticated algorithm that simplifies multi-party debts into the fewest possible transactions.
+- **Real-time Sync**: Instant updates across all devices when an expense is added.
+- **Transparent Ledger**: All settlements are recorded on the Celo blockchain for immutable proof of payment.
+
+---
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19
+- **Styling**: Tailwind CSS 4.0
+- **Blockchain**: Viem (Lightweight alternative to ethers.js)
+- **Database**: Supabase (PostgreSQL with Realtime subscriptions)
+- **Network**: Celo Mainnet (Chain ID: `42220`)
+- **Token**: cUSD (`0x765DE816845861e75A25fCA122bb6898B8B1282a`)
+- **Smart Contract**: Solidity 0.8.20 (Hardhat)
+
+---
+
+## Smart Contract
+
+The core logic resides in `SplitGroup.sol`, deployed on Celo Mainnet.
+
+- **Contract Address:** `0x0f2BcbB95144CAF706Ba7bEb8912D234C2d7D234`
+- **Verified on CeloScan:** [View Contract](https://celoscan.io/address/0x0f2BcbB95144CAF706Ba7bEb8912D234C2d7D234#code)
+
+The contract handles:
+
+1.  Group creation and membership registration.
+2.  Logging expense metadata (off-chain storage, on-chain hash).
+3.  Atomic cUSD settlements using `transferFrom`.
+
+---
+
+## Local Development
+
+### 1. Prerequisites
+
+- Node.js 20+
+- A Supabase account
+
+### 2. Environment Setup
+
+Create a `.env.local` file in the root:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+NEXT_PUBLIC_SPLIT_CONTRACT=0x0f2BcbB95144CAF706Ba7bEb8912D234C2d7D234
+NEXT_PUBLIC_CUSD_ADDRESS=0x765DE816845861e75A25fCA122bb6898B8B1282a
+NEXT_PUBLIC_CHAIN_ID=42220
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Running the App
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Security
 
-To learn more about Next.js, take a look at the following resources:
+- **Strict GitIgnore**: We use recursive patterns to ensure no `.env` or `private.key` files ever touch GitHub.
+- **ReentrancyGuard**: Smart contracts use OpenZeppelin's security standards to prevent drainage attacks.
+- **Supabase RLS**: Database is configured to handle user data isolation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Future Roadmap
 
-## Deploy on Vercel
+- **Scan-to-Split**: AI-powered receipt scanning and OCR.
+- **Recurring Bills**: Automatic tracking for rent and subscriptions.
+- **Yield-Bearing Balances**: Option to hold group funds in Aave/Moola for interest.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built for Celo Proof of Ship.

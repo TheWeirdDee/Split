@@ -39,7 +39,7 @@ export default function AppPage() {
             Scan to open in MiniPay
           </p>
           <div className="bg-white p-4 rounded-3xl inline-block shadow-lg">
-            <QRCodeSVG value={typeof window !== 'undefined' ? window.location.href : 'https://split-pay.vercel.app'} size={120} />
+            <QRCodeSVG value={typeof window !== 'undefined' ? window.location.href : 'https://split-five-eta.vercel.app'} size={120} />
           </div>
         </div>
       </div>

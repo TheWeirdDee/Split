@@ -5,7 +5,7 @@ import { AppHeader } from '@/components/app/AppHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { useWallet } from '@/context/WalletContext';
-import { LogOut, Shield, Github, MessageSquare } from 'lucide-react';
+import { LogOut, Shield, Code, MessageSquare } from 'lucide-react';
 
 export default function SettingsPage() {
   const { address, disconnect, isMiniPay } = useWallet();
@@ -43,7 +43,7 @@ export default function SettingsPage() {
           <Card className="divide-y divide-border p-0 overflow-hidden">
             <div className="p-4 flex items-center justify-between hover:bg-surface-2 transition-colors cursor-pointer">
               <div className="flex items-center gap-3">
-                <Github className="w-5 h-5 text-text-secondary" />
+                <Code className="w-5 h-5 text-text-secondary" />
                 <span className="text-sm font-medium">Open Source Code</span>
               </div>
             </div>

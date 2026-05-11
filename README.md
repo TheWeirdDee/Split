@@ -7,7 +7,7 @@ Built specifically for the Celo MiniPay ecosystem for the **Proof of Ship Season
 
 ## Live Application
 
-- **URL:** [https://split-celo.vercel.app](https://split-celo.vercel.app)
+- **URL:** [https://split-five-eta.vercel.app](https://split-five-eta.vercel.app)
 - **Environment:** Optimized for **MiniPay** (Opera Browser on Android/iOS).
 
 ---

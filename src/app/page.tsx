@@ -63,7 +63,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <div className="bg-white p-4 rounded-3xl inline-block shadow-2xl">
-                <QRCodeSVG value="https://split-celo.vercel.app" size={128} />
+                <QRCodeSVG value="https://split-five-eta.vercel.app" size={128} />
               </div>
             </div>
           </div>

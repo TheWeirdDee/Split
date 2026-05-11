@@ -29,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="talentapp:project_verification" content="ee9420bf2cc5f1202b039dfd1ec0f39bc056249158b08ebae2fa822181ce477b0f7f1ed1c89624cb030177cd66d495b2b8896637b79d74208ab32f1841108281" />
         <link
           href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap"
           rel="stylesheet"

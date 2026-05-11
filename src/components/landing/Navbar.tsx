@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '../common/Button';
+import { Logo } from '../common/Logo';
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -20,14 +21,7 @@ export const Navbar = () => {
       scrolled ? "glass border-b border-border h-16" : "bg-transparent"
     )}>
       <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12">
-            <span className="clash-display font-bold text-bg text-2xl">S</span>
-          </div>
-          <span className="clash-display font-bold text-2xl tracking-tight text-text-primary">
-            Split
-          </span>
-        </Link>
+        <Logo className="scale-110" />
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-text-secondary">
           <Link href="#features" className="hover:text-brand transition-colors">Features</Link>

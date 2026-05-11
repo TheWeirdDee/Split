@@ -1,5 +1,5 @@
 export const generateInviteLink = (groupId: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://split-pay.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://split-five-eta.vercel.app';
   return `${baseUrl}/app/join/${groupId}`;
 };
 

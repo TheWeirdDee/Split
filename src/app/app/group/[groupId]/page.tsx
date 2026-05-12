@@ -87,84 +87,67 @@ export default function GroupDetailPage() {
 
   return (
     <>
-      <AppHeader title={group?.name || 'Group'} showBack />
+      <AppHeader />
       
       <div className="pt-20 px-4 pb-24 space-y-6">
         {/* Group Header Info */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-surface-2 rounded-xl flex items-center justify-center text-brand">
+            <div className="w-12 h-12 bg-[#161616] border border-[#2C2C2C] rounded-xl flex items-center justify-center text-brand">
               <GroupIcon name={group?.emoji || 'Users'} size={32} />
             </div>
             <div>
               <h1 className="clash-display font-bold text-xl">{group?.name}</h1>
-              <p className="text-xs text-text-muted">{members.length} members</p>
+              <p className="text-xs text-[#8A8A8A]">{members.length} members</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {isCreator && (
+              <button 
+                onClick={handleDeleteGroup}
+                disabled={isDeleting}
+                style={{
+                  width: '36px', height: '36px',
+                  background: 'rgba(255,92,92,0.1)',
+                  border: '1px solid rgba(255,92,92,0.3)',
+                  borderRadius: '50%',
+                  color: '#FF5C5C',
+                  display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', cursor: 'pointer'
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
             <Button size="icon" variant="secondary" onClick={handleShare}>
               <Share2 className="w-4 h-4" />
-            </Button>
-            <Button size="icon" variant="secondary" onClick={() => setShowSettings(!showSettings)}>
-              <Settings2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Group Settings / Management */}
-        {showSettings && (
-          <div className="bg-surface-2 border border-border rounded-2xl p-4 space-y-4 animate-in slide-in-from-top-4 duration-300">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-text-muted ml-1">
-                Add Member by Address
-              </label>
-              <div className="flex gap-2">
-                <input 
-                  type="text"
-                  placeholder="0x..."
-                  className="flex-1 bg-surface border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand transition-colors"
-                  value={manualAddress}
-                  onChange={(e) => setManualAddress(e.target.value)}
-                />
-                <Button size="sm" onClick={handleAddManual} loading={isAdding} disabled={!manualAddress}>
-                  <UserCheck className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {isCreator && (
-              <div className="pt-2 border-t border-border/50">
-                <Button 
-                  variant="outline" 
-                  className="w-full text-red-500 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40" 
-                  onClick={handleDeleteGroup}
-                  loading={isDeleting}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Group
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Tab Switcher */}
-        <div className="flex p-1 bg-surface-2 rounded-2xl border border-border">
+        <div className="flex p-1 bg-[#161616] rounded-2xl border border-[#2C2C2C]">
           <button 
             onClick={() => setActiveTab('balances')}
-            className={cn(
-              "flex-1 py-2 text-sm font-semibold rounded-xl transition-all",
-              activeTab === 'balances' ? "bg-surface shadow-sm text-brand" : "text-text-muted"
-            )}
+            style={{
+              flex: 1, paddingTop: '8px', paddingBottom: '8px', fontSize: '14px', fontWeight: '600',
+              borderRadius: '12px', transition: 'all 0.2s',
+              background: activeTab === 'balances' ? '#2C2C2C' : 'transparent',
+              color: activeTab === 'balances' ? '#00C896' : '#8A8A8A',
+              border: 'none', cursor: 'pointer'
+            }}
           >
             Balances
           </button>
           <button 
             onClick={() => setActiveTab('expenses')}
-            className={cn(
-              "flex-1 py-2 text-sm font-semibold rounded-xl transition-all",
-              activeTab === 'expenses' ? "bg-surface shadow-sm text-brand" : "text-text-muted"
-            )}
+            style={{
+              flex: 1, paddingTop: '8px', paddingBottom: '8px', fontSize: '14px', fontWeight: '600',
+              borderRadius: '12px', transition: 'all 0.2s',
+              background: activeTab === 'expenses' ? '#2C2C2C' : 'transparent',
+              color: activeTab === 'expenses' ? '#00C896' : '#8A8A8A',
+              border: 'none', cursor: 'pointer'
+            }}
           >
             Expenses
           </button>
@@ -173,7 +156,7 @@ export default function GroupDetailPage() {
         {activeTab === 'balances' ? (
           <div className="space-y-4 animate-fade-in">
             {balances.length > 0 ? (
-              <Card className="divide-y divide-border p-0 overflow-hidden">
+              <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
                 {balances.map((balance, i) => {
                   const isUserFrom = balance.from.toLowerCase() === address?.toLowerCase();
                   const isUserTo = balance.to.toLowerCase() === address?.toLowerCase();
@@ -192,24 +175,47 @@ export default function GroupDetailPage() {
                     </div>
                   );
                 })}
-                {balances.filter(b => b.from.toLowerCase() === address?.toLowerCase() || b.to.toLowerCase() === address?.toLowerCase()).length === 0 && (
-                  <div className="p-8 text-center text-text-muted text-sm flex flex-col items-center gap-2">
-                    <PartyPopper className="w-8 h-8 text-brand mb-2" />
-                    You're all settled up!
-                  </div>
-                )}
               </Card>
             ) : (
-              <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl flex flex-col items-center gap-2">
-                <CheckCircle2 className="w-8 h-8 text-text-muted mb-2" />
-                <p className="text-text-muted">Everyone is settled!</p>
+              <div className="text-center py-12 border-2 border-dashed border-[#2C2C2C] rounded-2xl flex flex-col items-center gap-2">
+                <CheckCircle2 className="w-8 h-8 text-[#4A4A4A] mb-2" />
+                <p className="text-[#8A8A8A]">Everyone is settled!</p>
               </div>
             )}
             
-            <Button variant="outline" className="w-full border-dashed" onClick={handleShare}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Members
-            </Button>
+            {/* Add Member Section */}
+            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!isAdding ? (
+                <button 
+                  onClick={() => setIsAdding(true)}
+                  style={{
+                    width: '100%', padding: '12px',
+                    background: 'transparent', border: '1px dashed #2C2C2C',
+                    borderRadius: '16px', color: '#8A8A8A',
+                    fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  + Add Member by Address
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    value={manualAddress}
+                    onChange={e => setManualAddress(e.target.value)}
+                    placeholder="0x... wallet address"
+                    style={{
+                      flex: 1, height: '44px',
+                      background: '#161616', border: '1px solid #2C2C2C',
+                      borderRadius: '12px', padding: '0 12px',
+                      color: '#F7F3EC', fontSize: '14px', outline: 'none'
+                    }}
+                  />
+                  <Button size="sm" onClick={handleAddManual}>Add</Button>
+                  <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-3 animate-fade-in">
@@ -225,7 +231,7 @@ export default function GroupDetailPage() {
                 );
               })
             ) : (
-              <div className="text-center py-12 text-text-muted">
+              <div className="text-center py-12 text-[#8A8A8A]">
                 No expenses logged yet.
               </div>
             )}
@@ -238,6 +244,7 @@ export default function GroupDetailPage() {
         <Button 
           className="w-full h-14 rounded-2xl shadow-xl shadow-brand/20 pointer-events-auto"
           onClick={() => router.push(`/app/group/${groupId}/add`)}
+          style={{ background: '#00C896', color: '#000', fontWeight: '700' }}
         >
           <Plus className="w-6 h-6 mr-2" />
           Add Expense

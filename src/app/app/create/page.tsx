@@ -112,9 +112,9 @@ export default function CreateGroupPage() {
 
   return (
     <>
-      <AppHeader title="New Group" showBack />
+      <AppHeader />
       
-      <div className="px-6 pt-24 pb-12 space-y-10">
+      <div className="px-6 pt-24 pb-48 space-y-10">
         {step === 1 ? (
           <div className="space-y-8 animate-fade-in">
             <div className="space-y-4">
@@ -162,15 +162,31 @@ export default function CreateGroupPage() {
               />
             </div>
 
+            {/* Forced recompile comment */}
             <Button 
               size="lg" 
-              className="w-full h-14 text-lg font-bold rounded-2xl mt-8"
-              disabled={!name}
+              style={{
+                width: '100%',
+                height: '56px',
+                background: '#00C896',
+                color: '#000000',
+                fontSize: '18px',
+                fontWeight: '700',
+                borderRadius: '16px',
+                marginTop: '32px',
+                border: 'none',
+                cursor: name ? 'pointer' : 'not-allowed',
+                opacity: name ? 1 : 0.5
+              }}
+              disabled={!name || loading}
               onClick={() => handleCreate()}
               loading={loading}
             >
               {loading ? 'Creating Onchain...' : 'Create Group'}
             </Button>
+            
+            {/* Massive spacer to ensure button clears the BottomNav */}
+            <div className="h-[120px] w-full shrink-0" />
           </div>
         ) : null}
       </div>

@@ -1,21 +1,39 @@
-"use client";
-
-import React from 'react';
+'use client';
+import { useWallet } from '@/context/WalletContext';
+import { AppHeader } from '@/components/app/AppHeader';
 import { BottomNav } from '@/components/app/BottomNav';
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
+export default function AppLayout({ 
+  children 
+}: { 
+  children: React.ReactNode 
 }) {
+  const { isConnected } = useWallet();
+
+  // No chrome when not connected
+  if (!isConnected) {
+    return <>{children}</>;
+  }
+
   return (
-    <div className="bg-bg min-h-screen text-text-primary selection:bg-brand selection:text-bg">
-      <div className="max-w-[430px] mx-auto min-h-screen border-x border-border flex flex-col relative bg-bg">
-        <main className="flex-1 pb-[80px]">
-          {children}
-        </main>
-        <BottomNav />
-      </div>
+    <div style={{
+      maxWidth: '430px',
+      margin: '0 auto',
+      minHeight: '100vh',
+      background: '#0D0D0D',
+      position: 'relative',
+      borderLeft: '1px solid #2C2C2C',
+      borderRight: '1px solid #2C2C2C',
+    }}>
+      <AppHeader />
+      <main style={{
+        paddingTop: '56px',
+        paddingBottom: '80px',
+        minHeight: '100vh',
+      }}>
+        {children}
+      </main>
+      <BottomNav />
     </div>
   );
 }

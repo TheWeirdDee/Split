@@ -101,7 +101,7 @@ export default function AddExpensePage() {
 
   return (
     <>
-      <AppHeader title="Add Expense" showBack />
+      <AppHeader />
       
       <div className="px-6 pt-24 pb-12 space-y-10 animate-fade-in">
         <div className="space-y-6">

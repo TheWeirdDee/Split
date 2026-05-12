@@ -6,6 +6,7 @@ import {
   createWalletClient, 
   custom, 
   http, 
+  fallback,
   formatEther,
   parseAbi
 } from 'viem';
@@ -43,7 +44,14 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 
   const publicClient = createPublicClient({
     chain: celo,
-    transport: http(),
+    transport: fallback([
+      http('https://forno.celo.org', { timeout: 30_000 }),
+      http('https://rpc.ankr.com/celo', { timeout: 30_000 }),
+      http('https://celo.drpc.org', { timeout: 30_000 }),
+      http('https://1rpc.io/celo', { timeout: 30_000 }),
+    ], { rank: true }),
+    batch: { multicall: true },
+    pollingInterval: 30_000,
   });
 
   const [walletClient, setWalletClient] = useState<any>(null);
@@ -64,25 +72,32 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   }, [address, publicClient]);
 
   const connect = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.ethereum) return;
-
+    if (!window.ethereum) {
+      alert('Please install MetaMask to use Split on desktop, or open in MiniPay on mobile');
+      return;
+    }
     try {
-      const client = createWalletClient({
-        chain: celo,
-        transport: custom(window.ethereum),
-      });
-      setWalletClient(client);
-
-      const [addr] = await client.requestAddresses();
-      setAddress(addr);
+      // First check if we already have accounts
+      let accounts = await window.ethereum.request({ method: 'eth_accounts' });
       
+      // Only request permissions/accounts if we don't have any yet
+      if (!accounts || accounts.length === 0) {
+        await window.ethereum.request({
+          method: 'wallet_requestPermissions',
+          params: [{ eth_accounts: {} }]
+        });
+        accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+      }
+      // Switch to Celo Mainnet
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0xA4EC' }], // 42220 in hex
+          params: [{ chainId: '0xA4EC' }]
         });
-      } catch (switchError: any) {
-        if (switchError.code === 4902) {
+      } catch (e: any) {
+        if (e.code === 4902) {
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
@@ -90,22 +105,35 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
               chainName: 'Celo Mainnet',
               nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
               rpcUrls: ['https://forno.celo.org'],
-              blockExplorerUrls: ['https://celoscan.io'],
-            }],
+              blockExplorerUrls: ['https://celoscan.io']
+            }]
           });
         }
       }
-    } catch (err) {
-      console.error('Connection error:', err);
+      if (!accounts?.[0]) return;
+      const addr = accounts[0];
+      const { createWalletClient, custom } = await import('viem');
+      const { celo } = await import('viem/chains');
+      const client = createWalletClient({
+        chain: celo, transport: custom(window.ethereum)
+      });
+      setAddress(addr);
+      setWalletClient(client);
+      setIsMiniPay(window.ethereum?.isMiniPay === true);
+      await refreshBalance();
+    } catch (e: any) {
+      if (e.code !== 4001) console.error('Connect error:', e);
     }
-  }, []);
+  }, [refreshBalance]);
 
   const disconnect = useCallback(() => {
     setAddress(null);
+    setCUSDBalance('0');
     setWalletClient(null);
-    setCUSDBalance('0.00');
-    localStorage.clear();
-    window.location.href = '/app';
+    setIsMiniPay(false);
+    try { localStorage.clear(); } catch {}
+    try { sessionStorage.clear(); } catch {}
+    window.location.replace('/app');
   }, []);
 
   useEffect(() => {
@@ -130,7 +158,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (address) {
       refreshBalance();
-      const interval = setInterval(refreshBalance, 10000);
+      const interval = setInterval(refreshBalance, 30000);
       return () => clearInterval(interval);
     }
   }, [address, refreshBalance]);

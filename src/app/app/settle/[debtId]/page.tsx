@@ -52,7 +52,7 @@ export default function SettlePage() {
 
   return (
     <>
-      <AppHeader title="Settle Debt" showBack />
+      <AppHeader />
       
       <div className="px-6 pt-24 space-y-12 animate-fade-in">
         <div className="flex flex-col items-center gap-6">

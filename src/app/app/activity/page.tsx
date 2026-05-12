@@ -44,7 +44,7 @@ export default function ActivityPage() {
 
   return (
     <>
-      <AppHeader title="Activity" />
+      <AppHeader />
       
       <div className="px-4 pt-20 pb-12 space-y-6">
         <h2 className="clash-display font-bold text-xl uppercase tracking-wider text-text-muted px-1">

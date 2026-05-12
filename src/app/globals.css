@@ -1,61 +1,51 @@
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --font-display: "Clash Display", sans-serif;
-  --font-body: "DM Sans", sans-serif;
-  --font-mono: "DM Mono", monospace;
+@source "../../**/*.{js,ts,jsx,tsx,mdx}";
 
-  --color-bg: #0D0D0D;
+@theme {
+  --color-background: #0D0D0D;
+  --color-foreground: #F7F3EC;
+  --color-brand: #00C896;
   --color-surface: #161616;
   --color-surface-2: #1F1F1F;
   --color-border: #2C2C2C;
+  
   --color-text-primary: #F7F3EC;
   --color-text-secondary: #8A8A8A;
   --color-text-muted: #4A4A4A;
-  --color-brand: #00C896;
-  --color-brand-dim: rgba(0, 200, 150, 0.12);
-  --color-brand-dark: #009E78;
+  
   --color-money-positive: #00C896;
   --color-money-negative: #FF5C5C;
   --color-money-settled: #4A4A4A;
+
+  --font-display: "Clash Display", sans-serif;
+  --font-body: var(--font-dm-sans), sans-serif;
+  --font-mono: var(--font-dm-mono), monospace;
 }
 
-:root {
-  --bg: #0D0D0D;
-  --surface: #161616;
-  --surface-2: #1F1F1F;
-  --border: #2C2C2C;
-  --text-primary: #F7F3EC;
-  --text-secondary: #8A8A8A;
-  --text-muted: #4A4A4A;
-  --brand: #00C896;
-  --brand-dim: rgba(0,200,150,0.12);
-  --brand-dark: #009E78;
-  --money-positive: #00C896;
-  --money-negative: #FF5C5C;
-  --money-settled: #4A4A4A;
-}
+@layer base {
+  * {
+    @apply border-border outline-none;
+  }
+  
+  body {
+    @apply bg-background text-text-primary antialiased;
+    font-family: var(--font-body);
+  }
 
-body {
-  background-color: var(--bg);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-}
+  .clash-display {
+    font-family: var(--font-display);
+  }
 
-.clash-display {
-  font-family: var(--font-display);
-}
-
-.dm-mono {
-  font-family: var(--font-mono);
+  .dm-mono {
+    font-family: var(--font-mono);
+  }
 }
 
 /* Glassmorphism */
 .glass {
-  background: rgba(22, 22, 22, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
+  @apply bg-surface/70 backdrop-blur-xl border border-border;
 }
 
 /* Custom Scrollbar */
@@ -63,11 +53,10 @@ body {
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg);
+  @apply bg-background;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
+  @apply bg-border rounded-full;
 }
 
 @keyframes fadeIn {
@@ -78,3 +67,4 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+

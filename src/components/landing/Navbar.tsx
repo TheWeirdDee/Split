@@ -30,7 +30,7 @@ export const Navbar = () => {
         </div>
 
         <Link href="/app">
-          <Button variant="primary" className="rounded-full px-6 font-semibold">
+          <Button variant="primary" className="rounded-sm px-6 font-semibold">
             Open App →
           </Button>
         </Link>

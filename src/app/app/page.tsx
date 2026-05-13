@@ -66,7 +66,7 @@ export default function AppHome() {
               height: '56px',
               background: '#00C896',
               border: 'none',
-              borderRadius: '100px',
+              borderRadius: '2px',
               fontFamily: 'DM Sans, sans-serif',
               fontSize: '16px', fontWeight: '600',
               color: '#000',
@@ -132,7 +132,7 @@ export default function AppHome() {
             style={{
               background: 'transparent',
               border: '1px solid #2C2C2C',
-              borderRadius: '100px',
+              borderRadius: '2px',
               padding: '8px 20px',
               color: '#8A8A8A',
               fontFamily: 'DM Mono, monospace',
@@ -202,7 +202,7 @@ function GroupsList({ address }: { address: string }) {
         <div style={{
           background: 'rgba(0,200,150,0.05)',
           border: '1px dashed #00C896',
-          borderRadius: '20px',
+          borderRadius: '2px',
           padding: '16px',
           display: 'flex',
           alignItems: 'center',

@@ -1,9 +1,13 @@
-import { createPublicClient, createWalletClient, custom, http } from 'viem';
-import { celo } from '@/constants/chains';
+import { createPublicClient, createWalletClient, custom, http, fallback } from 'viem';
+import { celo } from 'viem/chains';
 
 export const publicClient = createPublicClient({
   chain: celo,
-  transport: http(),
+  transport: fallback([
+    http('https://forno.celo.org'),
+    http('https://rpc.ankr.com/celo'),
+    http('https://celo.drpc.org'),
+  ]),
 });
 
 export const getWalletClient = () => {

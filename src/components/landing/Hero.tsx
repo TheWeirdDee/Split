@@ -26,7 +26,7 @@ export const Hero = () => {
         <h1 className="clash-display font-bold text-5xl md:text-8xl leading-[0.92] text-text-primary tracking-tight">
           SPLIT BILLS.<br />
           <span className="italic text-brand">SETTLE INSTANTLY.</span><br />
-          NO AWKWARDNESS.
+          <span className="text-4xl md:text-7xl block mt-2">No awkwardness.</span>
         </h1>
 
         <p className="text-text-secondary text-lg md:text-xl max-w-[500px] mx-auto font-medium leading-relaxed">
@@ -36,12 +36,12 @@ export const Hero = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link href="/app" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto rounded-full px-10 text-lg font-bold h-16">
+            <Button variant="outline" className="w-full sm:w-auto rounded-md px-10 text-lg font-bold h-14 bg-black border-white/20 hover:bg-white/5 text-white">
               Open App →
             </Button>
           </Link>
           <Link href="#how-it-works" className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-10 text-lg font-bold h-16">
+            <Button variant="outline" className="w-full sm:w-auto rounded-md px-10 text-lg font-bold h-14 bg-black border-white/20 hover:bg-white/5 text-white">
               See how it works ↓
             </Button>
           </Link>

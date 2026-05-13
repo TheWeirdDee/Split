@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { 
   createPublicClient, 
   createWalletClient, 
@@ -42,22 +42,25 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [cUSDBalance, setCUSDBalance] = useState('0.00');
   const [isMiniPay, setIsMiniPay] = useState(false);
 
-  const publicClient = createPublicClient({
+  const publicClient = useMemo(() => createPublicClient({
     chain: celo,
     transport: fallback([
       http('https://forno.celo.org', { timeout: 30_000 }),
       http('https://rpc.ankr.com/celo', { timeout: 30_000 }),
       http('https://celo.drpc.org', { timeout: 30_000 }),
-      http('https://1rpc.io/celo', { timeout: 30_000 }),
     ], { rank: true }),
     batch: { multicall: true },
     pollingInterval: 30_000,
-  });
+  }), []);
 
   const [walletClient, setWalletClient] = useState<any>(null);
 
+  const isRefreshingRef = useRef(false);
+
   const refreshBalance = useCallback(async () => {
-    if (!address) return;
+    if (!address || isRefreshingRef.current) return;
+    
+    isRefreshingRef.current = true;
     try {
       const balance = await publicClient.readContract({
         address: CUSD_ADDRESS,
@@ -68,6 +71,8 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       setCUSDBalance(formatEther(balance as bigint));
     } catch (err) {
       console.error('Balance fetch error:', err);
+    } finally {
+      isRefreshingRef.current = false;
     }
   }, [address, publicClient]);
 
@@ -158,7 +163,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (address) {
       refreshBalance();
-      const interval = setInterval(refreshBalance, 30000);
+      const interval = setInterval(refreshBalance, 15000);
       return () => clearInterval(interval);
     }
   }, [address, refreshBalance]);

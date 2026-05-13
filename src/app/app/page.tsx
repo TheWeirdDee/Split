@@ -11,7 +11,7 @@ import { Button } from '@/components/common/Button';
 import { Wallet2 } from 'lucide-react';
 
 export default function AppHome() {
-  const { isConnected, address, isMiniPay, connect } = useWallet();
+  const { isConnected, address, isMiniPay, isInitialLoading, connect } = useWallet();
   const [mounted, setMounted] = useState(false);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL 
     || 'https://split-five-eta.vercel.app/app';
@@ -19,6 +19,10 @@ export default function AppHome() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (isInitialLoading) {
+    return <div style={{ minHeight: '100vh', background: '#0D0D0D' }} />;
+  }
 
   if (!isConnected || !address) {
     return (

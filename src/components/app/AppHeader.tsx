@@ -102,7 +102,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
           <div style={{
             background: '#161616',
             border: '1px solid #2C2C2C',
-            borderRadius: '20px',
+            borderRadius: '2px',
             padding: '6px 12px',
             display: 'flex', alignItems: 'center', gap: '6px',
           }}>
@@ -141,7 +141,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
           style={{
             background: 'transparent',
             border: '1px solid #2C2C2C',
-            borderRadius: '50%',
+            borderRadius: '2px',
             width: '36px', height: '36px',
             display: 'flex', alignItems: 'center',
             justifyContent: 'center',

@@ -34,7 +34,7 @@ export const Button = ({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100',
+        'inline-flex items-center justify-center rounded-md font-medium transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100',
         variants[variant],
         sizes[size],
         className

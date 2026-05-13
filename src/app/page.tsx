@@ -628,7 +628,7 @@ export default function LandingPage() {
 
       {/* --- CTA Section --- */}
       <section className="py-0 reveal w-full overflow-hidden">
-        <div className="w-full bg-[#00C896] p-8 md:p-10 text-center space-y-6 relative overflow-hidden">
+        <div className="w-full bg-[#006E53] p-8 md:p-10 text-center space-y-6 relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-black/5 rounded-full pointer-events-none" />
           <div className="relative z-10 space-y-3">
             <span className="dm-mono text-[10px] font-bold tracking-[0.2em] text-black/60 uppercase">READY TO SPLIT?</span>
@@ -650,15 +650,15 @@ export default function LandingPage() {
         <div className="max-w-[1280px] mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-10">
             <Logo />
-            <div className="flex gap-8 text-[13px] text-[#3a3a3a] font-sans">
+            <div className="flex gap-8 text-[13px] text-[#8A8A8A] font-sans">
               <Link href="#" className="hover:text-[#f5f0e8] transition-colors">Twitter</Link>
               <Link href="#" className="hover:text-[#f5f0e8] transition-colors">GitHub</Link>
               <Link href="#" className="hover:text-[#f5f0e8] transition-colors">Built on Celo</Link>
             </div>
           </div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-[#242424]/50 text-[11px] dm-mono text-[#3a3a3a] tracking-wider">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-[#242424]/50 text-[11px] dm-mono text-[#8A8A8A] tracking-wider">
             <p>© 2025 Split · Built on Celo · Open Source</p>
-            <p className="flex items-center gap-1.5 uppercase font-bold">Made in Africa 🌍</p>
+            <p className="flex items-center gap-1.5 uppercase font-bold">MADE IN AFRICA 🌍</p>
           </div>
         </div>
       </footer>

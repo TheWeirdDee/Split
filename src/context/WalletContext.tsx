@@ -22,6 +22,7 @@ interface WalletContextType {
   address: `0x${string}` | null;
   isConnected: boolean;
   isMiniPay: boolean;
+  isInitialLoading: boolean;
   cUSDBalance: string;
   publicClient: any;
   walletClient: any;
@@ -41,6 +42,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
   const [cUSDBalance, setCUSDBalance] = useState('0.00');
   const [isMiniPay, setIsMiniPay] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const publicClient = useMemo(() => createPublicClient({
     chain: celo,
@@ -76,25 +78,25 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [address, publicClient]);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (force = true) => {
     if (!window.ethereum) {
-      alert('Please install MetaMask to use Split on desktop, or open in MiniPay on mobile');
+      if (force) alert('Please install MetaMask to use Split on desktop, or open in MiniPay on mobile');
       return;
     }
     try {
-      // First check if we already have accounts
-      let accounts = await window.ethereum.request({ method: 'eth_accounts' });
-      
-      // Only request permissions/accounts if we don't have any yet
-      if (!accounts || accounts.length === 0) {
+      if (force) {
+        localStorage.removeItem('manualDisconnect');
+        // Always request permissions to force a wallet popup/account selection
         await window.ethereum.request({
           method: 'wallet_requestPermissions',
           params: [{ eth_accounts: {} }]
         });
-        accounts = await window.ethereum.request({ 
-          method: 'eth_requestAccounts' 
-        });
       }
+      
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
       // Switch to Celo Mainnet
       try {
         await window.ethereum.request({
@@ -103,6 +105,10 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         });
       } catch (e: any) {
         if (e.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }]
+          });
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
@@ -127,7 +133,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       setIsMiniPay(window.ethereum?.isMiniPay === true);
       await refreshBalance();
     } catch (e: any) {
-      if (e.code !== 4001) console.error('Connect error:', e);
+      if (force && e.code !== 4001) console.error('Connect error:', e);
     }
   }, [refreshBalance]);
 
@@ -136,7 +142,10 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     setCUSDBalance('0');
     setWalletClient(null);
     setIsMiniPay(false);
-    try { localStorage.clear(); } catch {}
+    try { 
+      localStorage.clear(); 
+      localStorage.setItem('manualDisconnect', 'true');
+    } catch {}
     try { sessionStorage.clear(); } catch {}
     window.location.replace('/app');
   }, []);
@@ -147,15 +156,22 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         const isMP = !!(window.ethereum as any).isMiniPay;
         setIsMiniPay(isMP);
 
-          if (isMP) {
-            await connect();
-          } else {
-            const [addr] = await window.ethereum.request({ method: 'eth_accounts' });
-            if (addr) {
-              await connect();
-            }
+        const wasManualDisconnect = localStorage.getItem('manualDisconnect') === 'true';
+        if (wasManualDisconnect && !isMP) {
+          setIsInitialLoading(false);
+          return;
+        }
+
+        if (isMP) {
+          await connect(false);
+        } else {
+          const [addr] = await window.ethereum.request({ method: 'eth_accounts' });
+          if (addr) {
+            await connect(false);
           }
+        }
       }
+      setIsInitialLoading(false);
     };
     checkConnection();
   }, [connect]);
@@ -173,6 +189,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       address,
       isConnected: !!address,
       isMiniPay,
+      isInitialLoading,
       cUSDBalance,
       publicClient,
       walletClient,

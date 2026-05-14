@@ -66,9 +66,6 @@ export default function CreateGroupPage() {
       const groupId = uuidv4();
       const groupIdBytes = generateGroupId(groupId);
 
-      const gasPrice = await publicClient.getGasPrice();
-      const nonce = await publicClient.getTransactionCount({ address, blockTag: 'pending' });
-
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
@@ -76,10 +73,7 @@ export default function CreateGroupPage() {
         args: [groupIdBytes],
         chain: celo,
         account: address,
-        gasPrice,
-        nonce,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

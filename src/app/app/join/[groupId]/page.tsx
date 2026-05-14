@@ -48,8 +48,6 @@ export default function JoinGroupPage() {
     try {
       const groupIdBytes = generateGroupId(groupId as string);
 
-      const gasPrice = await publicClient.getGasPrice();
-
       // 1. Contract Call
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS,
@@ -59,9 +57,7 @@ export default function JoinGroupPage() {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
-        gasPrice,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
+        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

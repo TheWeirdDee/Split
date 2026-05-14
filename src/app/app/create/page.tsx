@@ -11,6 +11,7 @@ import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/li
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { celo } from 'viem/chains';
+import { parseEther, erc20Abi } from 'viem';
 
 import { 
   Users, Pizza, Car, House, PartyPopper, Plane, 
@@ -57,6 +58,7 @@ export default function CreateGroupPage() {
   const [emoji, setEmoji] = useState('Users');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Creating Onchain (cUSD)...');
 
   const handleCreate = async () => {
     if (!address || !name) return;
@@ -67,11 +69,32 @@ export default function CreateGroupPage() {
       const groupIdBytes = generateGroupId(groupId);
 
       const gasPrice = await publicClient.getGasPrice();
-      const nonce = await publicClient.getTransactionCount({
+      let currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
         blockTag: 'pending'
       });
 
+      // STEP 1: Small cUSD Transfer to trigger Volume and cUSD Logo
+      setLoadingText('Initiating cUSD (Step 1/2)...');
+      const transferTx = await walletClient.writeContract({
+        address: CUSD_ADDRESS as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
+        chain: celo,
+        account: address as `0x${string}`,
+        feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
+        gasPrice,
+        nonce: currentNonce,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
+      });
+
+      await publicClient.waitForTransactionReceipt({ hash: transferTx });
+      
+      // STEP 2: Create Group
+      setLoadingText('Creating Group (Step 2/2)...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -82,7 +105,7 @@ export default function CreateGroupPage() {
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce,
+        nonce: currentNonce + 1,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });
@@ -114,6 +137,7 @@ export default function CreateGroupPage() {
       alert('Failed to create group onchain. Please check your balance and try again.');
     } finally {
       setLoading(false);
+      setLoadingText('Creating Onchain (cUSD)...');
     }
   };
 
@@ -189,7 +213,7 @@ export default function CreateGroupPage() {
               onClick={() => handleCreate()}
               loading={loading}
             >
-              {loading ? 'Creating Onchain (cUSD gas)...' : 'Create Group'}
+              {loading ? loadingText : 'Create Group'}
             </Button>
             
             {/* Massive spacer to ensure button clears the BottomNav */}

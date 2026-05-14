@@ -7,7 +7,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
-import { CONTRACT_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { celo } from '@/constants/chains';
@@ -78,6 +78,7 @@ export default function CreateGroupPage() {
         account: address,
         gasPrice,
         nonce,
+        feeCurrency: CUSD_ADDRESS,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

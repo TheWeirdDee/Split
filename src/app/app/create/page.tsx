@@ -74,7 +74,8 @@ export default function CreateGroupPage() {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip64',
+        type: 'cip42',
+        gas: BigInt(200000),
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

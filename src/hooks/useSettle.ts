@@ -30,8 +30,9 @@ export const useSettle = () => {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip42',
-        gas: BigInt(100000),
+        gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
@@ -45,8 +46,9 @@ export const useSettle = () => {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip42',
-        gas: BigInt(200000),
+        gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: settleTx });

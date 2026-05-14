@@ -124,9 +124,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       if (!accounts?.[0]) return;
       const addr = accounts[0];
       const { createWalletClient, custom } = await import('viem');
-      const { celo } = await import('viem/chains');
       const client = createWalletClient({
-        chain: celo, transport: custom(window.ethereum)
+        chain: celo,
+        transport: custom(window.ethereum)
       });
       setAddress(addr);
       setWalletClient(client);

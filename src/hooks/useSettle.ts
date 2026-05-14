@@ -31,6 +31,8 @@ export const useSettle = () => {
         account: address,
         feeCurrency: CUSD_ADDRESS,
         gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
@@ -45,6 +47,8 @@ export const useSettle = () => {
         account: address,
         feeCurrency: CUSD_ADDRESS,
         gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: settleTx });

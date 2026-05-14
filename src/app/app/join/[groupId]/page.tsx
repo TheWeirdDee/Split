@@ -62,6 +62,7 @@ export default function JoinGroupPage() {
         gasPrice,
         nonce,
         feeCurrency: CUSD_ADDRESS,
+        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });
@@ -117,7 +118,7 @@ export default function JoinGroupPage() {
           onClick={handleJoin}
           loading={joining}
         >
-          {isConnected ? (joining ? 'Joining Onchain...' : 'Join Group Now') : 'Connect Wallet to Join'}
+          {isConnected ? (joining ? 'Joining Onchain (cUSD gas)...' : 'Join Group Now') : 'Connect Wallet to Join'}
         </Button>
       </div>
     </>

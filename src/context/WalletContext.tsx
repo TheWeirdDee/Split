@@ -46,13 +46,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 
   const publicClient = useMemo(() => createPublicClient({
     chain: celo,
-    transport: fallback([
-      http('https://forno.celo.org', { timeout: 30_000 }),
-      http('https://rpc.ankr.com/celo', { timeout: 30_000 }),
-      http('https://celo.drpc.org', { timeout: 30_000 }),
-    ], { rank: true }),
-    batch: { multicall: true },
-    pollingInterval: 30_000,
+    transport: http('https://forno.celo.org'),
   }), []);
 
   const [walletClient, setWalletClient] = useState<any>(null);

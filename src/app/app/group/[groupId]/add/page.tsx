@@ -9,7 +9,7 @@ import { CategoryPicker } from '@/components/app/CategoryPicker';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { useGroup } from '@/hooks/useGroups';
-import { CONTRACT_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { cn, truncateAddress } from '@/lib/utils';
 import { parseEther, keccak256, toBytes } from 'viem';
 import { celo } from '@/constants/chains';
@@ -57,6 +57,7 @@ export default function AddExpensePage() {
         account: address,
         gasPrice,
         nonce,
+        feeCurrency: CUSD_ADDRESS,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

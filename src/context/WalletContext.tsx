@@ -46,6 +46,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const publicClient = useMemo(() => createPublicClient({
     chain: celo,
     transport: http('https://forno.celo.org'),
+    batch: { multicall: true },
   }), []);
 
   const [walletClient, setWalletClient] = useState<any>(null);

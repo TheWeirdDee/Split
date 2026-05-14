@@ -6,11 +6,10 @@ import {
   createWalletClient, 
   custom, 
   http, 
-  fallback,
   formatEther,
   parseAbi
 } from 'viem';
-import { celo } from '@/constants/chains';
+import { celo } from 'viem/chains';
 
 declare global {
   interface Window {

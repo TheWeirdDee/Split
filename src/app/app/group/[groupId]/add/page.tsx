@@ -58,6 +58,7 @@ export default function AddExpensePage() {
         gasPrice,
         nonce,
         feeCurrency: CUSD_ADDRESS,
+        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });
@@ -189,7 +190,7 @@ export default function AddExpensePage() {
             onClick={handleSubmit}
             loading={loading}
           >
-            Log Expense
+            {loading ? 'Logging Expense (cUSD gas)...' : 'Log Expense'}
           </Button>
         </div>
       </div>

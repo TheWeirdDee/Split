@@ -10,7 +10,7 @@ import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
-import { celo } from '@/constants/chains';
+import { celo } from 'viem/chains';
 
 import { 
   Users, Pizza, Car, House, PartyPopper, Plane, 
@@ -80,6 +80,7 @@ export default function CreateGroupPage() {
         chain: celo,
         account: address as `0x${string}`,
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
         gasPrice,
         nonce,
         maxFeePerGas: undefined,

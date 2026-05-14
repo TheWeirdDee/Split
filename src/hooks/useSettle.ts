@@ -32,6 +32,7 @@ export const useSettle = () => {
         gasPrice,
         nonce,
         feeCurrency: CUSD_ADDRESS,
+        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
@@ -48,6 +49,7 @@ export const useSettle = () => {
         gasPrice,
         nonce,
         feeCurrency: CUSD_ADDRESS,
+        type: 'cip64',
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: settleTx });

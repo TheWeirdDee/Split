@@ -11,7 +11,6 @@ import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/li
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { celo } from '@/constants/chains';
-import { encodeFunctionData } from 'viem';
 
 import { 
   Users, Pizza, Car, House, PartyPopper, Plane, 
@@ -67,19 +66,19 @@ export default function CreateGroupPage() {
       const groupId = uuidv4();
       const groupIdBytes = generateGroupId(groupId);
 
-      const data = encodeFunctionData({
+      const gasPrice = await publicClient.getGasPrice();
+
+      const tx = await walletClient.writeContract({
+        address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
         functionName: 'createGroup',
         args: [groupIdBytes],
-      });
-
-      const tx = await walletClient.sendTransaction({
-        account: address,
-        to: CONTRACT_ADDRESS,
-        data,
-        feeCurrency: CUSD_ADDRESS,
-        type: 'cip64',
         chain: celo,
+        account: address,
+        feeCurrency: CUSD_ADDRESS,
+        gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

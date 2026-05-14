@@ -77,6 +77,8 @@ export default function CreateGroupPage() {
         account: address,
         feeCurrency: CUSD_ADDRESS,
         gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

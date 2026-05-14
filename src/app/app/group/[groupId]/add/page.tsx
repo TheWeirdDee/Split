@@ -45,8 +45,6 @@ export default function AddExpensePage() {
       const expenseIdBytes = keccak256(toBytes(expenseId));
       const groupIdBytes = generateGroupId(groupId as string);
 
-      const gasPrice = await publicClient.getGasPrice();
-
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
@@ -55,9 +53,7 @@ export default function AddExpensePage() {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
-        gasPrice,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
+        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

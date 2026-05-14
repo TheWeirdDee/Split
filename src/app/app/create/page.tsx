@@ -79,6 +79,7 @@ export default function CreateGroupPage() {
         gasPrice,
         nonce,
         feeCurrency: CUSD_ADDRESS,
+        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });
@@ -183,7 +184,7 @@ export default function CreateGroupPage() {
               onClick={() => handleCreate()}
               loading={loading}
             >
-              {loading ? 'Creating Onchain...' : 'Create Group'}
+              {loading ? 'Creating Onchain (cUSD gas)...' : 'Create Group'}
             </Button>
             
             {/* Massive spacer to ensure button clears the BottomNav */}

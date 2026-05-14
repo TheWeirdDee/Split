@@ -12,7 +12,7 @@ import { useGroup } from '@/hooks/useGroups';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { cn, truncateAddress } from '@/lib/utils';
 import { parseEther, keccak256, toBytes } from 'viem';
-import { celo } from '@/constants/chains';
+import { celo } from 'viem/chains';
 
 export default function AddExpensePage() {
   const { groupId } = useParams();
@@ -59,6 +59,7 @@ export default function AddExpensePage() {
         chain: celo,
         account: address as `0x${string}`,
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
         gasPrice,
         nonce,
         maxFeePerGas: undefined,

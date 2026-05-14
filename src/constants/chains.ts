@@ -1,32 +1,3 @@
-import { defineChain } from 'viem';
+import { celo as viemCelo } from 'viem/chains';
 
-export const celo = defineChain({
-  id: 42220,
-  name: 'Celo',
-  network: 'celo',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'CELO',
-    symbol: 'CELO',
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://forno.celo.org'],
-    },
-    public: {
-      http: ['https://forno.celo.org'],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'CeloScan',
-      url: 'https://celoscan.io',
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
-      blockCreated: 13112427,
-    },
-  },
-});
+export const celo = viemCelo;

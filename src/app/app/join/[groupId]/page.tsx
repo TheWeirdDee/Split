@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { truncateAddress } from '@/lib/utils';
-import { celo } from '@/constants/chains';
+import { celo } from 'viem/chains';
 
 export default function JoinGroupPage() {
   const router = useRouter();
@@ -63,6 +63,7 @@ export default function JoinGroupPage() {
         chain: celo,
         account: address as `0x${string}`,
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
         gasPrice,
         nonce,
         maxFeePerGas: undefined,

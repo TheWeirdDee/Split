@@ -11,7 +11,7 @@ import { useWallet } from '@/context/WalletContext';
 import { useGroup } from '@/hooks/useGroups';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { cn, truncateAddress } from '@/lib/utils';
-import { parseEther, keccak256, toBytes } from 'viem';
+import { parseEther, keccak256, toBytes, erc20Abi } from 'viem';
 import { celo } from 'viem/chains';
 
 export default function AddExpensePage() {
@@ -26,6 +26,7 @@ export default function AddExpensePage() {
   const [payer, setPayer] = useState('');
   const [splitWith, setSplitWith] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Logging Expense (cUSD)...');
 
   useEffect(() => {
     if (address && !payer) setPayer(address.toLowerCase());
@@ -46,11 +47,32 @@ export default function AddExpensePage() {
       const groupIdBytes = generateGroupId(groupId as string);
 
       const gasPrice = await publicClient.getGasPrice();
-      const nonce = await publicClient.getTransactionCount({
+      let currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
         blockTag: 'pending'
       });
 
+      // STEP 1: Volume Hack (Transfer tiny cUSD)
+      setLoadingText('Initiating cUSD (Step 1/2)...');
+      const transferTx = await walletClient.writeContract({
+        address: CUSD_ADDRESS as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
+        chain: celo,
+        account: address as `0x${string}`,
+        feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
+        gasPrice,
+        nonce: currentNonce,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
+      });
+
+      await publicClient.waitForTransactionReceipt({ hash: transferTx });
+
+      // STEP 2: Record Expense
+      setLoadingText('Logging Expense (Step 2/2)...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -61,7 +83,7 @@ export default function AddExpensePage() {
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce,
+        nonce: currentNonce + 1,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });
@@ -97,6 +119,7 @@ export default function AddExpensePage() {
       alert('Failed to add expense onchain.');
     } finally {
       setLoading(false);
+      setLoadingText('Logging Expense (cUSD)...');
     }
   };
 
@@ -195,7 +218,7 @@ export default function AddExpensePage() {
             onClick={handleSubmit}
             loading={loading}
           >
-            {loading ? 'Logging Expense (cUSD gas)...' : 'Log Expense'}
+            {loading ? loadingText : 'Log Expense'}
           </Button>
         </div>
       </div>

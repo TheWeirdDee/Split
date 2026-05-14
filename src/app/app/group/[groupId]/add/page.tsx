@@ -45,9 +45,6 @@ export default function AddExpensePage() {
       const expenseIdBytes = keccak256(toBytes(expenseId));
       const groupIdBytes = generateGroupId(groupId as string);
 
-      const gasPrice = await publicClient.getGasPrice();
-      const nonce = await publicClient.getTransactionCount({ address, blockTag: 'pending' });
-
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
@@ -55,10 +52,7 @@ export default function AddExpensePage() {
         args: [groupIdBytes, expenseIdBytes, parseEther(totalAmountNum.toString())],
         chain: celo,
         account: address,
-        gasPrice,
-        nonce,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

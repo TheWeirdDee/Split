@@ -7,7 +7,7 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
-import { CONTRACT_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { truncateAddress } from '@/lib/utils';
 import { celo } from '@/constants/chains';
 
@@ -61,6 +61,7 @@ export default function JoinGroupPage() {
         account: address,
         gasPrice,
         nonce,
+        feeCurrency: CUSD_ADDRESS,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

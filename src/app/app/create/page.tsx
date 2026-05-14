@@ -67,16 +67,21 @@ export default function CreateGroupPage() {
       const groupIdBytes = generateGroupId(groupId);
 
       const gasPrice = await publicClient.getGasPrice();
+      const nonce = await publicClient.getTransactionCount({
+        address: address as `0x${string}`,
+        blockTag: 'pending'
+      });
 
       const tx = await walletClient.writeContract({
-        address: CONTRACT_ADDRESS,
+        address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
         functionName: 'createGroup',
         args: [groupIdBytes],
         chain: celo,
-        account: address,
-        feeCurrency: CUSD_ADDRESS,
+        account: address as `0x${string}`,
+        feeCurrency: CUSD_ADDRESS as `0x${string}`,
         gasPrice,
+        nonce,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });

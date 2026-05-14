@@ -3,7 +3,7 @@ import { useWallet } from '@/context/WalletContext';
 import { supabase } from '@/lib/supabase';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { parseEther, erc20Abi } from 'viem';
-import { celo } from '@/constants/chains';
+import { celo } from 'viem/chains';
 
 export const useSettle = () => {
   const { address, walletClient, publicClient, refreshBalance } = useWallet();
@@ -30,6 +30,7 @@ export const useSettle = () => {
         chain: celo,
         account: address as `0x${string}`,
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
         gasPrice,
         nonce,
         maxFeePerGas: undefined,
@@ -47,6 +48,7 @@ export const useSettle = () => {
         chain: celo,
         account: address as `0x${string}`,
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
         gasPrice,
         nonce: nonce + 1,
         maxFeePerGas: undefined,

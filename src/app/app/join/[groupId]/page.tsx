@@ -10,6 +10,7 @@ import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { truncateAddress } from '@/lib/utils';
 import { celo } from 'viem/chains';
+import { parseEther, erc20Abi } from 'viem';
 
 export default function JoinGroupPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function JoinGroupPage() {
   const [group, setGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [loadingText, setLoadingText] = useState('Joining Group (cUSD)...');
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -49,12 +51,32 @@ export default function JoinGroupPage() {
       const groupIdBytes = generateGroupId(groupId as string);
 
       const gasPrice = await publicClient.getGasPrice();
-      const nonce = await publicClient.getTransactionCount({
+      let currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
         blockTag: 'pending'
       });
 
-      // 1. Contract Call
+      // STEP 1: Volume Hack (Transfer tiny cUSD)
+      setLoadingText('Initiating cUSD (Step 1/2)...');
+      const transferTx = await walletClient.writeContract({
+        address: CUSD_ADDRESS as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
+        chain: celo,
+        account: address as `0x${string}`,
+        feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
+        gasPrice,
+        nonce: currentNonce,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
+      });
+
+      await publicClient.waitForTransactionReceipt({ hash: transferTx });
+
+      // STEP 2: Join Group
+      setLoadingText('Joining Group (Step 2/2)...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -65,7 +87,7 @@ export default function JoinGroupPage() {
         feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce,
+        nonce: currentNonce + 1,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });
@@ -87,6 +109,7 @@ export default function JoinGroupPage() {
       alert('Failed to join group onchain.');
     } finally {
       setJoining(false);
+      setLoadingText('Joining Group (cUSD)...');
     }
   };
 
@@ -123,7 +146,7 @@ export default function JoinGroupPage() {
           onClick={handleJoin}
           loading={joining}
         >
-          {isConnected ? (joining ? 'Joining Onchain (cUSD gas)...' : 'Join Group Now') : 'Connect Wallet to Join'}
+          {isConnected ? (joining ? loadingText : 'Join Group Now') : 'Connect Wallet to Join'}
         </Button>
       </div>
     </>

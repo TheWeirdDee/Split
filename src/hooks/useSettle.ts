@@ -30,6 +30,7 @@ export const useSettle = () => {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
+        gasPrice,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
@@ -43,6 +44,7 @@ export const useSettle = () => {
         chain: celo,
         account: address,
         feeCurrency: CUSD_ADDRESS,
+        gasPrice,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: settleTx });

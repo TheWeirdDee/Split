@@ -29,16 +29,12 @@ export const useSettle = () => {
         args: [CONTRACT_ADDRESS, amountRaw],
         chain: celo,
         account: address,
-        gasPrice,
-        nonce,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip64',
       });
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
       
       setStep('sending');
-      nonce = await publicClient.getTransactionCount({ address, blockTag: 'pending' });
       const settleTx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
@@ -46,10 +42,7 @@ export const useSettle = () => {
         args: [groupIdBytes, creditor as `0x${string}`, amountRaw],
         chain: celo,
         account: address,
-        gasPrice,
-        nonce,
         feeCurrency: CUSD_ADDRESS,
-        type: 'cip64',
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: settleTx });

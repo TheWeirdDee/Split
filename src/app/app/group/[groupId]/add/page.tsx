@@ -56,6 +56,8 @@ export default function AddExpensePage() {
         account: address,
         feeCurrency: CUSD_ADDRESS,
         gasPrice,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });

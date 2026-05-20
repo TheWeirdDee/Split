@@ -11,9 +11,32 @@ CREATE TABLE groups (
 CREATE TABLE group_members (
   group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
   wallet_address TEXT NOT NULL,
+  display_name TEXT,
   joined_at TIMESTAMPTZ DEFAULT NOW(),
   onchain_tx TEXT,
   PRIMARY KEY (group_id, wallet_address)
+);
+
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_address TEXT NOT NULL,
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  actor TEXT,
+  action_url TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+  sender TEXT NOT NULL,
+  text TEXT,
+  attachment_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE expenses (

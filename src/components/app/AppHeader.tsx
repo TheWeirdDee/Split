@@ -2,7 +2,8 @@
 import Link from 'next/link';
 import { useWallet } from '@/context/WalletContext';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { Bell, ChevronLeft } from 'lucide-react';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface AppHeaderProps {
   title?: string;
@@ -32,6 +33,7 @@ function SplitLogo({ size = 28 }: { size?: number }) {
 
 export function AppHeader({ title, showBack }: AppHeaderProps) {
   const { address, cUSDBalance, disconnect } = useWallet();
+  const { unreadCount } = useNotifications();
   const pathname = usePathname();
   const router = useRouter();
   
@@ -98,6 +100,39 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
 
       {/* Right: Wallet badge + disconnect */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {address && (
+          <button
+            onClick={() => router.push('/app/notifications')}
+            style={{
+              position: 'relative',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              border: '1px solid #2C2C2C',
+              background: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#8A8A8A',
+            }}
+            title="Open notifications"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '6px',
+                right: '6px',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#00C896',
+              }} />
+            )}
+          </button>
+        )}
+
         {address && (
           <div style={{
             background: '#161616',

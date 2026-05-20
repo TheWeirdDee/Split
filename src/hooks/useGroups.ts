@@ -31,7 +31,7 @@ export const useGroups = () => {
 
     const { data: groupData, error: groupError } = await supabase
       .from('groups')
-      .select('*, group_members(wallet_address)')
+      .select('*, group_members(*)')
       .in('id', groupIds)
       .order('created_at', { ascending: false });
 

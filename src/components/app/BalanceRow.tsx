@@ -9,23 +9,24 @@ import Link from 'next/link';
 
 interface BalanceRowProps {
   address: string;
+  displayName?: string;
   amount: number;
   type: 'owe' | 'owed';
   groupId: string;
   onRemind?: () => void;
 }
 
-export const BalanceRow = ({ address, amount, type, groupId, onRemind }: BalanceRowProps) => {
+export const BalanceRow = ({ address, displayName, amount, type, groupId, onRemind }: BalanceRowProps) => {
   return (
     <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
       <div className="flex items-center gap-3">
         <WalletAvatar address={address} size={40} />
         <div className="flex flex-col">
           <span className="text-sm font-medium text-text-primary">
-            {truncateAddress(address)}
+            {displayName || truncateAddress(address)}
           </span>
           <p className="text-xs text-text-secondary">
-            {type === 'owe' ? 'You owe them' : 'Owes you'}
+            {type === 'owe' ? 'You owe' : 'Owes you'}
           </p>
         </div>
       </div>

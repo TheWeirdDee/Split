@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
 import { useGroups } from '@/hooks/useGroups';
+import { useUserBalance } from '@/hooks/useUserBalance';
 import { BalanceSummaryCard } from '@/components/app/BalanceSummaryCard';
 import { GroupCard } from '@/components/app/GroupCard';
 import { Button } from '@/components/common/Button';
@@ -158,13 +159,14 @@ export default function AppHome() {
 
 function GroupsList({ address }: { address: string }) {
   const { groups, loading } = useGroups();
+  const { totalOwed, totalOwing } = useUserBalance();
 
   return (
-    <div style={{ padding: '0 16px', paddingTop: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
         <BalanceSummaryCard 
-          totalOwed={0}
-          totalOwing={0}
+          totalOwed={totalOwed}
+          totalOwing={totalOwing}
         />
       </div>
 

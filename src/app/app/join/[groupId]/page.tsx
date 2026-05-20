@@ -19,6 +19,7 @@ export default function JoinGroupPage() {
   const [group, setGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [displayName, setDisplayName] = useState('');
   const [loadingText, setLoadingText] = useState('Joining Group (cUSD)...');
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export default function JoinGroupPage() {
       const { error } = await supabase.from('group_members').insert({
         group_id: groupId,
         wallet_address: address.toLowerCase(),
+        display_name: displayName || null,
         onchain_tx: tx,
       });
 
@@ -138,6 +140,12 @@ export default function JoinGroupPage() {
           <p className="text-sm leading-relaxed text-text-secondary">
             You've been invited to join this group. Once joined, you can split bills and settle debts with other members using cUSD.
           </p>
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Your display name (optional)"
+            className="w-full rounded-2xl border border-[#2C2C2C] bg-[#121212] p-4 text-sm text-text-primary outline-none"
+          />
         </div>
 
         <Button 

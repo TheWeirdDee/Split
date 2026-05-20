@@ -15,7 +15,7 @@ interface GroupCardProps {
     id: string;
     name: string;
     emoji: string;
-    group_members: { wallet_address: string }[];
+    group_members: { wallet_address: string; display_name?: string }[];
   };
 }
 

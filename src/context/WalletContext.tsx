@@ -77,44 +77,47 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       if (force) alert('Please install MetaMask to use Split on desktop, or open in MiniPay on mobile');
       return;
     }
+
+    // Detect MiniPay FIRST before any other wallet checks
+    const isMP = !!(window.ethereum as any).isMiniPay;
+
     try {
-      if (force) {
+      if (force && !isMP) {
+        // Only request permissions popup for non-MiniPay wallets
         localStorage.removeItem('manualDisconnect');
-        // Always request permissions to force a wallet popup/account selection
         await window.ethereum.request({
           method: 'wallet_requestPermissions',
           params: [{ eth_accounts: {} }]
         });
       }
-      
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
+
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
       });
-      
-      // Switch to Celo Mainnet
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0xA4EC' }]
-        });
-      } catch (e: any) {
-        if (e.code === 4902) {
+
+      // Switch to Celo Mainnet — skip for MiniPay (always on Celo)
+      if (!isMP) {
+        try {
           await window.ethereum.request({
-            method: 'wallet_requestPermissions',
-            params: [{ eth_accounts: {} }]
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0xA4EC' }]
           });
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0xA4EC',
-              chainName: 'Celo Mainnet',
-              nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
-              rpcUrls: ['https://forno.celo.org'],
-              blockExplorerUrls: ['https://celoscan.io']
-            }]
-          });
+        } catch (e: any) {
+          if (e.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0xA4EC',
+                chainName: 'Celo Mainnet',
+                nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
+                rpcUrls: ['https://forno.celo.org'],
+                blockExplorerUrls: ['https://celoscan.io']
+              }]
+            });
+          }
         }
       }
+
       if (!accounts?.[0]) return;
       const addr = accounts[0];
       const { createWalletClient, custom } = await import('viem');
@@ -124,7 +127,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       });
       setAddress(addr);
       setWalletClient(client);
-      setIsMiniPay(window.ethereum?.isMiniPay === true);
+      setIsMiniPay(isMP);
       await refreshBalance();
     } catch (e: any) {
       if (force && e.code !== 4001) console.error('Connect error:', e);

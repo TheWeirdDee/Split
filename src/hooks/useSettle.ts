@@ -29,12 +29,6 @@ export const useSettle = () => {
         args: [CONTRACT_ADDRESS, amountRaw],
         chain: celo,
         account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
-        nonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
@@ -47,12 +41,6 @@ export const useSettle = () => {
         args: [groupIdBytes, creditor as `0x${string}`, amountRaw],
         chain: celo,
         account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
-        nonce: nonce + 1,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: settleTx });

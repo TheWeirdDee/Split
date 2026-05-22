@@ -1,7 +1,9 @@
 'use client';
+import React from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { AppHeader } from '@/components/app/AppHeader';
 import { BottomNav } from '@/components/app/BottomNav';
+import { ToastProvider } from '@/components/common/Toast';
 
 export default function AppLayout({ 
   children 
@@ -12,28 +14,30 @@ export default function AppLayout({
 
   // No chrome when not connected
   if (!isConnected) {
-    return <>{children}</>;
+    return <ToastProvider>{children}</ToastProvider>;
   }
 
   return (
-    <div style={{
-      maxWidth: '430px',
-      margin: '0 auto',
-      minHeight: '100vh',
-      background: '#0D0D0D',
-      position: 'relative',
-      borderLeft: '1px solid #2C2C2C',
-      borderRight: '1px solid #2C2C2C',
-    }}>
-      <AppHeader />
-      <main style={{
-        paddingTop: '56px',
-        paddingBottom: '80px',
+    <ToastProvider>
+      <div style={{
+        maxWidth: '430px',
+        margin: '0 auto',
         minHeight: '100vh',
+        background: '#0D0D0D',
+        position: 'relative',
+        borderLeft: '1px solid #2C2C2C',
+        borderRight: '1px solid #2C2C2C',
       }}>
-        {children}
-      </main>
-      <BottomNav />
-    </div>
+        <AppHeader />
+        <main style={{
+          paddingTop: '56px',
+          paddingBottom: '80px',
+          minHeight: '100vh',
+        }}>
+          {children}
+        </main>
+        <BottomNav />
+      </div>
+    </ToastProvider>
   );
 }

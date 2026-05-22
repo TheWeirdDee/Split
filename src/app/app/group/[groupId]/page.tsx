@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { useGroup } from '@/hooks/useGroups';
@@ -12,63 +12,71 @@ import { BalanceRow } from '@/components/app/BalanceRow';
 import { ExpenseCard } from '@/components/app/ExpenseCard';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
-import { Plus, UserPlus, Share2, PartyPopper, CheckCircle2, Trash2, Settings2, UserCheck, MessageCircle } from 'lucide-react';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { useToast } from '@/components/common/Toast';
+import { Plus, Share2, CheckCircle2, Trash2, MessageCircle, Paperclip, Send, Image as ImageIcon, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { generateInviteLink, copyToClipboard } from '@/lib/inviteLinks';
-import { cn } from '@/lib/utils';
-
 import { GroupIcon } from '@/components/common/GroupIcon';
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
   const router = useRouter();
   const { address } = useWallet();
+  const { showToast } = useToast();
   const { group, members, loading: groupLoading } = useGroup(groupId as string);
   const { balances, loading: balancesLoading } = useBalances(groupId as string);
   const { expenses, splits, loading: expensesLoading } = useExpenses(groupId as string);
   const { messages, loading: messagesLoading, sendMessage } = useGroupChat(groupId as string);
-  
+
   const [activeTab, setActiveTab] = useState<'balances' | 'expenses' | 'chat'>('balances');
-  const [showSettings, setShowSettings] = useState(false);
   const [manualAddress, setManualAddress] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [attachmentUrl, setAttachmentUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const inviteLink = generateInviteLink(groupId as string);
 
   const getMemberDisplayName = (walletAddress: string) => {
-    const member = members.find((member) => member.wallet_address.toLowerCase() === walletAddress.toLowerCase());
-    return member?.display_name || member?.wallet_address || walletAddress;
+    const member = members.find((m) => m.wallet_address.toLowerCase() === walletAddress.toLowerCase());
+    return member?.display_name || `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`;
   };
 
-  const handleShare = async () => {
+  // ─── Share (works in MiniPay) ──────────────────────────────────────────────
+  const handleShare = () => {
     const shareData = {
       title: `Join ${group?.name}`,
-      text: `Join my MiniPay Split group ${group?.name}:`,
+      text: `Join my Split group "${group?.name}":`,
       url: inviteLink,
     };
 
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (error) {
-        console.warn('Native share failed, falling back to clipboard.', error);
-      }
-    }
-
-    const copied = await copyToClipboard(inviteLink);
-    if (copied) {
-      alert('Invite link copied to clipboard!');
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share(shareData).catch(() => {
+        copyToClipboard(inviteLink).then((ok) => {
+          if (ok) showToast('Invite link copied!', 'success');
+          else showToast('Could not share. Please copy the link manually.', 'error');
+        });
+      });
     } else {
-      alert('Failed to share invite link. Please copy it manually.');
+      copyToClipboard(inviteLink).then((ok) => {
+        if (ok) showToast('Invite link copied!', 'success');
+        else showToast('Could not copy link.', 'error');
+      });
     }
   };
 
-  const createNotification = async (userAddress: string, title: string, body: string, actionUrl: string | null = null) => {
+  // ─── Create notification (reminder) ───────────────────────────────────────
+  const createNotification = async (
+    userAddress: string,
+    title: string,
+    body: string,
+    actionUrl: string | null = null
+  ) => {
     const { error } = await supabase.from('notifications').insert({
       user_address: userAddress.toLowerCase(),
       group_id: groupId,
@@ -79,34 +87,33 @@ export default function GroupDetailPage() {
       action_url: actionUrl,
       is_read: false,
     });
-
-    if (error) {
-      console.error('Failed to insert notification:', error);
-      throw error;
-    }
+    if (error) throw error;
   };
 
+  // ─── Remind ────────────────────────────────────────────────────────────────
   const handleRemind = async (targetAddress: string, amount: number) => {
     try {
-      const name = getMemberDisplayName(targetAddress);
+      const senderName = getMemberDisplayName(address || '');
+      const targetName = getMemberDisplayName(targetAddress);
       await createNotification(
         targetAddress,
-        'Payment Reminder',
-        `${getMemberDisplayName(address || '')} reminded you to pay ${amount.toFixed(2)} cUSD in ${group?.name}.`,
+        '💸 Payment Reminder',
+        `${senderName} reminds you to pay ${amount.toFixed(2)} cUSD in "${group?.name}".`,
         `/app/group/${groupId}`
       );
-      alert(`Reminder sent to ${name}.`);
-    } catch (error) {
-      alert('Failed to send reminder.');
+      showToast(`Reminder sent to ${targetName}!`, 'success');
+    } catch {
+      showToast('Failed to send reminder.', 'error');
     }
   };
 
+  // ─── Add member ────────────────────────────────────────────────────────────
   const handleAddManual = async () => {
     if (!manualAddress || !manualAddress.startsWith('0x')) {
-      alert('Please enter a valid wallet address');
+      showToast('Please enter a valid wallet address (0x…)', 'error');
       return;
     }
-    
+
     setIsAdding(true);
     try {
       const { error } = await supabase.from('group_members').insert({
@@ -114,318 +121,474 @@ export default function GroupDetailPage() {
         wallet_address: manualAddress.toLowerCase(),
         display_name: newMemberName || null,
       });
-
       if (error) throw error;
-      alert('Member added successfully!');
+      showToast('Member added!', 'success');
       setManualAddress('');
       setNewMemberName('');
-      window.location.reload(); // Refresh to show new member
-    } catch (err) {
-      console.error(err);
-      alert('Failed to add member. They might already be in the group.');
+      window.location.reload();
+    } catch {
+      showToast('Failed to add member. They may already be in the group.', 'error');
     } finally {
       setIsAdding(false);
     }
   };
 
+  // ─── Delete group ──────────────────────────────────────────────────────────
   const handleDeleteGroup = async () => {
-    if (!confirm('Are you sure you want to delete this group? This action cannot be undone.')) return;
-    
+    setShowDeleteConfirm(false);
     setIsDeleting(true);
     try {
       const { error } = await supabase.from('groups').delete().eq('id', groupId);
       if (error) throw error;
-      
       router.push('/app');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete group.');
+    } catch {
+      showToast('Failed to delete group.', 'error');
     } finally {
       setIsDeleting(false);
     }
   };
 
+  // ─── Send chat message ─────────────────────────────────────────────────────
+  const handleSendMessage = async () => {
+    if (!address || (!newMessage && !attachmentUrl)) return;
+    setIsSendingMessage(true);
+    try {
+      await sendMessage(groupId as string, address, newMessage || null, attachmentUrl || null);
+      setNewMessage('');
+      setAttachmentUrl('');
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch {
+      showToast('Failed to send message.', 'error');
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
   const isCreator = group?.created_by?.toLowerCase() === address?.toLowerCase();
 
-  if (groupLoading) return <div className="p-8 text-center">Loading...</div>;
+  if (groupLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif' }}>Loading group…</div>
+      </div>
+    );
+  }
 
   return (
     <>
       <AppHeader />
-      
-      <div className="pt-20 px-4 pb-24 space-y-6">
-        {/* Group Header Info */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#161616] border border-[#2C2C2C] rounded-xl flex items-center justify-center text-brand">
-              <GroupIcon name={group?.emoji || 'Users'} size={32} />
+
+      {/* Delete Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Group"
+        message={`Are you sure you want to delete "${group?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={handleDeleteGroup}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      <div className="pt-20 px-4 pb-28 space-y-5">
+        {/* ── Group Header ──────────────────────────────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+            <div style={{
+              width: '48px', height: '48px', flexShrink: 0,
+              background: '#161616', border: '1px solid #2C2C2C',
+              borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <GroupIcon name={group?.emoji || 'Users'} size={28} />
             </div>
-            <div>
-              <h1 className="clash-display font-bold text-xl">{group?.name}</h1>
-              <p className="text-xs text-[#8A8A8A]">{members.length} members</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {members.slice(0, 4).map((member) => (
-                  <span key={member.wallet_address} className="text-[10px] text-[#8A8A8A] bg-[#111] px-2 py-1 rounded-full">
-                    {member.display_name || member.wallet_address.slice(0, 6) + '...' + member.wallet_address.slice(-4)}
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{
+                fontFamily: 'Clash Display, sans-serif', fontWeight: '700',
+                fontSize: '20px', color: '#F7F3EC', margin: 0,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {group?.name}
+              </h1>
+              <p style={{ fontSize: '12px', color: '#8A8A8A', margin: '2px 0 0', fontFamily: 'DM Sans, sans-serif' }}>
+                {members.length} {members.length === 1 ? 'member' : 'members'}
+              </p>
+              <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {members.slice(0, 4).map((m) => (
+                  <span key={m.wallet_address} style={{
+                    fontSize: '10px', color: '#8A8A8A', background: '#111',
+                    padding: '2px 8px', borderRadius: '100px', fontFamily: 'DM Sans, sans-serif',
+                  }}>
+                    {m.display_name || `${m.wallet_address.slice(0, 6)}…${m.wallet_address.slice(-4)}`}
                   </span>
                 ))}
                 {members.length > 4 && (
-                  <span className="text-[10px] text-[#8A8A8A] bg-[#111] px-2 py-1 rounded-full">
+                  <span style={{ fontSize: '10px', color: '#8A8A8A', background: '#111', padding: '2px 8px', borderRadius: '100px' }}>
                     +{members.length - 4} more
                   </span>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             {isCreator && (
-              <button 
-                onClick={handleDeleteGroup}
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={isDeleting}
                 style={{
                   width: '36px', height: '36px',
                   background: 'rgba(255,92,92,0.1)',
                   border: '1px solid rgba(255,92,92,0.3)',
-                  borderRadius: '50%',
-                  color: '#FF5C5C',
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', cursor: 'pointer'
+                  borderRadius: '50%', color: '#FF5C5C',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', touchAction: 'manipulation',
                 }}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 style={{ width: '16px', height: '16px' }} />
               </button>
             )}
-            <Button size="icon" variant="secondary" onClick={handleShare}>
-              <Share2 className="w-4 h-4" />
-            </Button>
+            <button
+              onClick={handleShare}
+              style={{
+                width: '36px', height: '36px',
+                background: 'rgba(0,200,150,0.1)',
+                border: '1px solid rgba(0,200,150,0.3)',
+                borderRadius: '50%', color: '#00C896',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', touchAction: 'manipulation',
+              }}
+            >
+              <Share2 style={{ width: '16px', height: '16px' }} />
+            </button>
           </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex p-1 bg-[#161616] rounded-2xl border border-[#2C2C2C]">
-          <button 
-            onClick={() => setActiveTab('balances')}
-            style={{
-              flex: 1, paddingTop: '8px', paddingBottom: '8px', fontSize: '14px', fontWeight: '600',
-              borderRadius: '12px', transition: 'all 0.2s',
-              background: activeTab === 'balances' ? '#2C2C2C' : 'transparent',
-              color: activeTab === 'balances' ? '#00C896' : '#8A8A8A',
-              border: 'none', cursor: 'pointer'
-            }}
-          >
-            Balances
-          </button>
-          <button 
-            onClick={() => setActiveTab('expenses')}
-            style={{
-              flex: 1, paddingTop: '8px', paddingBottom: '8px', fontSize: '14px', fontWeight: '600',
-              borderRadius: '12px', transition: 'all 0.2s',
-              background: activeTab === 'expenses' ? '#2C2C2C' : 'transparent',
-              color: activeTab === 'expenses' ? '#00C896' : '#8A8A8A',
-              border: 'none', cursor: 'pointer'
-            }}
-          >
-            Expenses
-          </button>
-          {members.length > 1 && (
-            <button 
-              onClick={() => setActiveTab('chat')}
+        {/* ── Tab Switcher ──────────────────────────────────────────── */}
+        <div style={{
+          display: 'flex', padding: '4px', background: '#161616',
+          borderRadius: '16px', border: '1px solid #2C2C2C',
+        }}>
+          {(['balances', 'expenses', ...(members.length > 1 ? ['chat'] : [])] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
               style={{
-                flex: 1, paddingTop: '8px', paddingBottom: '8px', fontSize: '14px', fontWeight: '600',
-                borderRadius: '12px', transition: 'all 0.2s',
-                background: activeTab === 'chat' ? '#2C2C2C' : 'transparent',
-                color: activeTab === 'chat' ? '#00C896' : '#8A8A8A',
-                border: 'none', cursor: 'pointer'
+                flex: 1, padding: '9px 0', fontSize: '14px', fontWeight: '600',
+                borderRadius: '12px', transition: 'all 0.2s', border: 'none',
+                cursor: 'pointer', touchAction: 'manipulation',
+                fontFamily: 'DM Sans, sans-serif',
+                background: activeTab === tab ? '#2C2C2C' : 'transparent',
+                color: activeTab === tab ? '#00C896' : '#8A8A8A',
               }}
             >
-              Chat
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
-          )}
+          ))}
         </div>
 
-        {activeTab === 'balances' ? (
-          <div className="space-y-4 animate-fade-in">
+        {/* ── Balances Tab ──────────────────────────────────────────── */}
+        {activeTab === 'balances' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {balances.length > 0 ? (
               <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
                 {balances.map((balance, i) => {
                   const isUserFrom = balance.from.toLowerCase() === address?.toLowerCase();
                   const isUserTo = balance.to.toLowerCase() === address?.toLowerCase();
-                  
                   if (!isUserFrom && !isUserTo) return null;
-
                   return (
                     <div key={i} className="px-4">
-                          <BalanceRow 
+                      <BalanceRow
                         address={isUserFrom ? balance.to : balance.from}
                         displayName={getMemberDisplayName(isUserFrom ? balance.to : balance.from)}
                         amount={balance.amount}
                         type={isUserFrom ? 'owe' : 'owed'}
                         groupId={groupId as string}
-                        onRemind={isUserFrom ? undefined : () => handleRemind(balance.from, balance.amount)}
+                        onRemind={!isUserFrom ? () => handleRemind(balance.from, balance.amount) : undefined}
                       />
                     </div>
                   );
                 })}
               </Card>
             ) : (
-              <div className="text-center py-12 border-2 border-dashed border-[#2C2C2C] rounded-2xl flex flex-col items-center gap-2">
-                <CheckCircle2 className="w-8 h-8 text-[#4A4A4A] mb-2" />
-                <p className="text-[#8A8A8A]">Everyone is settled!</p>
+              <div style={{
+                textAlign: 'center', padding: '48px 24px',
+                border: '2px dashed #2C2C2C', borderRadius: '20px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+              }}>
+                <CheckCircle2 style={{ width: '32px', height: '32px', color: '#4A4A4A' }} />
+                <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', margin: 0 }}>Everyone is settled!</p>
               </div>
             )}
-            
-            {/* Add Member Section */}
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {!isAdding ? (
-                <button 
-                  onClick={() => setIsAdding(true)}
-                  style={{
-                    width: '100%', padding: '12px',
-                    background: 'transparent', border: '1px dashed #2C2C2C',
-                    borderRadius: '16px', color: '#8A8A8A',
-                    fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  + Add Member by Address
-                </button>
-              ) : (
-                <div className="space-y-3">
+
+            {/* Add Member */}
+            {!isAdding ? (
+              <button
+                onClick={() => setIsAdding(true)}
+                style={{
+                  width: '100%', padding: '14px',
+                  background: 'transparent', border: '1px dashed #2C2C2C',
+                  borderRadius: '16px', color: '#8A8A8A',
+                  fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
+                  cursor: 'pointer', touchAction: 'manipulation',
+                }}
+              >
+                + Add Member by Address
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <input
                   value={manualAddress}
-                  onChange={e => setManualAddress(e.target.value)}
-                  placeholder="0x... wallet address"
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="0x… wallet address"
                   style={{
-                    width: '100%', height: '44px',
-                    background: '#161616', border: '1px solid #2C2C2C',
-                    borderRadius: '12px', padding: '0 12px',
-                    color: '#F7F3EC', fontSize: '14px', outline: 'none'
+                    width: '100%', height: '46px', background: '#161616',
+                    border: '1px solid #2C2C2C', borderRadius: '12px',
+                    padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
+                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
                   }}
                 />
                 <input
                   value={newMemberName}
-                  onChange={e => setNewMemberName(e.target.value)}
+                  onChange={(e) => setNewMemberName(e.target.value)}
                   placeholder="Display name (optional)"
                   style={{
-                    width: '100%', height: '44px',
-                    background: '#161616', border: '1px solid #2C2C2C',
-                    borderRadius: '12px', padding: '0 12px',
-                    color: '#F7F3EC', fontSize: '14px', outline: 'none'
+                    width: '100%', height: '46px', background: '#161616',
+                    border: '1px solid #2C2C2C', borderRadius: '12px',
+                    padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
+                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
                   }}
                 />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleAddManual}>Add</Button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button size="sm" onClick={handleAddManual} disabled={isAdding}>Add</Button>
                   <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
                 </div>
               </div>
-              )}
-            </div>
+            )}
           </div>
-        ) : activeTab === 'expenses' ? (
-          <div className="space-y-3 animate-fade-in">
-            {expenses.length > 0 ? (
+        )}
+
+        {/* ── Expenses Tab ──────────────────────────────────────────── */}
+        {activeTab === 'expenses' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {expensesLoading ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} style={{ height: '72px', background: '#161616', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
+              ))
+            ) : expenses.length > 0 ? (
               expenses.map((expense) => {
-                const userSplit = splits.find(s => s.expense_id === expense.id && s.wallet_address.toLowerCase() === address?.toLowerCase());
+                const userSplit = splits.find(
+                  (s) => s.expense_id === expense.id && s.wallet_address.toLowerCase() === address?.toLowerCase()
+                );
                 return (
-                  <ExpenseCard 
-                    key={expense.id} 
-                    expense={expense} 
-                    userShare={userSplit ? parseFloat(userSplit.amount) : 0} 
+                  <ExpenseCard
+                    key={expense.id}
+                    expense={expense}
+                    userShare={userSplit ? parseFloat(userSplit.amount) : 0}
                   />
                 );
               })
             ) : (
-              <div className="text-center py-12 text-[#8A8A8A]">
+              <div style={{
+                textAlign: 'center', padding: '48px 24px', color: '#8A8A8A',
+                fontFamily: 'DM Sans, sans-serif',
+              }}>
                 No expenses logged yet.
               </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-text-primary">Group Chat</p>
-                <p className="text-xs text-text-secondary">Keep everyone in sync, share images and links.</p>
-              </div>
+        )}
+
+        {/* ── Chat Tab ──────────────────────────────────────────────── */}
+        {activeTab === 'chat' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <MessageCircle style={{ width: '16px', height: '16px', color: '#00C896' }} />
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: '600', fontSize: '14px', color: '#F7F3EC', margin: 0 }}>
+                Group Chat
+              </p>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: '#8A8A8A', margin: 0 }}>
+                · {messages.length} messages
+              </p>
             </div>
 
-            {messagesLoading ? (
-              [1, 2, 3].map((i) => <div key={i} className="h-20 bg-surface-2 rounded-3xl animate-pulse" />)
-            ) : messages.length > 0 ? (
-              <div className="space-y-3">
-                {messages.map((message) => {
-                  const senderName = getMemberDisplayName(message.sender);
-                  const isImage = message.attachment_url?.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+            {/* Messages */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {messagesLoading ? (
+                [1, 2, 3].map((i) => (
+                  <div key={i} style={{ height: '64px', background: '#161616', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
+                ))
+              ) : messages.length > 0 ? (
+                messages.map((msg: any) => {
+                  const senderName = getMemberDisplayName(msg.sender);
+                  const isOwn = msg.sender.toLowerCase() === address?.toLowerCase();
+                  const isImage = msg.attachment_url?.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                  const isVideo = msg.attachment_url?.match(/\.(mp4|webm|ogg|mov)$/i);
+
                   return (
-                    <Card key={message.id} className="p-4 bg-[#121212] border border-[#2C2C2C]">
-                      <div className="flex items-center justify-between gap-3 mb-2">
-                        <span className="text-xs text-text-secondary">{senderName}</span>
-                        <span className="text-[10px] text-[#6d6d6d]">
-                          {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div
+                      key={msg.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: isOwn ? 'flex-end' : 'flex-start',
+                      }}
+                    >
+                      {!isOwn && (
+                        <span style={{
+                          fontSize: '11px', color: '#00C896', marginBottom: '4px',
+                          fontFamily: 'DM Sans, sans-serif', fontWeight: '600', paddingLeft: '4px',
+                        }}>
+                          {senderName}
                         </span>
-                      </div>
-                      {message.text && <p className="text-sm text-text-primary mb-2">{message.text}</p>}
-                      {message.attachment_url && (
-                        <div className="rounded-2xl overflow-hidden bg-[#0e0e0e] border border-[#2c2c2c]">
-                          {isImage ? (
-                            <img src={message.attachment_url} alt="attachment" className="w-full object-cover" />
-                          ) : (
-                            <a href={message.attachment_url} target="_blank" rel="noreferrer" className="block p-3 text-sm text-brand underline">
-                              View attachment
-                            </a>
-                          )}
-                        </div>
                       )}
-                    </Card>
+                      <div style={{
+                        maxWidth: '80%',
+                        background: isOwn ? 'rgba(0,200,150,0.12)' : '#1A1A1A',
+                        border: `1px solid ${isOwn ? 'rgba(0,200,150,0.25)' : '#2C2C2C'}`,
+                        borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                        padding: '10px 14px',
+                        overflow: 'hidden',
+                      }}>
+                        {msg.text && (
+                          <p style={{
+                            fontSize: '14px', color: '#F7F3EC', margin: 0,
+                            fontFamily: 'DM Sans, sans-serif', lineHeight: '1.5',
+                            marginBottom: msg.attachment_url ? '8px' : 0,
+                          }}>
+                            {msg.text}
+                          </p>
+                        )}
+                        {msg.attachment_url && isImage && (
+                          <img
+                            src={msg.attachment_url}
+                            alt="attachment"
+                            style={{ width: '100%', borderRadius: '10px', display: 'block', maxHeight: '220px', objectFit: 'cover' }}
+                          />
+                        )}
+                        {msg.attachment_url && isVideo && (
+                          <video
+                            src={msg.attachment_url}
+                            controls
+                            style={{ width: '100%', borderRadius: '10px', display: 'block', maxHeight: '220px' }}
+                          />
+                        )}
+                        {msg.attachment_url && !isImage && !isVideo && (
+                          <a
+                            href={msg.attachment_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '13px', color: '#00C896', fontFamily: 'DM Sans, sans-serif' }}
+                          >
+                            📎 View attachment
+                          </a>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: '10px', color: '#4A4A4A', marginTop: '3px',
+                        fontFamily: 'DM Mono, monospace', paddingLeft: isOwn ? 0 : '4px',
+                        paddingRight: isOwn ? '4px' : 0,
+                      }}>
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-[#8A8A8A] border border-dashed border-[#2C2C2C] rounded-2xl">
-                No chat messages yet. Send the first update.
+                })
+              ) : (
+                <div style={{
+                  textAlign: 'center', padding: '40px 24px',
+                  border: '1px dashed #2C2C2C', borderRadius: '20px',
+                  color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
+                }}>
+                  No messages yet — say hello! 👋
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Attachment preview */}
+            {attachmentUrl && (
+              <div style={{
+                background: '#161616', border: '1px solid #2C2C2C', borderRadius: '12px', padding: '10px 12px',
+                display: 'flex', alignItems: 'center', gap: '8px',
+              }}>
+                {attachmentUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                  <img src={attachmentUrl} alt="preview" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
+                ) : attachmentUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                  <Video style={{ width: '24px', height: '24px', color: '#00C896' }} />
+                ) : (
+                  <Paperclip style={{ width: '20px', height: '20px', color: '#8A8A8A' }} />
+                )}
+                <span style={{ fontSize: '12px', color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {attachmentUrl}
+                </span>
+                <button onClick={() => setAttachmentUrl('')} style={{ background: 'none', border: 'none', color: '#FF5C5C', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>×</button>
               </div>
             )}
 
-            <div className="space-y-3">
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                rows={3}
-                placeholder="Write a message..."
-                className="w-full rounded-3xl border border-[#2C2C2C] bg-[#121212] p-4 text-sm text-text-primary outline-none"
-              />
-              <input
-                value={attachmentUrl}
-                onChange={(e) => setAttachmentUrl(e.target.value)}
-                placeholder="Add image or file URL (optional)"
-                className="w-full rounded-3xl border border-[#2C2C2C] bg-[#121212] p-4 text-sm text-text-primary outline-none"
-              />
-              <Button
-                className="w-full"
-                onClick={async () => {
-                  if (!address) return;
-                  if (!newMessage && !attachmentUrl) return;
-
-                  await sendMessage(groupId as string, address, newMessage || null, attachmentUrl || null);
-                  setNewMessage('');
-                  setAttachmentUrl('');
+            {/* Message input */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1 }}>
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  rows={2}
+                  placeholder="Write a message…"
+                  style={{
+                    width: '100%', background: '#161616', border: '1px solid #2C2C2C',
+                    borderRadius: '16px', padding: '12px 14px', color: '#F7F3EC',
+                    fontSize: '14px', outline: 'none', resize: 'none',
+                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box', lineHeight: '1.5',
+                  }}
+                />
+                <input
+                  value={attachmentUrl}
+                  onChange={(e) => setAttachmentUrl(e.target.value)}
+                  placeholder="Paste image/video URL (optional)"
+                  style={{
+                    width: '100%', height: '38px', background: '#0D0D0D',
+                    border: '1px solid #2C2C2C', borderTop: 'none',
+                    borderRadius: '0 0 12px 12px', padding: '0 12px',
+                    color: '#8A8A8A', fontSize: '12px', outline: 'none',
+                    fontFamily: 'DM Mono, monospace', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleSendMessage}
+                disabled={isSendingMessage || (!newMessage && !attachmentUrl)}
+                style={{
+                  width: '48px', height: '48px', flexShrink: 0,
+                  background: '#00C896', border: 'none', borderRadius: '14px',
+                  color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', touchAction: 'manipulation',
+                  opacity: (!newMessage && !attachmentUrl) ? 0.4 : 1,
                 }}
               >
-                Send message
-              </Button>
+                <Send style={{ width: '18px', height: '18px' }} />
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[430px] px-6 pointer-events-none">
-        <Button 
-          className="w-full h-14 rounded-2xl shadow-xl shadow-brand/20 pointer-events-auto"
+      {/* ── FAB: Add Expense ─────────────────────────────────────────── */}
+      <div style={{
+        position: 'fixed', bottom: '88px', left: '50%', transform: 'translateX(-50%)',
+        width: 'calc(100% - 48px)', maxWidth: '382px', pointerEvents: 'none',
+      }}>
+        <Button
+          className="w-full h-14 rounded-2xl shadow-xl"
           onClick={() => router.push(`/app/group/${groupId}/add`)}
-          style={{ background: '#00C896', color: '#000', fontWeight: '700' }}
+          style={{ background: '#00C896', color: '#000', fontWeight: '700', pointerEvents: 'auto', touchAction: 'manipulation' }}
         >
-          <Plus className="w-6 h-6 mr-2" />
+          <Plus style={{ width: '22px', height: '22px', marginRight: '8px' }} />
           Add Expense
         </Button>
       </div>

@@ -9,7 +9,7 @@ import { useUserBalance } from '@/hooks/useUserBalance';
 import { BalanceSummaryCard } from '@/components/app/BalanceSummaryCard';
 import { GroupCard } from '@/components/app/GroupCard';
 import { Button } from '@/components/common/Button';
-import { Wallet2 } from 'lucide-react';
+import { DailyCheckIn } from '@/components/app/DailyCheckIn';
 
 export default function AppHome() {
   const { isConnected, address, isMiniPay, isInitialLoading, connect } = useWallet();
@@ -163,6 +163,10 @@ function GroupsList({ address }: { address: string }) {
 
   return (
     <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
+        <DailyCheckIn />
+      </div>
+
       <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
         <BalanceSummaryCard 
           totalOwed={totalOwed}

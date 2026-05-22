@@ -74,9 +74,13 @@ ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expense_splits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settlements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all" ON groups FOR ALL USING (true);
 CREATE POLICY "Allow all" ON group_members FOR ALL USING (true);
 CREATE POLICY "Allow all" ON expenses FOR ALL USING (true);
 CREATE POLICY "Allow all" ON expense_splits FOR ALL USING (true);
 CREATE POLICY "Allow all" ON settlements FOR ALL USING (true);
+CREATE POLICY "Allow all" ON notifications FOR ALL USING (true);
+CREATE POLICY "Allow all" ON messages FOR ALL USING (true);

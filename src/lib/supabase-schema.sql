@@ -1,5 +1,5 @@
 -- User profiles (display names, avatars, daily streaks)
-CREATE TABLE user_profiles (
+CREATE TABLE IF NOT EXISTS user_profiles (
   wallet_address TEXT PRIMARY KEY,
   display_name TEXT,
   avatar_emoji TEXT DEFAULT '👤',
@@ -9,7 +9,7 @@ CREATE TABLE user_profiles (
 );
 
 -- Reminder tracking (for auto-debit logic)
-CREATE TABLE reminders (
+CREATE TABLE IF NOT EXISTS reminders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
   from_address TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE reminders (
   sent_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE groups (
+CREATE TABLE IF NOT EXISTS groups (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   emoji TEXT DEFAULT 'Users',
@@ -28,7 +28,7 @@ CREATE TABLE groups (
   onchain_tx TEXT
 );
 
-CREATE TABLE group_members (
+CREATE TABLE IF NOT EXISTS group_members (
   group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
   wallet_address TEXT NOT NULL,
   display_name TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE group_members (
   PRIMARY KEY (group_id, wallet_address)
 );
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_address TEXT NOT NULL,
   group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
@@ -50,7 +50,7 @@ CREATE TABLE notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
   sender TEXT NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE expenses (
+CREATE TABLE IF NOT EXISTS expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
   description TEXT NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE expenses (
   onchain_tx TEXT
 );
 
-CREATE TABLE expense_splits (
+CREATE TABLE IF NOT EXISTS expense_splits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   expense_id UUID REFERENCES expenses(id) ON DELETE CASCADE,
   wallet_address TEXT NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE expense_splits (
   is_payer BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE settlements (
+CREATE TABLE IF NOT EXISTS settlements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id TEXT NOT NULL,
   debtor TEXT NOT NULL,

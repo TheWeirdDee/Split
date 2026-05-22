@@ -1,3 +1,23 @@
+-- User profiles (display names, avatars, daily streaks)
+CREATE TABLE user_profiles (
+  wallet_address TEXT PRIMARY KEY,
+  display_name TEXT,
+  avatar_emoji TEXT DEFAULT '👤',
+  streak_count INTEGER DEFAULT 0,
+  last_checkin DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Reminder tracking (for auto-debit logic)
+CREATE TABLE reminders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+  from_address TEXT NOT NULL,
+  to_address TEXT NOT NULL,
+  amount DECIMAL(18,6) NOT NULL,
+  sent_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE TABLE groups (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

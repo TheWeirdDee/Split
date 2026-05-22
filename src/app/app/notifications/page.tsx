@@ -1,83 +1,193 @@
-"use client";
-
-import { AppHeader } from '@/components/app/AppHeader';
+'use client';
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Card } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { Bell } from 'lucide-react';
+import { Bell, Check, CheckCheck, ChevronRight, Trash2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useWallet } from '@/context/WalletContext';
+
+function timeAgo(dateStr: string): string {
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+const TYPE_ICON: Record<string, string> = {
+  reminder: '💸',
+  payment: '✅',
+  join: '👥',
+  expense: '🧾',
+  system: '🔔',
+};
 
 export default function NotificationsPage() {
-  const { notifications, loading, markAsRead, markAllRead, unreadCount } = useNotifications();
+  const router = useRouter();
+  const { address } = useWallet();
+  const { notifications, loading, markAsRead, markAllRead, fetchNotifications, unreadCount } = useNotifications();
+
+  const handleTap = async (n: any) => {
+    if (!n.is_read) await markAsRead(n.id);
+    if (n.action_url) router.push(n.action_url);
+  };
+
+  const handleDeleteAll = async () => {
+    if (!address) return;
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_address', address.toLowerCase());
+    fetchNotifications();
+  };
 
   return (
-    <>
-      <AppHeader title="Notifications" showBack />
-      <div className="pt-20 px-4 pb-24 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#161616] border border-[#2C2C2C] flex items-center justify-center text-brand">
-              <Bell className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-text-primary">Notifications</p>
-              <p className="text-xs text-text-secondary">
-                {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}
-              </p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={markAllRead}>
-            Mark all read
-          </Button>
+    <div style={{ padding: '0 0 24px', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{
+        padding: '20px 16px 16px',
+        borderBottom: '1px solid #1A1A1A',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Bell style={{ width: '20px', height: '20px', color: '#00C896' }} />
+          <h1 style={{
+            fontFamily: 'Clash Display, sans-serif', fontWeight: '700',
+            fontSize: '20px', color: '#F7F3EC', margin: 0,
+          }}>
+            Notifications
+          </h1>
+          {unreadCount > 0 && (
+            <span style={{
+              background: '#FF5C5C', color: '#fff', fontSize: '11px',
+              fontWeight: '700', padding: '2px 8px', borderRadius: '100px',
+              fontFamily: 'DM Sans, sans-serif',
+            }}>
+              {unreadCount}
+            </span>
+          )}
         </div>
 
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllRead}
+              style={{
+                background: 'transparent', border: '1px solid #2C2C2C',
+                borderRadius: '10px', padding: '6px 12px',
+                color: '#8A8A8A', fontSize: '12px', fontFamily: 'DM Sans, sans-serif',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+                touchAction: 'manipulation',
+              }}
+            >
+              <CheckCheck style={{ width: '12px', height: '12px' }} />
+              Mark all read
+            </button>
+          )}
+          {notifications.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              style={{
+                background: 'transparent', border: '1px solid rgba(255,92,92,0.3)',
+                borderRadius: '10px', padding: '6px 10px',
+                color: '#FF5C5C', fontSize: '12px',
+                cursor: 'pointer', display: 'flex', alignItems: 'center',
+                touchAction: 'manipulation',
+              }}
+            >
+              <Trash2 style={{ width: '12px', height: '12px' }} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* List */}
+      <div style={{ padding: '8px 0' }}>
         {loading ? (
-          [1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-surface-2 rounded-3xl animate-pulse" />
+          [1, 2, 3, 4].map((i) => (
+            <div key={i} style={{
+              height: '72px', margin: '8px 16px',
+              background: '#161616', borderRadius: '16px',
+              animation: 'pulse 1.5s infinite',
+            }} />
           ))
         ) : notifications.length === 0 ? (
-          <Card className="p-6 text-center text-text-secondary">
-            No notifications yet. Reminders and group alerts will appear here.
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {notifications.map((notification) => (
-              <Card
-                key={notification.id}
-                className="p-4 border border-border"
-                style={{ background: notification.is_read ? '#0D0D0D' : '#111' }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">{notification.title}</p>
-                    <p className="text-xs text-text-secondary mt-1 leading-5">{notification.body}</p>
-                    <p className="text-[10px] text-[#6d6d6d] mt-3">
-                      {new Date(notification.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 items-end">
-                    {!notification.is_read && (
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-[#00c896] font-semibold">New</span>
-                    )}
-                    {notification.action_url && (
-                      <a
-                        href={notification.action_url}
-                        className="text-[11px] text-brand hover:underline"
-                      >
-                        Open
-                      </a>
-                    )}
-                    {!notification.is_read && (
-                      <Button size="icon" variant="secondary" onClick={() => markAsRead(notification.id)}>
-                        Read
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '64px 24px', gap: '12px',
+          }}>
+            <div style={{
+              width: '56px', height: '56px', background: '#161616',
+              border: '1px solid #2C2C2C', borderRadius: '18px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px',
+            }}>
+              🔕
+            </div>
+            <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', fontSize: '14px', margin: 0, textAlign: 'center' }}>
+              No notifications yet.<br />Reminders and group updates will appear here.
+            </p>
           </div>
+        ) : (
+          notifications.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => handleTap(n)}
+              style={{
+                width: '100%', padding: '14px 16px',
+                background: n.is_read ? 'transparent' : 'rgba(0,200,150,0.04)',
+                border: 'none', borderBottom: '1px solid #111',
+                display: 'flex', alignItems: 'flex-start', gap: '12px',
+                cursor: 'pointer', textAlign: 'left', touchAction: 'manipulation',
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: '40px', height: '40px', flexShrink: 0,
+                background: '#161616', border: '1px solid #2C2C2C',
+                borderRadius: '12px', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: '18px',
+                position: 'relative',
+              }}>
+                {TYPE_ICON[n.type] ?? '🔔'}
+                {!n.is_read && (
+                  <div style={{
+                    position: 'absolute', top: '-3px', right: '-3px',
+                    width: '10px', height: '10px', background: '#00C896',
+                    borderRadius: '50%', border: '2px solid #0D0D0D',
+                  }} />
+                )}
+              </div>
+
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontFamily: 'DM Sans, sans-serif', fontWeight: n.is_read ? '500' : '700',
+                  fontSize: '14px', color: '#F7F3EC', margin: 0, lineHeight: '1.4',
+                }}>
+                  {n.title}
+                </p>
+                <p style={{
+                  fontFamily: 'DM Sans, sans-serif', fontSize: '12px',
+                  color: '#8A8A8A', margin: '3px 0 0', lineHeight: '1.4',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {n.body}
+                </p>
+                <p style={{
+                  fontFamily: 'DM Mono, monospace', fontSize: '10px',
+                  color: '#4A4A4A', margin: '5px 0 0',
+                }}>
+                  {timeAgo(n.created_at)}
+                </p>
+              </div>
+
+              {n.action_url && (
+                <ChevronRight style={{ width: '16px', height: '16px', color: '#4A4A4A', flexShrink: 0, marginTop: '10px' }} />
+              )}
+            </button>
+          ))
         )}
       </div>
-    </>
+    </div>
   );
 }

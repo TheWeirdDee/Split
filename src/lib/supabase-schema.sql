@@ -97,10 +97,23 @@ ALTER TABLE settlements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all" ON groups;
 CREATE POLICY "Allow all" ON groups FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON group_members;
 CREATE POLICY "Allow all" ON group_members FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON expenses;
 CREATE POLICY "Allow all" ON expenses FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON expense_splits;
 CREATE POLICY "Allow all" ON expense_splits FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON settlements;
 CREATE POLICY "Allow all" ON settlements FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON notifications;
 CREATE POLICY "Allow all" ON notifications FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON messages;
 CREATE POLICY "Allow all" ON messages FOR ALL USING (true);

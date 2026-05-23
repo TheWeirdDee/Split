@@ -36,6 +36,11 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
   const { unreadCount } = useNotifications();
   const pathname = usePathname();
   const router = useRouter();
+
+  const formattedBalance = (() => {
+    const num = parseFloat(cUSDBalance);
+    return isNaN(num) ? '0.00' : num.toFixed(2);
+  })();
   
   return (
     <header style={{
@@ -58,7 +63,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
       boxSizing: 'border-box',
     }}>
       {/* Left: Logo or Back Button */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
         {showBack ? (
           <button
             onClick={() => router.back()}
@@ -70,7 +75,8 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               color: '#F7F3EC',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}
           >
             <ChevronLeft size={24} />
@@ -80,14 +86,17 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
             href="/" 
             style={{ 
               display: 'flex', alignItems: 'center', gap: '8px',
-              textDecoration: 'none'
+              textDecoration: 'none', flexShrink: 0
             }}
           >
             <SplitLogo size={28} />
           </Link>
         )}
         
-        <span className="clash-display font-bold text-[18px] tracking-tight text-[#f5f0e8] relative group">
+        <span 
+          className="clash-display font-bold text-[18px] tracking-tight text-[#f5f0e8] relative group truncate"
+          style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}
+        >
           <span className="relative z-10">{title || 'split'}</span>
           {!title && (
             <>
@@ -99,7 +108,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
       </div>
 
       {/* Right: Wallet badge + disconnect */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 1 }}>
         {address && (
           <button
             onClick={() => router.push('/app/notifications')}
@@ -115,6 +124,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               justifyContent: 'center',
               cursor: 'pointer',
               color: '#8A8A8A',
+              flexShrink: 0,
             }}
             title="Open notifications"
           >
@@ -134,12 +144,14 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
         )}
 
         {address && (
-          <div style={{
+          <div className="header-wallet-badge" style={{
             background: '#161616',
             border: '1px solid #2C2C2C',
             borderRadius: '2px',
             padding: '6px 12px',
             display: 'flex', alignItems: 'center', gap: '6px',
+            flexShrink: 1,
+            minWidth: 0,
           }}>
             {/* Colored avatar dot */}
             <div style={{
@@ -148,21 +160,23 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               background: '#00C896',
               flexShrink: 0,
             }} />
-            <span style={{
+            <span className="header-wallet-address" style={{
               fontFamily: 'DM Mono, monospace',
               fontSize: '11px',
               color: '#F7F3EC',
+              whiteSpace: 'nowrap',
             }}>
               {address.slice(0,6)}...{address.slice(-4)}
             </span>
-            <span style={{
+            <span className="header-wallet-balance" style={{
               fontFamily: 'DM Mono, monospace',
               fontSize: '11px',
               color: '#00C896',
               borderLeft: '1px solid #2C2C2C',
               paddingLeft: '6px',
+              whiteSpace: 'nowrap',
             }}>
-              {cUSDBalance} cUSD
+              {formattedBalance} cUSD
             </span>
           </div>
         )}

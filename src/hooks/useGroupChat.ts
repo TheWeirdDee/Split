@@ -38,22 +38,21 @@ export const useGroupChat = (groupId: string) => {
   }, [fetchMessages]);
 
   const sendMessage = async (groupId: string, sender: string, text: string | null, attachmentUrl: string | null) => {
-    try {
-      const { data, error } = await supabase.from('messages').insert([
-        {
-          group_id: groupId,
-          sender: sender.toLowerCase(),
-          text,
-          attachment_url: attachmentUrl,
-        },
-      ]);
+    const { data, error } = await supabase.from('messages').insert([
+      {
+        group_id: groupId,
+        sender: sender.toLowerCase(),
+        text,
+        attachment_url: attachmentUrl,
+      },
+    ]).select();
 
-      if (error) throw error;
-      if (data && data[0]) {
-        setMessages((prev) => [...prev, data[0]]);
-      }
-    } catch (err) {
-      console.error('Error sending message:', err);
+    if (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+    if (data && data[0]) {
+      setMessages((prev) => [...prev, data[0]]);
     }
   };
 

@@ -168,7 +168,7 @@ export default function SettingsPage() {
           <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif' }}>cUSD Balance</span>
             <span style={{ fontSize: '16px', fontWeight: '600', color: '#00C896', fontFamily: 'DM Mono, monospace' }}>
-              {cUSDBalance} cUSD
+              {(isNaN(parseFloat(cUSDBalance)) ? '0.00' : parseFloat(cUSDBalance).toFixed(2))} cUSD
             </span>
           </div>
         </div>

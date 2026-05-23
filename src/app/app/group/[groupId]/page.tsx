@@ -19,6 +19,44 @@ import { supabase } from '@/lib/supabase';
 import { generateInviteLink, copyToClipboard } from '@/lib/inviteLinks';
 import { GroupIcon } from '@/components/common/GroupIcon';
 
+const compressImageBase64 = (base64Str: string, maxWidth = 800, maxHeight = 800, quality = 0.6): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(base64Str);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
+    };
+    img.onerror = (err) => reject(err);
+  });
+};
+
 export default function GroupDetailPage() {
   const { groupId } = useParams();
   const router = useRouter();
@@ -39,6 +77,38 @@ export default function GroupDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File size must be less than 5MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      let result = event.target?.result as string;
+
+      if (file.type.startsWith('image/')) {
+        try {
+          result = await compressImageBase64(result);
+        } catch (err) {
+          console.error('Image compression failed, using original', err);
+        }
+      }
+
+      setAttachmentUrl(result);
+      showToast('File attached!', 'success');
+      if (e.target) e.target.value = '';
+    };
+    reader.onerror = () => {
+      showToast('Failed to read file', 'error');
+    };
+    reader.readAsDataURL(file);
+  };
 
   const inviteLink = generateInviteLink(groupId as string);
 
@@ -422,8 +492,8 @@ export default function GroupDetailPage() {
                 messages.map((msg: any) => {
                   const senderName = getMemberDisplayName(msg.sender);
                   const isOwn = msg.sender.toLowerCase() === address?.toLowerCase();
-                  const isImage = msg.attachment_url?.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-                  const isVideo = msg.attachment_url?.match(/\.(mp4|webm|ogg|mov)$/i);
+                  const isImage = msg.attachment_url?.match(/\.(jpeg|jpg|gif|png|webp)$/i) || msg.attachment_url?.startsWith('data:image/');
+                  const isVideo = msg.attachment_url?.match(/\.(mp4|webm|ogg|mov)$/i) || msg.attachment_url?.startsWith('data:video/');
 
                   return (
                     <div
@@ -512,15 +582,15 @@ export default function GroupDetailPage() {
                 background: '#161616', border: '1px solid #2C2C2C', borderRadius: '12px', padding: '10px 12px',
                 display: 'flex', alignItems: 'center', gap: '8px',
               }}>
-                {attachmentUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                {(attachmentUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) || attachmentUrl.startsWith('data:image/')) ? (
                   <img src={attachmentUrl} alt="preview" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
-                ) : attachmentUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                ) : (attachmentUrl.match(/\.(mp4|webm|ogg|mov)$/i) || attachmentUrl.startsWith('data:video/')) ? (
                   <Video style={{ width: '24px', height: '24px', color: '#00C896' }} />
                 ) : (
                   <Paperclip style={{ width: '20px', height: '20px', color: '#8A8A8A' }} />
                 )}
                 <span style={{ fontSize: '12px', color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {attachmentUrl}
+                  {attachmentUrl.startsWith('data:') ? 'Uploaded media file' : attachmentUrl}
                 </span>
                 <button onClick={() => setAttachmentUrl('')} style={{ background: 'none', border: 'none', color: '#FF5C5C', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>×</button>
               </div>
@@ -528,6 +598,26 @@ export default function GroupDetailPage() {
 
             {/* Message input */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: '48px', height: '48px', flexShrink: 0,
+                  background: '#161616', border: '1px solid #2C2C2C', borderRadius: '14px',
+                  color: '#8A8A8A', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', touchAction: 'manipulation',
+                }}
+                title="Upload image or video"
+              >
+                <ImageIcon style={{ width: '18px', height: '18px' }} />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*,video/*"
+                style={{ display: 'none' }}
+              />
+
               <div style={{ flex: 1 }}>
                 <textarea
                   value={newMessage}
@@ -548,7 +638,7 @@ export default function GroupDetailPage() {
                   }}
                 />
                 <input
-                  value={attachmentUrl}
+                  value={attachmentUrl.startsWith('data:') ? '' : attachmentUrl}
                   onChange={(e) => setAttachmentUrl(e.target.value)}
                   placeholder="Paste image/video URL (optional)"
                   style={{

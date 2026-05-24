@@ -636,7 +636,11 @@ export default function LandingPage() {
             <p className="dm-sans text-black/70 text-[14px] font-medium max-w-xl mx-auto leading-relaxed">The simplest way to handle group expenses. Instant settlements, zero awkward conversations.</p>
           </div>
           <div className="relative z-10 flex flex-col items-center gap-6">
-            <Link href="/app"><Button className="bg-black text-[#00C896] px-[32px] py-[12px] text-[15px] font-bold hover:bg-black/85 hover:scale-105 border-none">Open Split →</Button></Link>
+            <Link href="/app">
+              <button className="bg-black text-[#00C896] px-[32px] py-[12px] rounded-md text-[15px] font-bold hover:bg-[#111] hover:scale-105 transition-all">
+                Open Split →
+              </button>
+            </Link>
             <div className="flex flex-col items-center gap-3">
                <div className="bg-white p-2 rounded-xl shadow-2xl"><QRCodeSVG value="https://split-five-eta.vercel.app" size={80} /></div>
                <span className="dm-mono text-[9px] text-black/45 tracking-widest uppercase">Scan to open in MiniPay</span>

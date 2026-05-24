@@ -128,7 +128,8 @@ export default function AddExpensePage() {
         }));
       
       if (notificationsToInsert.length > 0) {
-        await supabase.from('notifications').insert(notificationsToInsert).catch(console.error);
+        const { error: notifError } = await supabase.from('notifications').insert(notificationsToInsert);
+        if (notifError) console.error(notifError);
       }
 
       router.push(`/app/group/${groupId}`);

@@ -58,7 +58,7 @@ export const useSettle = () => {
       const { data: profile } = await supabase.from('user_profiles').select('display_name').eq('wallet_address', address.toLowerCase()).single();
       const debtorName = profile?.display_name || 'Someone';
 
-      await supabase.from('notifications').insert({
+      const { error: notifError } = await supabase.from('notifications').insert({
         user_address: creditor.toLowerCase(),
         group_id: groupId,
         type: 'settlement',
@@ -67,7 +67,8 @@ export const useSettle = () => {
         actor: address.toLowerCase(),
         action_url: `/app/group/${groupId}`,
         is_read: false,
-      }).catch(console.error);
+      });
+      if (notifError) console.error(notifError);
 
       setStep('confirmed');
       await refreshBalance();

@@ -44,8 +44,9 @@ export const useNotifications = () => {
 
     if (!address) return;
 
+    const channelName = `notifications-${address.toLowerCase()}-${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel(`public:notifications:${address.toLowerCase()}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

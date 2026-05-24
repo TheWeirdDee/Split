@@ -41,7 +41,29 @@ export const useNotifications = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]);
+
+    if (!address) return;
+
+    const channel = supabase
+      .channel(`public:notifications:${address.toLowerCase()}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_address=eq.${address.toLowerCase()}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new as NotificationItem, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchNotifications, address]);
 
   const markAsRead = async (id: string) => {
     const { error } = await supabase

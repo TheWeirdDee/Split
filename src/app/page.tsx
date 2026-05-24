@@ -262,7 +262,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="hero-trust flex items-center gap-4 text-[11px] dm-mono text-[#3a3a3a] tracking-[0.12em] mt-12">
+            <div className="hero-trust flex items-center gap-4 text-[11px] dm-mono text-[#8A8A8A] tracking-[0.12em] mt-12">
               <span>✦ Built on Celo</span>
               <span>·</span>
               <span>Powered by MiniPay</span>
@@ -381,14 +381,14 @@ export default function LandingPage() {
              </div>
 
              {/* Card 2: Wide - Smart Debt Engine */}
-             <div className="feature-card relative bg-[#161616] rounded-md p-8 md:col-span-2 overflow-hidden transition-all group">
-               <div className="relative z-10 max-w-[55%]">
-                 <h3 className="clash-display font-bold text-2xl mb-4">
+             <div className="feature-card relative bg-[#161616] rounded-md p-6 md:p-8 md:col-span-2 overflow-hidden transition-all group">
+               <div className="relative z-10 max-w-[65%] md:max-w-[55%]">
+                 <h3 className="clash-display font-bold text-[17px] md:text-2xl mb-4 whitespace-nowrap">
                    <span className="bg-[#00C896] text-[#0D0D0D] px-2 py-0.5 rounded-sm">Smart Debt Engine</span>
                  </h3>
-                 <p className="dm-sans text-[#8A8A8A] text-sm leading-[1.6]">Our proprietary algorithm minimizes the number of transactions needed between group members. More efficiency, lower gas fees.</p>
+                 <p className="dm-sans text-[#8A8A8A] text-xs md:text-sm leading-[1.6]">Our proprietary algorithm minimizes the number of transactions needed between group members. More efficiency, lower gas fees.</p>
                </div>
-               <div className="absolute right-12 top-1/2 -translate-y-1/2 w-44 h-44">
+               <div className="absolute -right-4 md:right-12 top-1/2 -translate-y-1/2 w-28 h-28 md:w-44 md:h-44">
                   <img 
                     src="/images/brain.png?v=2" 
                     alt="Brain" 
@@ -430,14 +430,14 @@ export default function LandingPage() {
              </div>
 
              {/* Card 5: Wide - MiniPay Native */}
-             <div className="feature-card relative bg-[#161616] rounded-md p-8 md:col-span-2 overflow-hidden transition-all group">
+             <div className="feature-card relative bg-[#161616] rounded-md p-6 md:p-8 md:col-span-2 overflow-hidden transition-all group">
                <div className="relative z-10 max-w-[65%]">
-                 <h3 className="clash-display font-bold text-2xl mb-4">
+                 <h3 className="clash-display font-bold text-lg md:text-2xl mb-4 whitespace-nowrap">
                    <span className="bg-[#00C896] text-[#0D0D0D] px-2 py-0.5 rounded-sm">MiniPay Native</span>
                  </h3>
-                 <p className="dm-sans text-[#8A8A8A] text-sm leading-[1.6]">Built specifically for MiniPay. No extra apps, no new wallets. Use your existing cUSD balance directly.</p>
+                 <p className="dm-sans text-[#8A8A8A] text-xs md:text-sm leading-[1.6]">Built specifically for MiniPay. No extra apps, no new wallets. Use your existing cUSD balance directly.</p>
                </div>
-               <div className="absolute right-6 top-1/2 -translate-y-1/2 w-72 h-36">
+               <div className="absolute -right-8 md:right-6 top-1/2 -translate-y-1/2 w-44 h-24 md:w-72 md:h-36">
                  <img 
                    src="/images/minipay.png" 
                    alt="MiniPay" 

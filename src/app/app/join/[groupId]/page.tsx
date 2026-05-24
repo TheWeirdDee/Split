@@ -105,6 +105,20 @@ export default function JoinGroupPage() {
 
       if (error && error.code !== '23505') throw error; // Ignore if already member
 
+      // Notify creator
+      if (group?.created_by && group.created_by.toLowerCase() !== address.toLowerCase()) {
+        await supabase.from('notifications').insert({
+          user_address: group.created_by.toLowerCase(),
+          group_id: groupId,
+          type: 'group_joined',
+          title: '👋 New Member',
+          body: `${displayName || 'Someone'} joined ${group.name}`,
+          actor: address.toLowerCase(),
+          action_url: `/app/group/${groupId}`,
+          is_read: false,
+        });
+      }
+
       router.push(`/app/group/${groupId}`);
     } catch (err) {
       console.error('Joining failed:', err);

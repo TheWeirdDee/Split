@@ -113,6 +113,24 @@ export default function AddExpensePage() {
       const { error: splitError } = await supabase.from('expense_splits').insert(splitsToInsert);
       if (splitError) throw splitError;
 
+      const creatorName = members.find(m => m.wallet_address.toLowerCase() === address?.toLowerCase())?.display_name || 'Someone';
+      const notificationsToInsert = splitWith
+        .filter(memberAddress => memberAddress.toLowerCase() !== address?.toLowerCase())
+        .map(memberAddress => ({
+          user_address: memberAddress.toLowerCase(),
+          group_id: groupId,
+          type: 'expense',
+          title: '🧾 New Expense',
+          body: `${creatorName} added an expense for ${totalAmountNum} cUSD`,
+          actor: address?.toLowerCase(),
+          action_url: `/app/group/${groupId}`,
+          is_read: false,
+        }));
+      
+      if (notificationsToInsert.length > 0) {
+        await supabase.from('notifications').insert(notificationsToInsert).catch(console.error);
+      }
+
       router.push(`/app/group/${groupId}`);
     } catch (err) {
       console.error('Adding expense failed:', err);

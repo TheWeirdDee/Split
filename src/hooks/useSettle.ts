@@ -55,6 +55,20 @@ export const useSettle = () => {
 
       if (error) throw error;
 
+      const { data: profile } = await supabase.from('user_profiles').select('display_name').eq('wallet_address', address.toLowerCase()).single();
+      const debtorName = profile?.display_name || 'Someone';
+
+      await supabase.from('notifications').insert({
+        user_address: creditor.toLowerCase(),
+        group_id: groupId,
+        type: 'settlement',
+        title: '💸 Payment Received',
+        body: `${debtorName} paid you ${amount.toFixed(2)} cUSD`,
+        actor: address.toLowerCase(),
+        action_url: `/app/group/${groupId}`,
+        is_read: false,
+      }).catch(console.error);
+
       setStep('confirmed');
       await refreshBalance();
       return settleTx;

@@ -140,17 +140,18 @@ export default function GroupDetailPage() {
     }
   };
 
-  // ─── Create notification (reminder) ───────────────────────────────────────
+  // ─── Create notification ──────────────────────────────────────────────────
   const createNotification = async (
     userAddress: string,
     title: string,
     body: string,
-    actionUrl: string | null = null
+    actionUrl: string | null = null,
+    type: string = 'reminder'
   ) => {
     const { error } = await supabase.from('notifications').insert({
       user_address: userAddress.toLowerCase(),
       group_id: groupId,
-      type: 'reminder',
+      type,
       title,
       body,
       actor: address?.toLowerCase() || null,
@@ -192,6 +193,18 @@ export default function GroupDetailPage() {
         display_name: newMemberName || null,
       });
       if (error) throw error;
+
+      if (group?.created_by && group.created_by.toLowerCase() !== address?.toLowerCase()) {
+        const adderName = getMemberDisplayName(address || '');
+        createNotification(
+          group.created_by,
+          '👋 New Member',
+          `${adderName} added a new member to ${group.name}`,
+          `/app/group/${groupId}`,
+          'group_joined'
+        ).catch(console.error);
+      }
+
       showToast('Member added!', 'success');
       setManualAddress('');
       setNewMemberName('');
@@ -205,6 +218,10 @@ export default function GroupDetailPage() {
 
   // ─── Delete group ──────────────────────────────────────────────────────────
   const handleDeleteGroup = async () => {
+    if (balances.length > 0) {
+      showToast('Cannot delete group with unsettled debts.', 'error');
+      return;
+    }
     setShowDeleteConfirm(false);
     setIsDeleting(true);
     try {
@@ -224,6 +241,21 @@ export default function GroupDetailPage() {
     setIsSendingMessage(true);
     try {
       await sendMessage(groupId as string, address, newMessage || null, attachmentUrl || null);
+      
+      const senderName = getMemberDisplayName(address);
+      const textPreview = newMessage ? (newMessage.length > 50 ? newMessage.substring(0, 50) + '...' : newMessage) : 'Sent an attachment';
+      members.forEach((m) => {
+        if (m.wallet_address.toLowerCase() !== address.toLowerCase()) {
+          createNotification(
+            m.wallet_address,
+            `💬 New message in ${group?.name}`,
+            `${senderName}: ${textPreview}`,
+            `/app/group/${groupId}`,
+            'message'
+          ).catch(console.error);
+        }
+      });
+
       setNewMessage('');
       setAttachmentUrl('');
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -304,16 +336,18 @@ export default function GroupDetailPage() {
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             {isCreator && (
               <button
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isDeleting}
+                onClick={() => balances.length === 0 && setShowDeleteConfirm(true)}
+                disabled={isDeleting || balances.length > 0}
                 style={{
                   width: '36px', height: '36px',
                   background: 'rgba(255,92,92,0.1)',
                   border: '1px solid rgba(255,92,92,0.3)',
-                  borderRadius: '50%', color: '#FF5C5C',
+                  borderRadius: '50%', color: balances.length > 0 ? '#4A4A4A' : '#FF5C5C',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', touchAction: 'manipulation',
+                  cursor: balances.length > 0 ? 'not-allowed' : 'pointer', touchAction: 'manipulation',
+                  opacity: balances.length > 0 ? 0.5 : 1,
                 }}
+                title={balances.length > 0 ? "Settle debts to delete" : "Delete Group"}
               >
                 <Trash2 style={{ width: '16px', height: '16px' }} />
               </button>

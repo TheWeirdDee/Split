@@ -5,7 +5,7 @@ import { Card } from '@/components/common/Card';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { truncateAddress } from '@/lib/utils';
-import { CheckCircle2, PlusCircle, UserPlus, ExternalLink, Trash2, MoreVertical } from 'lucide-react';
+import { CheckCircle2, PlusCircle, UserPlus, ExternalLink, Trash2, MoreVertical, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function ActivityPage() {
@@ -34,9 +34,21 @@ export default function ActivityPage() {
         .eq('wallet_address', address.toLowerCase())
         .order('id', { ascending: false });
 
+      const { data: groupsCreated } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('created_by', address.toLowerCase());
+
+      const { data: groupJoins } = await supabase
+        .from('group_members')
+        .select('*, groups(*)')
+        .eq('wallet_address', address.toLowerCase());
+
       const merged = [
         ...(setts || []).map((s: any, idx) => ({ ...s, type: 'settlement', date: new Date(s.settled_at), localId: `s-${idx}` })),
-        ...(splits || []).map((s: any, idx) => ({ ...s, type: 'expense', date: new Date(s.expenses.created_at), localId: `e-${idx}` }))
+        ...(splits || []).map((s: any, idx) => ({ ...s, type: 'expense', date: new Date(s.expenses.created_at), localId: `e-${idx}` })),
+        ...(groupsCreated || []).map((g: any, idx) => ({ ...g, type: 'group_created', date: new Date(g.created_at), localId: `gc-${idx}` })),
+        ...(groupJoins || []).map((j: any, idx) => ({ ...j, type: 'group_joined', date: new Date(j.joined_at), localId: `gj-${idx}` }))
       ].sort((a: any, b: any) => b.date.getTime() - a.date.getTime());
 
       setActivities(merged);
@@ -71,11 +83,15 @@ export default function ActivityPage() {
           .from('settlements')
           .delete()
           .eq('id', activity.id);
-      } else {
+      } else if (activity.type === 'expense') {
         await supabase
           .from('expense_splits')
           .delete()
           .eq('id', activity.id);
+      } else {
+        setActivities(activities.filter((_, i) => i !== index));
+        setSwipedId(null);
+        return;
       }
       
       setActivities(activities.filter((_, i) => i !== index));
@@ -104,7 +120,7 @@ export default function ActivityPage() {
             .from('settlements')
             .delete()
             .eq('id', activity.id);
-        } else {
+        } else if (activity.type === 'expense') {
           await supabase
             .from('expense_splits')
             .delete()
@@ -187,8 +203,38 @@ export default function ActivityPage() {
           ) : activities.length > 0 ? (
             activities.map((act: any, i: number) => {
               const isSettlement = act.type === 'settlement';
+              const isExpense = act.type === 'expense';
+              const isGroupCreated = act.type === 'group_created';
+              const isGroupJoined = act.type === 'group_joined';
               const isPayer = act.debtor === address?.toLowerCase();
               const isSelected = selectMode && selectedItems.has(i);
+              
+              let icon;
+              let titleText;
+              let subText;
+              let borderColor;
+              
+              if (isSettlement) {
+                icon = <CheckCircle2 className="w-5 h-5 text-brand" />;
+                titleText = isPayer ? `You paid ${truncateAddress(act.creditor)}` : `${truncateAddress(act.debtor)} paid you`;
+                subText = `${act.date.toLocaleDateString()} • ${act.amount} cUSD`;
+                borderColor = "border-l-4 border-l-brand";
+              } else if (isExpense) {
+                icon = <PlusCircle className="w-5 h-5 text-blue-500" />;
+                titleText = `Added to expense: ${act.expenses?.description || 'Unknown'}`;
+                subText = `${act.date.toLocaleDateString()} • ${act.amount} cUSD`;
+                borderColor = "border-l-4 border-l-blue-500";
+              } else if (isGroupCreated) {
+                icon = <Users className="w-5 h-5 text-purple-500" />;
+                titleText = `Created group: ${act.name}`;
+                subText = `${act.date.toLocaleDateString()}`;
+                borderColor = "border-l-4 border-l-purple-500";
+              } else {
+                icon = <UserPlus className="w-5 h-5 text-green-500" />;
+                titleText = `Joined group: ${act.groups?.name || 'Unknown'}`;
+                subText = `${act.date.toLocaleDateString()}`;
+                borderColor = "border-l-4 border-l-green-500";
+              }
               
               return (
                 <div
@@ -198,22 +244,24 @@ export default function ActivityPage() {
                   onTouchEnd={(e) => handleTouchEnd(e, i)}
                 >
                   {/* Swipe-to-delete background */}
-                  <div className="absolute inset-0 bg-red-500/20 rounded-2xl flex items-center justify-end pr-4">
-                    {swipedId === i && (
-                      <button
-                        onClick={() => handleDeleteActivity(i)}
-                        className="text-red-500 font-medium text-sm"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
+                  {(isSettlement || isExpense) && (
+                    <div className="absolute inset-0 bg-red-500/20 rounded-2xl flex items-center justify-end pr-4">
+                      {swipedId === i && (
+                        <button
+                          onClick={() => handleDeleteActivity(i)}
+                          className="text-red-500 font-medium text-sm"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {/* Main card */}
                   <Card 
                     className={cn(
                       "flex items-center justify-between p-4 transition-transform duration-200",
-                      isSettlement ? "border-l-4 border-l-brand" : "border-l-4 border-l-blue-500",
+                      borderColor,
                       swipedId === i && "translate-x-[-60px]",
                       isSelected && "bg-surface-2"
                     )}
@@ -232,16 +280,14 @@ export default function ActivityPage() {
 
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center flex-shrink-0">
-                        {isSettlement ? <CheckCircle2 className="w-5 h-5 text-brand" /> : <PlusCircle className="w-5 h-5 text-blue-500" />}
+                        {icon}
                       </div>
                       <div>
                         <h4 className="text-sm font-semibold">
-                          {isSettlement 
-                            ? (isPayer ? `You paid ${truncateAddress(act.creditor)}` : `${truncateAddress(act.debtor)} paid you`)
-                            : `Added to expense: ${act.expenses.description}`}
+                          {titleText}
                         </h4>
                         <p className="text-[10px] text-text-muted">
-                          {act.date.toLocaleDateString()} • {act.amount} cUSD
+                          {subText}
                         </p>
                       </div>
                     </div>

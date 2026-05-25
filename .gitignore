@@ -69,7 +69,15 @@ hardhat.config.ts.last
 # Private/Sensitive Data
 /private/
 /scratch/
+<<<<<<< HEAD
 /docs/
+=======
+/scripts/
+/docs/
+!docs/
+!docs/FEATURES_IMPLEMENTATION_AND_SUPABASE_SETUP.md
+/public/brand-visual.png
+>>>>>>> restore-features-20260525
 *.csv
 *.key
 *.json

@@ -59,6 +59,14 @@
   @apply bg-border rounded-full;
 }
 
+input.time-input::-webkit-calendar-picker-indicator {
+  filter: invert(92%) sepia(6%) saturate(4%) hue-rotate(180deg) brightness(90%);
+}
+
+input.time-input {
+  color: #B0B0B0;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -77,5 +85,14 @@
     border-left: none !important;
     padding-left: 0 !important;
   }
+}
+
+/* Tint time picker icon to match theme (may vary by browser) */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: grayscale(1) brightness(0.8) opacity(0.9);
+}
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
 }
 

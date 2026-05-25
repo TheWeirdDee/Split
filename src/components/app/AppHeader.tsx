@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useWallet } from '@/context/WalletContext';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Bell, ChevronLeft } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -34,8 +34,8 @@ function SplitLogo({ size = 28 }: { size?: number }) {
 export function AppHeader({ title, showBack }: AppHeaderProps) {
   const { address, cUSDBalance, disconnect } = useWallet();
   const { unreadCount } = useNotifications();
-  const pathname = usePathname();
   const router = useRouter();
+  const unreadLabel = unreadCount > 99 ? '99+' : unreadCount.toString();
 
   const formattedBalance = (() => {
     const num = parseFloat(cUSDBalance);
@@ -129,17 +129,27 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
             title="Open notifications"
           >
             <Bell size={18} />
-            {unreadCount > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '6px',
-                right: '6px',
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: '#00C896',
-              }} />
-            )}
+            <span style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '-6px',
+              minWidth: '18px',
+              height: '18px',
+              borderRadius: '999px',
+              background: unreadCount > 0 ? '#FF5C5C' : '#2C2C2C',
+              color: unreadCount > 0 ? '#fff' : '#8A8A8A',
+              border: '2px solid #0D0D0D',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 4px',
+              fontSize: '10px',
+              fontWeight: '700',
+              fontFamily: 'DM Sans, sans-serif',
+              lineHeight: 1,
+            }}>
+              {unreadLabel}
+            </span>
           </button>
         )}
 

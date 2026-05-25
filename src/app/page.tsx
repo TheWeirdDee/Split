@@ -201,9 +201,13 @@ export default function LandingPage() {
           <Logo />
           
           <div className="hidden md:flex items-center gap-10 text-[14px] font-sans text-[#7a7a7a]">
-            {["Features", "How it works", "FAQ"].map((item) => (
-              <Link key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="relative group transition-colors hover:text-[#f5f0e8]">
-                {item}
+            {[
+              { label: "Features", href: "#features" },
+              { label: "How it works", href: "#how-it-works" },
+              { label: "FAQ", href: "/faq" },
+            ].map((item) => (
+              <Link key={item.label} href={item.href} className="relative group transition-colors hover:text-[#f5f0e8]">
+                {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00c896] transition-all group-hover:w-full" />
               </Link>
             ))}

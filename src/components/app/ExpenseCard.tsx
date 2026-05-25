@@ -17,6 +17,7 @@ interface ExpenseCardProps {
     total_amount: number;
     paid_by: string;
     created_at: string;
+    status?: string;
   };
   userShare: number;
 }
@@ -44,6 +45,9 @@ export const ExpenseCard = ({ expense, userShare }: ExpenseCardProps) => {
       
       <div className="text-right">
         <AmountDisplay amount={expense.total_amount} size="md" />
+        {expense.status === 'reversed' && (
+          <p className="text-[10px] text-money-negative mt-0.5">Reversed</p>
+        )}
         <p className="text-[10px] text-text-secondary mt-0.5">
           Your share: <span className="dm-mono">{userShare.toFixed(2)}</span>
         </p>

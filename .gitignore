@@ -69,6 +69,7 @@ hardhat.config.ts.last
 # Private/Sensitive Data
 /private/
 /scratch/
+/docs/
 *.csv
 *.key
 *.json

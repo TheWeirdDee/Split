@@ -29,7 +29,10 @@ export const useBalances = (groupId: string) => {
 
   useEffect(() => {
     if (!expensesLoading) {
-      const calculatedBalances = calculateGroupBalances(expenses, splits, settlements);
+      const activeExpenses = expenses.filter((expense) => (expense.status || 'active') === 'active');
+      const activeExpenseIds = new Set(activeExpenses.map((expense) => expense.id));
+      const activeSplits = splits.filter((split) => activeExpenseIds.has(split.expense_id));
+      const calculatedBalances = calculateGroupBalances(activeExpenses, activeSplits, settlements);
       setBalances(calculatedBalances);
       setLoading(false);
     }

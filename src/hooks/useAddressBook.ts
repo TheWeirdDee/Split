@@ -4,10 +4,12 @@ import { useWallet } from '@/context/WalletContext';
 
 export interface AddressBookEntry {
   id: string;
-  user_address: string;
+  owner_address: string;
   contact_address: string;
   nickname: string;
-  created_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useAddressBook = () => {
@@ -16,17 +18,21 @@ export const useAddressBook = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchEntries = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      setEntries([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     const { data, error } = await supabase
-      .from<AddressBookEntry>('address_book')
+      .from('address_book')
       .select('*')
-      .eq('user_address', address.toLowerCase())
-      .order('created_at', { ascending: false });
+      .eq('owner_address', address.toLowerCase())
+      .order('updated_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching address book entries:', error);
+      console.error('Error fetching address book:', error);
       setEntries([]);
     } else {
       setEntries(data || []);
@@ -38,41 +44,35 @@ export const useAddressBook = () => {
     fetchEntries();
   }, [fetchEntries]);
 
-  const upsertEntry = async (contactAddress: string, nickname: string) => {
+  const upsertEntry = async (contactAddress: string, nickname: string, notes: string | null = null) => {
     if (!address) return;
-
-    const payload = {
-      user_address: address.toLowerCase(),
-      contact_address: contactAddress.toLowerCase(),
-      nickname,
-    };
-
-    const { error } = await supabase
-      .from('address_book')
-      .upsert(payload, { onConflict: ['user_address', 'contact_address'] });
-
-    if (error) {
-      throw error;
-    }
-
+    const normalizedContact = contactAddress.toLowerCase();
+    const { error } = await supabase.from('address_book').upsert(
+      {
+        owner_address: address.toLowerCase(),
+        contact_address: normalizedContact,
+        nickname: nickname.trim(),
+        notes,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'owner_address,contact_address' }
+    );
+    if (error) throw error;
     await fetchEntries();
   };
 
   const deleteEntry = async (id: string) => {
-    if (!address) return;
-
-    const { error } = await supabase
-      .from('address_book')
-      .delete()
-      .eq('id', id)
-      .eq('user_address', address.toLowerCase());
-
-    if (error) {
-      throw error;
-    }
-
-    setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    const { error } = await supabase.from('address_book').delete().eq('id', id);
+    if (error) throw error;
+    await fetchEntries();
   };
 
-  return { entries, loading, fetchEntries, upsertEntry, deleteEntry };
+  const getNickname = (walletAddress: string) => {
+    const match = entries.find(
+      (entry) => entry.contact_address.toLowerCase() === walletAddress.toLowerCase()
+    );
+    return match?.nickname || null;
+  };
+
+  return { entries, loading, fetchEntries, upsertEntry, deleteEntry, getNickname };
 };

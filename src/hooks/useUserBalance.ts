@@ -89,6 +89,7 @@ export const useUserBalance = () => {
 
       // Add amounts from expenses
       expenses?.forEach(expense => {
+        if ((expense.status || 'active') !== 'active') return;
         const payer = expense.paid_by.toLowerCase();
         const expenseSplits = splits.filter(s => s.expense_id === expense.id);
         

@@ -59,6 +59,14 @@
   @apply bg-border rounded-full;
 }
 
+input.time-input::-webkit-calendar-picker-indicator {
+  filter: invert(92%) sepia(6%) saturate(4%) hue-rotate(180deg) brightness(90%);
+}
+
+input.time-input {
+  color: #B0B0B0;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

@@ -79,3 +79,12 @@
   }
 }
 
+/* Tint time picker icon to match theme (may vary by browser) */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: grayscale(1) brightness(0.8) opacity(0.9);
+}
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+

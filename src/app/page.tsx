@@ -1,197 +1,37 @@
-"use client";
+﻿"use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { QRCodeSVG } from "qrcode.react";
-import { 
-  Zap, 
-  Calculator, 
-  Users, 
-  ShieldCheck, 
-  Smartphone, 
-  Globe, 
-  ChevronRight, 
-  ChevronLeft,
-  Settings,
-  Plus,
-  ArrowRight,
-  ClipboardList,
-  Brain,
-  MessageCircle,
-  QrCode,
-  Wallet
-} from "lucide-react";
-
-gsap.registerPlugin(ScrollTrigger);
-
-// --- Local Components ---
-
-const Logo = () => (
-  <Link href="/" className="flex items-center gap-3 group transition-all active:scale-95">
-    <div className="relative w-8 h-8">
-      {/* Shadow/Back Layer */}
-      <div className="absolute inset-0 bg-[#009E78] rounded-[25%] translate-x-[12%] translate-y-[12%] opacity-60" />
-      {/* Main Green Layer */}
-      <div className="absolute inset-0 bg-[#00C896] rounded-[25%] flex flex-col items-center justify-center gap-[10%] overflow-hidden">
-        {/* Receipt Lines */}
-        <div className="w-[50%] h-[6%] bg-black/20 rounded-full" />
-        <div className="w-[50%] h-[6%] bg-black/20 rounded-full" />
-        <div className="w-[50%] h-[6%] bg-black/20 rounded-full" />
-        {/* Diagonal Slash */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-[140%] h-[10%] bg-white rotate-[-45deg] shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
-        </div>
-      </div>
-    </div>
-    <span className="clash-display font-bold text-[24px] tracking-tight text-[#f5f0e8] transition-all relative">
-      <span className="relative z-10">split</span>
-      <span className="absolute inset-0 text-[#ff0000] mix-blend-screen translate-x-[1px] opacity-70 pointer-events-none select-none blur-[0.4px] group-hover:translate-x-[2.5px] transition-transform">split</span>
-      <span className="absolute inset-0 text-[#00ffff] mix-blend-screen translate-x-[-1px] opacity-70 pointer-events-none select-none blur-[0.4px] group-hover:translate-x-[-2.5px] transition-transform">split</span>
-    </span>
-  </Link>
-);
-
-const Button = ({ children, variant = "primary", className = "", ...props }: any) => {
-  const baseStyles = "px-6 py-2.5 rounded-md font-semibold text-[15px] transition-all active:scale-95 flex items-center justify-center gap-2";
-  const variants = {
-    primary: "bg-[#00C896] text-[#000] hover:bg-[#009E78] shadow-[0_8px_30px_rgba(0,200,150,0.3)]",
-    outline: "bg-transparent border border-[#242424] text-[#7a7a7a] hover:border-[#00C896] hover:text-[#f5f0e8]",
-    ghost: "bg-transparent text-[#7a7a7a] hover:text-[#f5f0e8]"
-  };
-
-  return (
-    <button className={`${baseStyles} ${variants[variant as keyof typeof variants]} ${className}`} {...props}>
-      {children}
-    </button>
-  );
-};
-
-// --- Main Page ---
+import React from "react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Hero } from "@/components/landing/Hero";
+import QuickSplit from "@/components/landing/QuickSplit";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { FlowSection } from "@/components/landing/FlowSection";
+import { Footer } from "@/components/landing/Footer";
 
 export default function LandingPage() {
-  const navRef = useRef(null);
-  const heroRef = useRef(null);
-  const hiwWrapperRef = useRef(null);
-  const hiwStickyRef = useRef(null);
-  const siaWrapperRef = useRef(null);
-  const siaStickyRef = useRef(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Navbar scroll behavior
-      ScrollTrigger.create({
-        start: "top -60px",
-        onEnter: () => gsap.to(navRef.current, { 
-          backgroundColor: "rgba(10,10,10,0.85)", 
-          backdropFilter: "blur(20px) saturate(180%)",
-          borderBottom: "1px solid #242424",
-          duration: 0.3 
-        }),
-        onLeaveBack: () => gsap.to(navRef.current, { 
-          backgroundColor: "transparent",
-          backdropFilter: "blur(0px)",
-          borderBottom: "1px solid transparent",
-          duration: 0.3 
-        }),
-      });
-
-      // Hero Entrance Animations
-      const tl = gsap.timeline();
-      tl.from(".hero-overline", { opacity:0, y:20, duration:0.6 })
-        .from(".hero-h1 span", { opacity:0, y:40, stagger:0.12, duration:0.7 }, "-=0.3")
-        .from(".hero-sub", { opacity:0, y:20, duration:0.5 }, "-=0.2")
-        .from(".hero-cta", { opacity:0, y:20, duration:0.5 }, "-=0.2")
-        .from(".hero-trust", { opacity:0, duration:0.5 }, "-=0.1")
-        .from(".hero-phone", { opacity:0, x:60, rotationY:-15, duration:0.9, ease:"power3.out" }, 0.3);
-
-      // Hero Phone Float
-      gsap.to(".hero-phone", {
-        y: -14,
-        duration: 3,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-      });
-
-      // See It In Action (Sticky Section)
-      const siaTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".see-in-action-sticky",
-          start: "top top",
-          end: "+=500%",
-          scrub: 0.5,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-        }
-      });
-      
-      // Step 1 -> 2 (Design -> Launch)
-      siaTl.to(".sia-state-1", { autoAlpha: 0, y: -20, duration: 0.5 }, 0.5)
-           .to(".sia-state-2", { autoAlpha: 1, y: 0, duration: 0.5 }, 1.2)
-           .to(".sia-indicator-1", { opacity: 0.3, duration: 0.4 }, 0.5)
-           .to(".sia-indicator-2", { color: "#00C896", borderColor: "#00C896", backgroundColor: "rgba(0,200,150,0.08)", opacity: 1, duration: 0.4 }, 1.2);
-      
-      // Step 2 -> 3 (Launch -> Track)
-      siaTl.to(".sia-state-2", { autoAlpha: 0, y: -20, duration: 0.5 }, 2.5)
-           .to(".sia-state-3", { autoAlpha: 1, y: 0, duration: 0.5 }, 3.2)
-           .to(".sia-indicator-2", { opacity: 0.3, duration: 0.4 }, 2.5)
-           .to(".sia-indicator-3", { color: "#00C896", borderColor: "#00C896", backgroundColor: "rgba(0,200,150,0.08)", opacity: 1, duration: 0.4 }, 3.2);
-
-      // Step 3 -> 4 (Track -> Settle)
-      siaTl.to(".sia-state-3", { autoAlpha: 0, y: -20, duration: 0.5 }, 4.5)
-           .to(".sia-state-4", { autoAlpha: 1, y: 0, duration: 0.5 }, 5.2)
-           .to(".sia-indicator-3", { opacity: 0.3, duration: 0.4 }, 4.5)
-           .to(".sia-indicator-4", { color: "#00C896", borderColor: "#00C896", backgroundColor: "rgba(0,200,150,0.08)", opacity: 1, duration: 0.4 }, 5.2);
-    
-    // ... rest of the GSAP logic unchanged ...
-
-      // Section reveal animations
-      gsap.utils.toArray(".reveal").forEach((el: any) => {
-        gsap.fromTo(el, 
-          { opacity: 0, y: 30 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: el,
-              start: "top 90%",
-              toggleActions: "play none none none"
-            }
-          }
-        );
-      });
-
-      // Feature cards stagger reveal
-      const featureCards = gsap.utils.toArray(".feature-card");
-      if (featureCards.length > 0) {
-        gsap.fromTo(featureCards, 
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            stagger: 0.1,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: ".features-grid",
-              start: "top 85%",
-              toggleActions: "play none none none"
-            }
-          }
-        );
-      }
-    });
-
-    return () => ctx.revert();
-  }, []);
-
   return (
     <div className="bg-[#0a0a0a] text-[#f5f0e8] font-body selection:bg-[#00C896] selection:text-black overflow-x-hidden">
+      <Navbar />
+      <main className="pt-20">
+        <Hero />
+
+        <section id="quick-split" className="py-24">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12 space-y-4">
+              <span className="dm-mono text-[11px] text-[#00C896] tracking-[0.2em] font-bold uppercase">Free to use</span>
+              <h2 className="clash-display font-bold text-[clamp(34px,5vw,52px)] text-[#f5f0e8]">Quick Split</h2>
+              <p className="text-[#8A8A8A] max-w-2xl mx-auto text-sm md:text-base leading-[1.7]">
+                Calculate who owes who instantly, without a wallet. Share the result link with anyone and keep the math simple.
+              </p>
+            </div>
+            <QuickSplit />
+          </div>
+        </section>
+
+        <HowItWorks />
+        <FlowSection />
+      </main>
+      <Footer />
       {/* --- Global CSS Inject (Clash Display) --- */}
       {/* Fonts are handled in globals.css */}
 

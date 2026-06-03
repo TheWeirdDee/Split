@@ -82,7 +82,8 @@ export default function AddExpensePage() {
         address: address as `0x${string}`,
         blockTag: 'pending',
       });
-
+      // STEP 1: Record Expense
+      setLoadingText('Logging Expense...');
       setLoadingText('Initiating cUSD (Step 1/2)...');
       const transferTx = await walletClient.writeContract({
         address: CUSD_ADDRESS as `0x${string}`,
@@ -109,10 +110,9 @@ export default function AddExpensePage() {
         args: [groupIdBytes, expenseIdBytes, parseEther(totalAmountNum.toString())],
         chain: celo,
         account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce: currentNonce + 1,
+        nonce: currentNonce,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });

@@ -11,7 +11,6 @@ import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/li
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { celo } from 'viem/chains';
-import { parseEther, erc20Abi } from 'viem';
 
 import { 
   Users, Pizza, Car, House, PartyPopper, Plane, 
@@ -74,27 +73,8 @@ export default function CreateGroupPage() {
         blockTag: 'pending'
       });
 
-      // STEP 1: Small cUSD Transfer to trigger Volume and cUSD Logo
-      setLoadingText('Initiating cUSD (Step 1/2)...');
-      const transferTx = await walletClient.writeContract({
-        address: CUSD_ADDRESS as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
-        chain: celo,
-        account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
-        nonce: currentNonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
-      });
-
-      await publicClient.waitForTransactionReceipt({ hash: transferTx });
-      
-      // STEP 2: Create Group
-      setLoadingText('Creating Group (Step 2/2)...');
+      // STEP 1: Create Group
+      setLoadingText('Creating Group...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -102,10 +82,9 @@ export default function CreateGroupPage() {
         args: [groupIdBytes],
         chain: celo,
         account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce: currentNonce + 1,
+        nonce: currentNonce,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });

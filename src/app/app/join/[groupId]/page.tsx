@@ -57,7 +57,7 @@ export default function JoinGroupPage() {
         address: address as `0x${string}`,
         blockTag: 'pending',
       });
-
+      setLoadingText('Joining Group...');
       setLoadingText('Initiating cUSD (Step 1/2)...');
       const transferTx = await walletClient.writeContract({
         address: CUSD_ADDRESS as `0x${string}`,
@@ -84,10 +84,9 @@ export default function JoinGroupPage() {
         args: [groupIdBytes],
         chain: celo,
         account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce: currentNonce + 1,
+        nonce: currentNonce,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });

@@ -89,3 +89,11 @@ hardhat.config.ts.last
 out/
 build/
 *.tsbuildinfo
+
+
+# Ignore all markdown files except README
+**/*.md
+!**/README.md
+!**/readme.md
+!**/README.MD
+!**/README

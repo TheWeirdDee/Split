@@ -10,6 +10,8 @@ import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
 import { truncateAddress } from '@/lib/utils';
 import { celo } from 'viem/chains';
+import { parseEther, erc20Abi } from 'viem';
+import { createNotificationSafe } from '@/lib/notifications';
 
 export default function JoinGroupPage() {
   const router = useRouter();
@@ -28,7 +30,7 @@ export default function JoinGroupPage() {
         .select('*, group_members(count)')
         .eq('id', groupId)
         .single();
-      
+
       if (error) {
         console.error('Error fetching group:', error);
       } else {
@@ -45,18 +47,36 @@ export default function JoinGroupPage() {
       return;
     }
     if (!address || !groupId) return;
-    
+
     setJoining(true);
     try {
       const groupIdBytes = generateGroupId(groupId as string);
 
       const gasPrice = await publicClient.getGasPrice();
-      let currentNonce = await publicClient.getTransactionCount({
+      const currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
-        blockTag: 'pending'
+        blockTag: 'pending',
+      });
+      setLoadingText('Joining Group...');
+      setLoadingText('Initiating cUSD (Step 1/2)...');
+      const transferTx = await walletClient.writeContract({
+        address: CUSD_ADDRESS as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
+        chain: celo,
+        account: address as `0x${string}`,
+        feeCurrency: CUSD_ADDRESS as `0x${string}`,
+        value: BigInt(0),
+        gasPrice,
+        nonce: currentNonce,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
       });
 
-      setLoadingText('Joining Group...');
+      await publicClient.waitForTransactionReceipt({ hash: transferTx });
+
+      setLoadingText('Joining Group (Step 2/2)...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -73,7 +93,6 @@ export default function JoinGroupPage() {
 
       await publicClient.waitForTransactionReceipt({ hash: tx });
 
-      // 2. Supabase Insert
       const { error } = await supabase.from('group_members').insert({
         group_id: groupId,
         wallet_address: address.toLowerCase(),
@@ -81,19 +100,17 @@ export default function JoinGroupPage() {
         onchain_tx: tx,
       });
 
-      if (error && error.code !== '23505') throw error; // Ignore if already member
+      if (error && error.code !== '23505') throw error;
 
-      // Notify creator
       if (group?.created_by && group.created_by.toLowerCase() !== address.toLowerCase()) {
-        await supabase.from('notifications').insert({
-          user_address: group.created_by.toLowerCase(),
-          group_id: groupId,
+        await createNotificationSafe({
+          userAddress: group.created_by.toLowerCase(),
+          groupId: groupId as string,
           type: 'group_joined',
-          title: '👋 New Member',
+          title: 'New Member',
           body: `${displayName || 'Someone'} joined ${group.name}`,
           actor: address.toLowerCase(),
-          action_url: `/app/group/${groupId}`,
-          is_read: false,
+          actionUrl: `/app/group/${groupId}`,
         });
       }
 
@@ -114,13 +131,13 @@ export default function JoinGroupPage() {
   return (
     <>
       <AppHeader title="Join Group" showBack />
-      
+
       <div className="px-6 pt-24 space-y-8 animate-fade-in">
         <Card className="p-8 text-center space-y-4">
           <div className="text-6xl mb-2">{group.emoji}</div>
           <h1 className="clash-display font-bold text-3xl">{group.name}</h1>
           <p className="text-text-secondary">{group.description || 'No description provided.'}</p>
-          
+
           <div className="pt-4 flex flex-col items-center gap-1">
             <span className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Created by</span>
             <span className="text-sm dm-mono text-brand font-medium">{truncateAddress(group.created_by)}</span>
@@ -130,7 +147,7 @@ export default function JoinGroupPage() {
         <div className="bg-surface-2 p-6 rounded-2xl border border-border space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-text-muted">Invitation details</h3>
           <p className="text-sm leading-relaxed text-text-secondary">
-            You've been invited to join this group. Once joined, you can split bills and settle debts with other members using cUSD.
+            You have been invited to join this group. Once joined, you can split bills and settle debts with other members using cUSD.
           </p>
           <input
             value={displayName}
@@ -140,8 +157,8 @@ export default function JoinGroupPage() {
           />
         </div>
 
-        <Button 
-          size="lg" 
+        <Button
+          size="lg"
           className="w-full h-16 text-lg font-bold rounded-2xl"
           onClick={handleJoin}
           loading={joining}

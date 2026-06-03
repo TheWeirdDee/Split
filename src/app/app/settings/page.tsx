@@ -192,7 +192,8 @@ export default function SettingsPage() {
                 disabled={savingPrefs}
                 style={{
                   width: '42px', height: '24px', borderRadius: '999px', border: '1px solid #2C2C2C',
-                  background: (preferences as any)?.[key] ? '#00C896' : '#0D0D0D', color: (preferences as any)?.[key] ? '#000' : '#8A8A8A',
+                  background: (preferences as any)?.[key] ? '#00C896' : '#1F1F1F',
+                  color: (preferences as any)?.[key] ? '#000' : '#B0B0B0',
                   fontSize: '11px', fontWeight: '700', cursor: 'pointer',
                 }}
               >
@@ -208,7 +209,8 @@ export default function SettingsPage() {
                 onClick={() => updatePref('quiet_hours_enabled', !preferences?.quiet_hours_enabled)}
                 style={{
                   width: '42px', height: '24px', borderRadius: '999px', border: '1px solid #2C2C2C',
-                  background: preferences?.quiet_hours_enabled ? '#00C896' : '#0D0D0D', color: preferences?.quiet_hours_enabled ? '#000' : '#8A8A8A',
+                  background: preferences?.quiet_hours_enabled ? '#00C896' : '#1F1F1F',
+                  color: preferences?.quiet_hours_enabled ? '#000' : '#B0B0B0',
                   fontSize: '11px', fontWeight: '700', cursor: 'pointer',
                 }}
               >
@@ -220,15 +222,13 @@ export default function SettingsPage() {
                 type="time"
                 value={preferences?.quiet_hours_start || '22:00'}
                 onChange={(e) => updatePref('quiet_hours_start', e.target.value)}
-                className="w-full rounded-xl border border-[#2C2C2C] bg-[#0D0D0D] px-3 py-2 text-xs"
-                style={{ color: preferences?.quiet_hours_enabled ? '#F7F3EC' : '#8A8A8A' }}
+                className="time-input w-full rounded-xl border border-[#2C2C2C] bg-[#0D0D0D] px-3 py-2 text-xs text-[#F7F3EC]"
               />
               <input
                 type="time"
                 value={preferences?.quiet_hours_end || '07:00'}
                 onChange={(e) => updatePref('quiet_hours_end', e.target.value)}
-                className="w-full rounded-xl border border-[#2C2C2C] bg-[#0D0D0D] px-3 py-2 text-xs"
-                style={{ color: preferences?.quiet_hours_enabled ? '#F7F3EC' : '#8A8A8A' }}
+                className="time-input w-full rounded-xl border border-[#2C2C2C] bg-[#0D0D0D] px-3 py-2 text-xs text-[#F7F3EC]"
               />
             </div>
           </div>

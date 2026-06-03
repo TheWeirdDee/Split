@@ -52,27 +52,8 @@ export default function AddExpensePage() {
         blockTag: 'pending'
       });
 
-      // STEP 1: Volume Hack (Transfer tiny cUSD)
-      setLoadingText('Initiating cUSD (Step 1/2)...');
-      const transferTx = await walletClient.writeContract({
-        address: CUSD_ADDRESS as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
-        chain: celo,
-        account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
-        nonce: currentNonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
-      });
-
-      await publicClient.waitForTransactionReceipt({ hash: transferTx });
-
-      // STEP 2: Record Expense
-      setLoadingText('Logging Expense (Step 2/2)...');
+      // STEP 1: Record Expense
+      setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -80,10 +61,9 @@ export default function AddExpensePage() {
         args: [groupIdBytes, expenseIdBytes, parseEther(totalAmountNum.toString())],
         chain: celo,
         account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
         value: BigInt(0),
         gasPrice,
-        nonce: currentNonce + 1,
+        nonce: currentNonce,
         maxFeePerGas: undefined,
         maxPriorityFeePerGas: undefined,
       });

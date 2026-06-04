@@ -5,18 +5,96 @@ export const CUSD_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x$
 
 export const SPLIT_ABI = [
   {
-    inputs: [{ name: "_cUSD", type: "address" }],
+    inputs: [
+      {
+        internalType: "address",
+        name: "_cUSD",
+        type: "address",
+      },
+    ],
     stateMutability: "nonpayable",
     type: "constructor",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "member",
+        type: "address",
+      },
+    ],
+    name: "AlreadyMember",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+    ],
+    name: "GroupNotFound",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidSplits",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "caller",
+        type: "address",
+      },
+    ],
+    name: "NotMember",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ReentrancyGuardReentrantCall",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TransferFailed",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
-      { indexed: true, name: "groupId", type: "bytes32" },
-      { indexed: true, name: "debtor", type: "address" },
-      { indexed: true, name: "creditor", type: "address" },
-      { indexed: false, name: "amount", type: "uint256" },
-      { indexed: false, name: "timestamp", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
     ],
     name: "DebtSettled",
     type: "event",
@@ -24,21 +102,61 @@ export const SPLIT_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, name: "groupId", type: "bytes32" },
-      { indexed: true, name: "expenseId", type: "bytes32" },
-      { indexed: true, name: "payer", type: "address" },
-      { indexed: false, name: "totalAmount", type: "uint256" },
-      { indexed: false, name: "timestamp", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "expenseId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "paidBy",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "description",
+        type: "string",
+      },
     ],
-    name: "ExpenseRecorded",
+    name: "ExpenseAdded",
     type: "event",
   },
   {
     anonymous: false,
     inputs: [
-      { indexed: true, name: "groupId", type: "bytes32" },
-      { indexed: true, name: "creator", type: "address" },
-      { indexed: false, name: "timestamp", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "creator",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
     ],
     name: "GroupCreated",
     type: "event",
@@ -46,22 +164,402 @@ export const SPLIT_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, name: "groupId", type: "bytes32" },
-      { indexed: true, name: "member", type: "address" },
-      { indexed: false, name: "timestamp", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "member",
+        type: "address",
+      },
     ],
-    name: "MemberJoined",
+    name: "MemberAdded",
     type: "event",
   },
   {
-    inputs: [{ name: "groupId", type: "bytes32" }],
-    name: "createGroup",
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "description",
+        type: "string",
+      },
+      {
+        internalType: "address[]",
+        name: "splitMembers",
+        type: "address[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "splitAmounts",
+        type: "uint256[]",
+      },
+    ],
+    name: "addExpense",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
-    inputs: [{ name: "groupId", type: "bytes32" }],
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "balances",
+    outputs: [
+      {
+        internalType: "int256",
+        name: "",
+        type: "int256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "cUSD",
+    outputs: [
+      {
+        internalType: "contract IERC20",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        internalType: "address[]",
+        name: "members",
+        type: "address[]",
+      },
+    ],
+    name: "createGroup",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "expenseCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "expenses",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "paidBy",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "description",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "timestamp",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "expenseId",
+        type: "uint256",
+      },
+    ],
+    name: "getExpense",
+    outputs: [
+      {
+        internalType: "address",
+        name: "paidBy",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "description",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "timestamp",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "expenseId",
+        type: "uint256",
+      },
+    ],
+    name: "getExpenseSplits",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "members",
+        type: "address[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "amounts",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+    ],
+    name: "getGroup",
+    outputs: [
+      {
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        internalType: "address",
+        name: "creator",
+        type: "address",
+      },
+      {
+        internalType: "address[]",
+        name: "members",
+        type: "address[]",
+      },
+      {
+        internalType: "uint256",
+        name: "expCount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+    ],
+    name: "getGroupExpenseCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "member",
+        type: "address",
+      },
+    ],
+    name: "getMemberBalance",
+    outputs: [
+      {
+        internalType: "int256",
+        name: "",
+        type: "int256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "groupCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "groups",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        internalType: "address",
+        name: "creator",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "expenseCount",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "exists",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "isMember",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+    ],
     name: "joinGroup",
     outputs: [],
     stateMutability: "nonpayable",
@@ -69,52 +567,25 @@ export const SPLIT_ABI = [
   },
   {
     inputs: [
-      { name: "groupId", type: "bytes32" },
-      { name: "expenseId", type: "bytes32" },
-      { name: "totalAmount", type: "uint256" },
-    ],
-    name: "recordExpense",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { name: "groupId", type: "bytes32" },
-      { name: "creditor", type: "address" },
-      { name: "amount", type: "uint256" },
+      {
+        internalType: "uint256",
+        name: "groupId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
     ],
     name: "settleDebt",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { name: "groupId", type: "bytes32" },
-      { name: "user", type: "address" },
-    ],
-    name: "isGroupMember",
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "groupId", type: "bytes32" }],
-    name: "getGroup",
-    outputs: [
-      {
-        components: [
-          { name: "id", type: "bytes32" },
-          { name: "creator", type: "address" },
-          { name: "createdAt", type: "uint256" },
-          { name: "exists", type: "bool" },
-        ],
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
 ] as const;

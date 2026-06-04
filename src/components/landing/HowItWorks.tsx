@@ -1,57 +1,30 @@
 "use client";
 
-import React from 'react';
-import { Card } from '../common/Card';
-
-import { Users, FileText, Zap } from 'lucide-react';
-
-const steps = [
-  {
-    number: '01',
-    title: 'Create a group',
-    description: 'Set up in 10 seconds. Share an invite link via WhatsApp or QR code.',
-    icon: Users
-  },
-  {
-    number: '02',
-    title: 'Log expenses',
-    description: 'Who paid. Who owes. Auto-calculated shares. No more manual math.',
-    icon: FileText
-  },
-  {
-    number: '03',
-    title: 'Settle with cUSD',
-    description: 'One tap. Instant. Onchain forever. No need for bank transfers.',
-    icon: Zap
-  }
-];
+import React from "react";
 
 export const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="py-24 px-6 max-w-7xl mx-auto">
-      <div className="text-center mb-16 space-y-4">
-        <h2 className="clash-display font-bold text-4xl md:text-5xl">How it works</h2>
-        <p className="text-text-secondary max-w-2xl mx-auto">
-          Simple, fast, and transparent. Designed for the Celo ecosystem.
-        </p>
+    <section id="how-it-works" className="bg-[#0a0a0a] py-32 px-8 max-w-[1280px] mx-auto">
+      <div className="text-center mb-24 reveal">
+        <h2 className="clash-display font-bold text-[clamp(36px,5vw,56px)] text-[#f5f0e8] mb-4">Simple by design.</h2>
+        <p className="dm-sans text-[#7a7a7a] text-[16px] max-w-xl mx-auto">Getting started is easier than sending a WhatsApp message.</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        {steps.map((step) => (
-          <Card key={step.number} className="p-8 space-y-6 relative overflow-hidden group">
-            <span className="absolute -top-4 -right-4 dm-mono text-8xl font-bold text-brand/5 group-hover:text-brand/10 transition-colors">
-              {step.number}
-            </span>
-            <div className="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-brand mb-4">
-              <step.icon className="w-8 h-8" />
+      <div className="grid md:grid-cols-3 gap-16 relative">
+        <div className="hidden md:block absolute top-[110px] left-[15%] w-[70%] border-t border-dashed border-[#242424] z-0" />
+        {[
+          { num: "01", title: "Create a Group", desc: "Set up in 10 seconds. Share an invite link via WhatsApp or QR code." },
+          { num: "02", title: "Log Expenses", desc: "Who paid. Who owes. Auto-calculated shares. No more manual math." },
+          { num: "03", title: "Settle with cUSD", desc: "One tap. Instant. Onchain forever. No need for bank transfers." },
+        ].map((s, i) => (
+          <div key={i} className="reveal relative z-10 flex flex-col items-center text-center">
+            <span className="dm-mono text-[72px] md:text-[80px] font-bold text-[#00C896] opacity-[0.1] leading-none mb-6">{s.num}</span>
+            <div className="w-14 h-14 rounded-full border border-[#242424] bg-[#0a0a0a] flex items-center justify-center mb-8 relative">
+               <div className="w-2 h-2 rounded-full bg-[#00C896]" />
             </div>
-            <div className="space-y-3">
-              <h3 className="clash-display font-bold text-2xl">{step.title}</h3>
-              <p className="text-text-secondary leading-relaxed">
-                {step.description}
-              </p>
-            </div>
-          </Card>
+            <h3 className="clash-display font-bold text-[20px] text-[#f5f0e8] mb-4">{s.title}</h3>
+            <p className="dm-sans text-[14px] text-[#7a7a7a] leading-[1.6] max-w-[240px]">{s.desc}</p>
+          </div>
         ))}
       </div>
     </section>

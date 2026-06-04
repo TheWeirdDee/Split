@@ -9,9 +9,9 @@ import { CategoryPicker } from '@/components/app/CategoryPicker';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { useGroup } from '@/hooks/useGroups';
-import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { cn, truncateAddress } from '@/lib/utils';
-import { parseEther, keccak256, toBytes, erc20Abi } from 'viem';
+import { parseEther } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 
@@ -29,7 +29,7 @@ export default function AddExpensePage() {
   const [payer, setPayer] = useState('');
   const [splitWith, setSplitWith] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('Logging Expense (cUSD)...');
+  const [loadingText, setLoadingText] = useState('Logging Expense...');
   const [prefilledFromRun, setPrefilledFromRun] = useState(false);
 
   useEffect(() => {
@@ -72,42 +72,31 @@ export default function AddExpensePage() {
 
     try {
       const totalAmountNum = parseFloat(amount);
-      const share = totalAmountNum / splitWith.length;
-      const expenseId = crypto.randomUUID();
-      const expenseIdBytes = keccak256(toBytes(expenseId));
-      const groupIdBytes = generateGroupId(groupId as string);
+      const totalAmountWei = parseEther(amount);
+      const memberCount = BigInt(splitWith.length);
+      const baseShare = totalAmountWei / memberCount;
+      const remainder = totalAmountWei % memberCount;
+
+      const splitAmounts = splitWith.map((member, index) => {
+        return index < remainder ? baseShare + 1n : baseShare;
+      });
+
+      const splitMembers = splitWith.map(addr => addr as `0x${string}`);
+      const descriptionWithMeta = `${description} |cat:${category}`;
 
       const gasPrice = await publicClient.getGasPrice();
       const currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
         blockTag: 'pending',
       });
-      // STEP 1: Record Expense
+
+      // STEP 1: Add Expense Onchain
       setLoadingText('Logging Expense...');
-      setLoadingText('Initiating cUSD (Step 1/2)...');
-      const transferTx = await walletClient.writeContract({
-        address: CUSD_ADDRESS as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
-        chain: celo,
-        account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
-        nonce: currentNonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
-      });
-
-      await publicClient.waitForTransactionReceipt({ hash: transferTx });
-
-      setLoadingText('Logging Expense (Step 2/2)...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
-        functionName: 'recordExpense',
-        args: [groupIdBytes, expenseIdBytes, parseEther(totalAmountNum.toString())],
+        functionName: 'addExpense',
+        args: [BigInt(groupId as string), totalAmountWei, descriptionWithMeta, splitMembers, splitAmounts],
         chain: celo,
         account: address as `0x${string}`,
         value: BigInt(0),
@@ -118,29 +107,6 @@ export default function AddExpensePage() {
       });
 
       await publicClient.waitForTransactionReceipt({ hash: tx });
-
-      const { error: expenseError } = await supabase.from('expenses').insert({
-        id: expenseId,
-        group_id: groupId,
-        description,
-        category,
-        total_amount: totalAmountNum,
-        paid_by: payer,
-        created_by: address?.toLowerCase(),
-        onchain_tx: tx,
-      });
-
-      if (expenseError) throw expenseError;
-
-      const splitsToInsert = splitWith.map((memberAddress) => ({
-        expense_id: expenseId,
-        wallet_address: memberAddress,
-        amount: share,
-        is_payer: memberAddress === payer,
-      }));
-
-      const { error: splitError } = await supabase.from('expense_splits').insert(splitsToInsert);
-      if (splitError) throw splitError;
 
       const creatorName =
         members.find((m) => m.wallet_address.toLowerCase() === address?.toLowerCase())?.display_name ||
@@ -173,7 +139,6 @@ export default function AddExpensePage() {
           .from('recurring_expense_runs')
           .update({
             status: 'processed',
-            processed_expense_id: expenseId,
             processed_at: new Date().toISOString(),
           })
           .eq('id', runId);
@@ -186,7 +151,7 @@ export default function AddExpensePage() {
       alert('Failed to add expense onchain.');
     } finally {
       setLoading(false);
-      setLoadingText('Logging Expense (cUSD)...');
+      setLoadingText('Logging Expense...');
     }
   };
 

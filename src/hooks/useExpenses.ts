@@ -1,38 +1,103 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useWallet } from '@/context/WalletContext';
+import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { formatEther } from 'viem';
 
 export const useExpenses = (groupId: string) => {
+  const { publicClient } = useWallet();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [splits, setSplits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchExpenses = useCallback(async () => {
-    if (!groupId) return;
+    if (!groupId || !publicClient) return;
     setLoading(true);
 
-    const { data: expenseData, error: expenseError } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('group_id', groupId)
-      .order('created_at', { ascending: false });
+    try {
+      const countBig = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: SPLIT_ABI,
+        functionName: 'getGroupExpenseCount',
+        args: [BigInt(groupId)],
+      });
+      const count = Number(countBig);
 
-    if (expenseError) {
-      console.error('Error fetching expenses:', expenseError);
-    } else {
-      setExpenses(expenseData || []);
-      
-      const expenseIds = expenseData?.map(e => e.id) || [];
-      if (expenseIds.length > 0) {
-        const { data: splitData, error: splitError } = await supabase
-          .from('expense_splits')
-          .select('*')
-          .in('expense_id', expenseIds);
-        
-        setSplits(splitData || []);
+      const fetchedExpenses: any[] = [];
+      const fetchedSplits: any[] = [];
+
+      const expensePromises = [];
+      for (let i = 1; i <= count; i++) {
+        expensePromises.push(
+          (async (expenseIndex) => {
+            try {
+              const expenseData = await publicClient.readContract({
+                address: CONTRACT_ADDRESS,
+                abi: SPLIT_ABI,
+                functionName: 'getExpense',
+                args: [BigInt(groupId), BigInt(expenseIndex)],
+              });
+
+              const [paidBy, amountWei, rawDescription, timestampBig] = expenseData as [string, bigint, string, bigint];
+
+              const splitData = await publicClient.readContract({
+                address: CONTRACT_ADDRESS,
+                abi: SPLIT_ABI,
+                functionName: 'getExpenseSplits',
+                args: [BigInt(groupId), BigInt(expenseIndex)],
+              });
+
+              const [splitMembers, splitAmountsWei] = splitData as [string[], bigint[]];
+
+              let cleanDescription = rawDescription;
+              let category = 'other';
+              const catIndex = rawDescription.lastIndexOf(' |cat:');
+              if (catIndex !== -1) {
+                cleanDescription = rawDescription.substring(0, catIndex);
+                category = rawDescription.substring(catIndex + 6);
+              }
+
+              const expenseId = expenseIndex.toString();
+
+              fetchedExpenses.push({
+                id: expenseId,
+                group_id: groupId,
+                description: cleanDescription,
+                category,
+                total_amount: parseFloat(formatEther(amountWei)),
+                paid_by: paidBy.toLowerCase(),
+                created_by: paidBy.toLowerCase(),
+                created_at: new Date(Number(timestampBig) * 1000).toISOString(),
+                status: 'active',
+              });
+
+              splitMembers.forEach((member, memberIdx) => {
+                fetchedSplits.push({
+                  id: `${expenseId}-${member.toLowerCase()}`,
+                  expense_id: expenseId,
+                  wallet_address: member.toLowerCase(),
+                  amount: formatEther(splitAmountsWei[memberIdx]),
+                  is_payer: member.toLowerCase() === paidBy.toLowerCase(),
+                });
+              });
+            } catch (innerErr) {
+              console.error(`Error fetching expense index ${expenseIndex}:`, innerErr);
+            }
+          })(i)
+        );
       }
+
+      await Promise.all(expensePromises);
+
+      fetchedExpenses.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setExpenses(fetchedExpenses);
+      setSplits(fetchedSplits);
+    } catch (err) {
+      console.error('Error fetching onchain expenses:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [groupId]);
+  }, [groupId, publicClient]);
 
   useEffect(() => {
     fetchExpenses();

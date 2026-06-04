@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { supabase } from '@/lib/supabase';
-import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { parseEther, erc20Abi } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
@@ -17,7 +17,6 @@ export const useSettle = () => {
     setLoading(true);
     try {
       const amountRaw = parseEther(amount.toFixed(18));
-      const groupIdBytes = generateGroupId(groupId);
 
       setStep('approving');
       const approveTx = await walletClient.writeContract({
@@ -36,22 +35,12 @@ export const useSettle = () => {
         address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
         functionName: 'settleDebt',
-        args: [groupIdBytes, creditor as `0x${string}`, amountRaw],
+        args: [BigInt(groupId), creditor as `0x${string}`, amountRaw],
         chain: celo,
         account: address as `0x${string}`,
       });
 
       await publicClient.waitForTransactionReceipt({ hash: settleTx });
-
-      const { error } = await supabase.from('settlements').insert({
-        group_id: groupId,
-        debtor: address.toLowerCase(),
-        creditor: creditor.toLowerCase(),
-        amount,
-        onchain_tx: settleTx,
-      });
-
-      if (error) throw error;
 
       const { data: profile } = await supabase
         .from('user_profiles')

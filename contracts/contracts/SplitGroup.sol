@@ -4,65 +4,243 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+/**
+ * @title SplitGroup
+ * @notice Onchain expense splitting and debt settlement for friend groups on Celo.
+ *         All financial data — expenses, splits, balances — stored onchain.
+ *         Supabase handles display names, notifications, and chat only.
+ *
+ * Deployment: Celo Mainnet
+ * cUSD address: 0x765DE816845861e75A25fCA122bb6898B8B1282a
+ */
 contract SplitGroup is ReentrancyGuard {
+
     IERC20 public immutable cUSD;
-    
+
+    // ─── Structs ──────────────────────────────────────────────────────────────
+
+    struct Split {
+        address member;
+        uint256 amount; // how much this member owes for this expense
+    }
+
+    struct Expense {
+        uint256 id;
+        address paidBy;
+        uint256 amount;
+        string description;
+        uint256 timestamp;
+        Split[] splits;
+    }
+
     struct Group {
-        bytes32 id;
+        uint256 id;
+        string name;
         address creator;
-        uint256 createdAt;
+        address[] members;
+        uint256 expenseCount;
         bool exists;
     }
-    
-    mapping(bytes32 => Group) public groups;
-    mapping(bytes32 => mapping(address => bool)) public groupMembers;
-    mapping(bytes32 => uint256) public groupMemberCount;
-    
-    event GroupCreated(bytes32 indexed groupId, address indexed creator, uint256 timestamp);
-    event MemberJoined(bytes32 indexed groupId, address indexed member, uint256 timestamp);
-    event DebtSettled(bytes32 indexed groupId, address indexed debtor, address indexed creditor, uint256 amount, uint256 timestamp);
-    event ExpenseRecorded(bytes32 indexed groupId, bytes32 indexed expenseId, address indexed payer, uint256 totalAmount, uint256 timestamp);
-    
-    constructor(address _cUSD) { cUSD = IERC20(_cUSD); }
-    
-    function createGroup(bytes32 groupId) external {
-        require(!groups[groupId].exists, "Group exists");
-        groups[groupId] = Group(groupId, msg.sender, block.timestamp, true);
-        groupMembers[groupId][msg.sender] = true;
-        groupMemberCount[groupId] = 1;
-        emit GroupCreated(groupId, msg.sender, block.timestamp);
-        emit MemberJoined(groupId, msg.sender, block.timestamp);
+
+    // ─── State ────────────────────────────────────────────────────────────────
+
+    uint256 public groupCount;
+    uint256 public expenseCount;
+
+    mapping(uint256 => Group) public groups;
+    mapping(uint256 => mapping(uint256 => Expense)) public expenses; // groupId => expenseId => Expense
+    mapping(uint256 => mapping(address => bool)) public isMember;
+
+    // Net balance per member per group (positive = owed to them, negative = they owe)
+    // Stored as int256, positive means others owe you, negative means you owe others
+    mapping(uint256 => mapping(address => int256)) public balances;
+
+    // ─── Events ───────────────────────────────────────────────────────────────
+
+    event GroupCreated(uint256 indexed groupId, address indexed creator, string name);
+    event MemberAdded(uint256 indexed groupId, address indexed member);
+    event ExpenseAdded(uint256 indexed groupId, uint256 indexed expenseId, address indexed paidBy, uint256 amount, string description);
+    event DebtSettled(uint256 indexed groupId, address indexed from, address indexed to, uint256 amount);
+
+    // ─── Errors ───────────────────────────────────────────────────────────────
+
+    error GroupNotFound(uint256 groupId);
+    error NotMember(uint256 groupId, address caller);
+    error InvalidSplits();
+    error TransferFailed();
+    error AlreadyMember(address member);
+
+    // ─── Constructor ──────────────────────────────────────────────────────────
+
+    constructor(address _cUSD) {
+        cUSD = IERC20(_cUSD);
     }
-    
-    function joinGroup(bytes32 groupId) external {
-        require(groups[groupId].exists, "Group not found");
-        require(!groupMembers[groupId][msg.sender], "Already member");
-        groupMembers[groupId][msg.sender] = true;
-        groupMemberCount[groupId]++;
-        emit MemberJoined(groupId, msg.sender, block.timestamp);
+
+    // ─── Group Management ─────────────────────────────────────────────────────
+
+    /**
+     * @notice Create a new expense group. Creator pays only gas — no dust transfers.
+     * @param name Group display name
+     * @param members Initial member addresses (can add more via addMember)
+     */
+    function createGroup(string calldata name, address[] calldata members) external returns (uint256) {
+        uint256 groupId = ++groupCount;
+
+        Group storage group = groups[groupId];
+        group.id = groupId;
+        group.name = name;
+        group.creator = msg.sender;
+        group.exists = true;
+
+        // Add creator as first member
+        group.members.push(msg.sender);
+        isMember[groupId][msg.sender] = true;
+        emit MemberAdded(groupId, msg.sender);
+
+        // Add initial members
+        for (uint256 i = 0; i < members.length; i++) {
+            if (!isMember[groupId][members[i]]) {
+                group.members.push(members[i]);
+                isMember[groupId][members[i]] = true;
+                emit MemberAdded(groupId, members[i]);
+            }
+        }
+
+        emit GroupCreated(groupId, msg.sender, name);
+        return groupId;
     }
-    
-    function recordExpense(bytes32 groupId, bytes32 expenseId, uint256 totalAmount) external {
-        require(groups[groupId].exists, "Group not found");
-        require(groupMembers[groupId][msg.sender], "Not a member");
-        emit ExpenseRecorded(groupId, expenseId, msg.sender, totalAmount, block.timestamp);
+
+    /**
+     * @notice Join a group via invite (anyone with groupId can join).
+     */
+    function joinGroup(uint256 groupId) external {
+        if (!groups[groupId].exists) revert GroupNotFound(groupId);
+        if (isMember[groupId][msg.sender]) revert AlreadyMember(msg.sender);
+
+        groups[groupId].members.push(msg.sender);
+        isMember[groupId][msg.sender] = true;
+        emit MemberAdded(groupId, msg.sender);
     }
-    
-    function settleDebt(bytes32 groupId, address creditor, uint256 amount) external nonReentrant {
-        require(groups[groupId].exists, "Group not found");
-        require(groupMembers[groupId][msg.sender], "Not a member");
-        require(groupMembers[groupId][creditor], "Creditor not member");
-        require(msg.sender != creditor, "Cannot pay yourself");
-        require(amount > 0, "Amount must be positive");
-        require(cUSD.transferFrom(msg.sender, creditor, amount), "Transfer failed");
-        emit DebtSettled(groupId, msg.sender, creditor, amount, block.timestamp);
+
+    // ─── Expenses ─────────────────────────────────────────────────────────────
+
+    /**
+     * @notice Record an expense onchain. Updates balances immediately.
+     * @param groupId The group this expense belongs to
+     * @param amount Total amount spent (in cUSD wei)
+     * @param description What was spent on
+     * @param splitMembers Array of member addresses for the split
+     * @param splitAmounts Array of amounts each member owes (must sum to amount)
+     */
+    function addExpense(
+        uint256 groupId,
+        uint256 amount,
+        string calldata description,
+        address[] calldata splitMembers,
+        uint256[] calldata splitAmounts
+    ) external {
+        if (!groups[groupId].exists) revert GroupNotFound(groupId);
+        if (!isMember[groupId][msg.sender]) revert NotMember(groupId, msg.sender);
+        if (splitMembers.length != splitAmounts.length) revert InvalidSplits();
+
+        // Validate splits sum to total
+        uint256 total = 0;
+        for (uint256 i = 0; i < splitAmounts.length; i++) {
+            total += splitAmounts[i];
+        }
+        if (total != amount) revert InvalidSplits();
+
+        uint256 expenseId = ++expenseCount;
+        uint256 localExpenseId = ++groups[groupId].expenseCount;
+
+        Expense storage expense = expenses[groupId][localExpenseId];
+        expense.id = expenseId;
+        expense.paidBy = msg.sender;
+        expense.amount = amount;
+        expense.description = description;
+        expense.timestamp = block.timestamp;
+
+        // Record splits and update balances
+        for (uint256 i = 0; i < splitMembers.length; i++) {
+            expense.splits.push(Split({
+                member: splitMembers[i],
+                amount: splitAmounts[i]
+            }));
+
+            // payer's balance goes up (others owe them)
+            balances[groupId][msg.sender] += int256(splitAmounts[i]);
+            // each member's balance goes down (they owe payer)
+            balances[groupId][splitMembers[i]] -= int256(splitAmounts[i]);
+        }
+
+        emit ExpenseAdded(groupId, localExpenseId, msg.sender, amount, description);
     }
-    
-    function isGroupMember(bytes32 groupId, address user) external view returns (bool) {
-        return groupMembers[groupId][user];
+
+    // ─── Settlement ───────────────────────────────────────────────────────────
+
+    /**
+     * @notice Settle a debt. Transfers cUSD directly from caller to recipient.
+     *         Updates onchain balances.
+     * @param groupId The group
+     * @param to The member being paid
+     * @param amount Amount to settle in cUSD wei
+     */
+    function settleDebt(uint256 groupId, address to, uint256 amount) external nonReentrant {
+        if (!groups[groupId].exists) revert GroupNotFound(groupId);
+        if (!isMember[groupId][msg.sender]) revert NotMember(groupId, msg.sender);
+
+        bool ok = cUSD.transferFrom(msg.sender, to, amount);
+        if (!ok) revert TransferFailed();
+
+        // Update balances
+        balances[groupId][msg.sender] += int256(amount);
+        balances[groupId][to] -= int256(amount);
+
+        emit DebtSettled(groupId, msg.sender, to, amount);
     }
-    
-    function getGroup(bytes32 groupId) external view returns (Group memory) {
-        return groups[groupId];
+
+    // ─── Views ────────────────────────────────────────────────────────────────
+
+    function getGroup(uint256 groupId) external view returns (
+        string memory name,
+        address creator,
+        address[] memory members,
+        uint256 expCount
+    ) {
+        Group storage g = groups[groupId];
+        if (!g.exists) revert GroupNotFound(groupId);
+        return (g.name, g.creator, g.members, g.expenseCount);
+    }
+
+    function getMemberBalance(uint256 groupId, address member) external view returns (int256) {
+        return balances[groupId][member];
+    }
+
+    function getExpense(uint256 groupId, uint256 expenseId) external view returns (
+        address paidBy,
+        uint256 amount,
+        string memory description,
+        uint256 timestamp
+    ) {
+        Expense storage e = expenses[groupId][expenseId];
+        return (e.paidBy, e.amount, e.description, e.timestamp);
+    }
+
+    function getExpenseSplits(uint256 groupId, uint256 expenseId) external view returns (
+        address[] memory members,
+        uint256[] memory amounts
+    ) {
+        Expense storage e = expenses[groupId][expenseId];
+        uint256 len = e.splits.length;
+        members = new address[](len);
+        amounts = new uint256[](len);
+        for (uint256 i = 0; i < len; i++) {
+            members[i] = e.splits[i].member;
+            amounts[i] = e.splits[i].amount;
+        }
+    }
+
+    function getGroupExpenseCount(uint256 groupId) external view returns (uint256) {
+        return groups[groupId].expenseCount;
     }
 }

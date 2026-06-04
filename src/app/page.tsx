@@ -117,6 +117,12 @@ export default function LandingPage() {
           display: flex;
         }
       `}</style>
+ 
+        <HowItWorks />
+        <FlowSection />
+      </main>
+      <Footer />
+ 
     </div>
   );
 }

@@ -1,31 +1,25 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
+import { Logo } from "./Navbar";
 
 export const Footer = () => {
   return (
-    <footer className="py-12 px-6 border-t border-border">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center">
-            <span className="clash-display font-bold text-bg text-xl">S</span>
+    <footer className="border-t border-[#242424] py-12 px-8 bg-[#0a0a0a]">
+      <div className="max-w-[1280px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-10">
+          <Logo />
+          <div className="flex gap-8 text-[13px] text-[#3a3a3a] font-sans">
+            <Link href="#" className="hover:text-[#f5f0e8] transition-colors">Twitter</Link>
+            <Link href="#" className="hover:text-[#f5f0e8] transition-colors">GitHub</Link>
+            <Link href="#" className="hover:text-[#f5f0e8] transition-colors">Built on Celo</Link>
           </div>
-          <span className="clash-display font-bold text-xl tracking-tight text-text-primary">
-            Split
-          </span>
         </div>
-        
-        <div className="flex gap-8 text-xs font-medium text-text-muted uppercase tracking-widest">
-          <Link href="#" className="hover:text-brand transition-colors">Twitter</Link>
-          <Link href="#" className="hover:text-brand transition-colors">GitHub</Link>
-          <Link href="#" className="hover:text-brand transition-colors">Celo</Link>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-[#242424]/50 text-[11px] dm-mono text-[#3a3a3a] tracking-wider">
+          <p>© 2025 Split · Built on Celo · Open Source</p>
+          <p className="flex items-center gap-1.5 uppercase font-bold">Made in Africa 🌍</p>
         </div>
-
-        <p className="text-[10px] dm-mono text-text-muted text-center md:text-right">
-          Split · Built on Celo Mainnet · Season 2 Proof of Ship<br />
-          © {new Date().getFullYear()} Split Labs. No rights reserved.
-        </p>
       </div>
     </footer>
   );

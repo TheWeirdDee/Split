@@ -100,3 +100,42 @@ export const splitEqually = (total: number, participants: string[]): Record<stri
 export const generateGroupId = (uuid: string): `0x${string}` => {
   return keccak256(toBytes(uuid));
 };
+
+export const calculateGroupBalancesFromOnchain = (
+  onchainBalances: Record<string, number>
+): GroupBalance[] => {
+  const debtors: { address: string; amount: number }[] = [];
+  const creditors: { address: string; amount: number }[] = [];
+
+  Object.entries(onchainBalances).forEach(([address, balance]) => {
+    if (balance < -0.0001) { // Floating point precision
+      debtors.push({ address, amount: Math.abs(balance) });
+    } else if (balance > 0.0001) {
+      creditors.push({ address, amount: balance });
+    }
+  });
+
+  const results: GroupBalance[] = [];
+  let d = 0;
+  let c = 0;
+
+  while (d < debtors.length && c < creditors.length) {
+    const debtor = debtors[d];
+    const creditor = creditors[c];
+    const settlementAmount = Math.min(debtor.amount, creditor.amount);
+
+    results.push({
+      from: debtor.address,
+      to: creditor.address,
+      amount: settlementAmount
+    });
+
+    debtor.amount -= settlementAmount;
+    creditor.amount -= settlementAmount;
+
+    if (debtor.amount < 0.0001) d++;
+    if (creditor.amount < 0.0001) c++;
+  }
+
+  return results;
+};

@@ -1,48 +1,61 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { calculateGroupBalances } from '@/lib/balanceEngine';
-import { useExpenses } from './useExpenses';
+import { useWallet } from '@/context/WalletContext';
+import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { formatEther } from 'viem';
+import { calculateGroupBalancesFromOnchain } from '@/lib/balanceEngine';
 
 export const useBalances = (groupId: string) => {
-  const { expenses, splits, loading: expensesLoading, refreshExpenses } = useExpenses(groupId);
-  const [settlements, setSettlements] = useState<any[]>([]);
+  const { publicClient } = useWallet();
   const [balances, setBalances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSettlements = useCallback(async () => {
-    if (!groupId) return;
-    const { data, error } = await supabase
-      .from('settlements')
-      .select('*')
-      .eq('group_id', groupId);
-    
-    if (error) {
-      console.error('Error fetching settlements:', error);
-    } else {
-      setSettlements(data || []);
-    }
-  }, [groupId]);
+  const fetchBalances = useCallback(async () => {
+    if (!groupId || !publicClient) return;
+    setLoading(true);
 
-  useEffect(() => {
-    fetchSettlements();
-  }, [fetchSettlements]);
+    try {
+      const groupData = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: SPLIT_ABI,
+        functionName: 'getGroup',
+        args: [BigInt(groupId)],
+      });
 
-  useEffect(() => {
-    if (!expensesLoading) {
-      const activeExpenses = expenses.filter((expense) => (expense.status || 'active') === 'active');
-      const activeExpenseIds = new Set(activeExpenses.map((expense) => expense.id));
-      const activeSplits = splits.filter((split) => activeExpenseIds.has(split.expense_id));
-      const calculatedBalances = calculateGroupBalances(activeExpenses, activeSplits, settlements);
+      const [, , members] = groupData as [string, string, string[], bigint];
+
+      const onchainBalances: Record<string, number> = {};
+      const balancePromises = members.map(async (member) => {
+        try {
+          const balanceWei = await publicClient.readContract({
+            address: CONTRACT_ADDRESS,
+            abi: SPLIT_ABI,
+            functionName: 'getMemberBalance',
+            args: [BigInt(groupId), member as `0x${string}`],
+          });
+          onchainBalances[member.toLowerCase()] = parseFloat(formatEther(balanceWei as bigint));
+        } catch (innerErr) {
+          console.error(`Error fetching balance for member ${member}:`, innerErr);
+          onchainBalances[member.toLowerCase()] = 0;
+        }
+      });
+
+      await Promise.all(balancePromises);
+
+      const calculatedBalances = calculateGroupBalancesFromOnchain(onchainBalances);
       setBalances(calculatedBalances);
+    } catch (err) {
+      console.error('Error fetching onchain balances:', err);
+    } finally {
       setLoading(false);
     }
-  }, [expenses, splits, settlements, expensesLoading]);
+  }, [groupId, publicClient]);
+
+  useEffect(() => {
+    fetchBalances();
+  }, [fetchBalances]);
 
   const refreshBalances = async () => {
-    setLoading(true);
-    await refreshExpenses();
-    await fetchSettlements();
-    setLoading(false);
+    await fetchBalances();
   };
 
   return { balances, loading, refreshBalances };

@@ -7,9 +7,9 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
-import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { cn } from '@/lib/utils';
-import { v4 as uuidv4 } from 'uuid';
+import { decodeEventLog } from 'viem';
 import { celo } from 'viem/chains';
 
 import { 
@@ -64,22 +64,19 @@ export default function CreateGroupPage() {
     setLoading(true);
 
     try {
-      const groupId = uuidv4();
-      const groupIdBytes = generateGroupId(groupId);
-
       const gasPrice = await publicClient.getGasPrice();
       let currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
         blockTag: 'pending'
       });
 
-      // STEP 1: Create Group
+      // STEP 1: Create Group Onchain
       setLoadingText('Creating Group...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
         functionName: 'createGroup',
-        args: [groupIdBytes],
+        args: [name, []],
         chain: celo,
         account: address as `0x${string}`,
         value: BigInt(0),
@@ -89,10 +86,38 @@ export default function CreateGroupPage() {
         maxPriorityFeePerGas: undefined,
       });
 
-      await publicClient.waitForTransactionReceipt({ hash: tx });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+
+      let onchainGroupId = '';
+      for (const log of receipt.logs) {
+        try {
+          const decoded = decodeEventLog({
+            abi: SPLIT_ABI,
+            eventName: 'GroupCreated',
+            data: log.data,
+            topics: log.topics,
+          });
+          if (decoded && decoded.args) {
+            onchainGroupId = (decoded.args as any).groupId.toString();
+            break;
+          }
+        } catch (e) {
+          // not our event or fail to decode
+        }
+      }
+
+      if (!onchainGroupId) {
+        // Fallback: fetch groupCount variable
+        const count = await publicClient.readContract({
+          address: CONTRACT_ADDRESS as `0x${string}`,
+          abi: SPLIT_ABI,
+          functionName: 'groupCount',
+        });
+        onchainGroupId = count.toString();
+      }
 
       const { error: groupError } = await supabase.from('groups').insert({
-        id: groupId,
+        id: onchainGroupId,
         name,
         emoji,
         description,
@@ -103,14 +128,14 @@ export default function CreateGroupPage() {
       if (groupError) throw groupError;
 
       const { error: memberError } = await supabase.from('group_members').insert({
-        group_id: groupId,
+        group_id: onchainGroupId,
         wallet_address: address.toLowerCase(),
         onchain_tx: tx,
       });
 
       if (memberError) throw memberError;
 
-      router.push(`/app/group/${groupId}`);
+      router.push(`/app/group/${onchainGroupId}`);
     } catch (err) {
       console.error('Group creation failed:', err);
       alert('Failed to create group onchain. Please check your balance and try again.');

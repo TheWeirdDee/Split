@@ -1,67 +1,157 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Button } from '../common/Button';
+import React, { useEffect, useRef } from "react";
+import Link from "next/link";
+import gsap from "gsap";
+import { Button } from "./Navbar";
 
 export const Hero = () => {
+  const heroRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Hero Entrance Animations
+      const tl = gsap.timeline();
+      tl.from(".hero-overline", { opacity: 0, y: 20, duration: 0.6 })
+        .from(".hero-h1 span", { opacity: 0, y: 40, stagger: 0.12, duration: 0.7 }, "-=0.3")
+        .from(".hero-sub", { opacity: 0, y: 20, duration: 0.5 }, "-=0.2")
+        .from(".hero-cta", { opacity: 0, y: 20, duration: 0.5 }, "-=0.2")
+        .from(".hero-trust", { opacity: 0, duration: 0.5 }, "-=0.1")
+        .from(".hero-phone", { opacity: 0, x: 60, rotationY: -15, duration: 0.9, ease: "power3.out" }, 0.3);
+
+      // Hero Phone Float
+      gsap.to(".hero-phone", {
+        y: -14,
+        duration: 3,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 px-6 overflow-hidden">
-      {/* Background patterns */}
+    <section ref={heroRef} className="relative min-h-[100svh] flex flex-col justify-center pt-[125px] pb-10 px-12 max-w-[1280px] mx-auto overflow-hidden">
+      {/* Premium Abstract Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0" style={{ 
-          backgroundImage: 'radial-gradient(circle, #2C2C2C 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
-        }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-bg/0 via-bg/50 to-bg" />
+        {/* Animated Glass Blobs */}
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[50%] bg-[radial-gradient(circle,rgba(0,200,150,0.07)_0%,transparent_70%)] blur-[100px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[35%] h-[45%] bg-[radial-gradient(circle,rgba(0,200,150,0.04)_0%,transparent_70%)] blur-[80px]" />
+        
+        {/* Subtle Grid */}
+        <div className="absolute inset-0 opacity-[0.12]" 
+             style={{ 
+               backgroundImage: 'radial-gradient(rgba(39, 16, 153, 0.3) 0.5px, transparent 0.5px)', 
+               backgroundSize: '24px 24px' 
+             }} 
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#0D0D0D_100%)]" />
       </div>
 
-      <div className="relative z-10 max-w-[800px] mx-auto text-center space-y-8">
-        <div className="inline-flex items-center gap-2 bg-brand/10 border border-brand/20 px-3 py-1 rounded-full animate-fade-in">
-          <span className="dm-mono text-[10px] text-brand tracking-widest uppercase font-semibold">
-            SPLIT · SETTLE · REPEAT
-          </span>
+      <div className="relative z-10 w-full grid lg:grid-cols-[1.22fr_0.78fr] gap-12 items-center">
+        {/* Left Column Content */}
+        <div className="flex flex-col items-start">
+          <div className="hero-overline inline-flex items-center gap-2 bg-[rgba(0,200,150,0.06)] border border-[rgba(0,200,150,0.15)] px-4 py-1 rounded-full mb-6">
+            <span className="dm-mono text-[9px] text-[#00c896] tracking-[0.3em] font-semibold uppercase">
+              ✦ Split · Settle · Repeat
+            </span>
+          </div>
+
+          <h1 className="hero-h1 clash-display font-bold text-[clamp(40px,5.8vw,68px)] leading-[0.95] tracking-[-0.04em] mb-6 flex flex-col">
+            <span className="text-[#f5f0e8]">Split bills.</span>
+            <span className="text-[#00c896]">Settle instantly.</span>
+            <span className="text-4xl md:text-7xl block mt-2">No awkwardness.</span>
+          </h1>
+
+          <p className="hero-sub dm-sans text-[#7a7a7a] text-[16px] leading-[1.6] max-w-[460px] mb-8">
+            Pay shared expenses with cUSD on Celo. No banks, no waiting. 
+            Every settlement is permanent and instant.
+          </p>
+
+          <div className="hero-cta flex flex-wrap gap-3">
+            <Link href="/app">
+              <Button className="px-10 h-14 text-lg font-bold bg-black border border-white/20 text-white rounded-md hover:bg-white/5 shadow-none">Open App →</Button>
+            </Link>
+            <Link href="#how-it-works">
+              <Button variant="outline" className="px-10 h-14 text-lg font-bold bg-black border border-white/20 text-white rounded-md hover:bg-white/5">See how it works ↓</Button>
+            </Link>
+          </div>
+
+          <div className="hero-trust flex items-center gap-4 text-[11px] dm-mono text-[#8a8a8a] tracking-[0.12em] mt-12">
+            <span>✦ Built on Celo</span>
+            <span>·</span>
+            <span>Powered by MiniPay</span>
+            <span>·</span>
+            <span>Open Source</span>
+          </div>
         </div>
 
-        <h1 className="clash-display font-bold text-5xl md:text-8xl leading-[0.92] text-text-primary tracking-tight">
-          SPLIT BILLS.<br />
-          <span className="italic text-brand">SETTLE INSTANTLY.</span><br />
-          <span className="text-4xl md:text-7xl block mt-2">No awkwardness.</span>
-        </h1>
+        {/* Right Column - Premium Summary Card */}
+        <div className="flex justify-center lg:justify-end mt-12 lg:mt-0 px-4 lg:px-0">
+          <div className="hero-phone relative w-full max-w-[440px] group">
+            {/* Background Stacked Card 2 */}
+            <div className="absolute top-[-24px] right-[-24px] w-full h-full bg-[#0D0D0D] rounded-[32px] border border-[#1A1A1A] opacity-20 -rotate-3 scale-[0.96] pointer-events-none" />
+            
+            {/* Background Stacked Card 1 */}
+            <div className="absolute top-[-12px] right-[-12px] w-full h-full bg-[#111111] rounded-[32px] border border-[#222222] opacity-50 -rotate-1 scale-[0.98] pointer-events-none" />
 
-        <p className="text-text-secondary text-lg md:text-xl max-w-[500px] mx-auto font-medium leading-relaxed">
-          Pay with cUSD. Settle onchain. Works natively in MiniPay.
-          The most seamless way to manage group expenses on Celo.
-        </p>
+            {/* Main Card */}
+            <div className="relative bg-[#141414] rounded-[32px] border border-[#2C2C2C] p-6 lg:p-8 shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+              {/* Subtle inner glow */}
+              <div className="absolute inset-0 rounded-[32px] bg-[radial-gradient(circle_at_50%_0%,rgba(0,200,150,0.04)_0%,transparent_70%)] pointer-events-none" />
+              
+              <div className="relative z-10 space-y-6">
+                {/* Header */}
+                <div className="flex justify-between items-center border-b border-[#222222] pb-4">
+                  <span className="dm-mono text-[8px] text-[#4A4A4A] tracking-[0.25em] uppercase font-bold">House Expenses · May 2025</span>
+                  <div className="flex gap-1.5">
+                    <div className="w-0.5 h-0.5 rounded-full bg-[#2C2C2C]" />
+                    <div className="w-0.5 h-0.5 rounded-full bg-[#2C2C2C]" />
+                  </div>
+                </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <Link href="/app" className="w-full sm:w-auto">
-            <Button variant="outline" className="w-full sm:w-auto rounded-md px-10 text-lg font-bold h-14 bg-black border-white/20 hover:bg-white/5 text-white">
-              Open App →
-            </Button>
-          </Link>
-          <Link href="#how-it-works" className="w-full sm:w-auto">
-            <Button variant="outline" className="w-full sm:w-auto rounded-md px-10 text-lg font-bold h-14 bg-black border-white/20 hover:bg-white/5 text-white">
-              See how it works ↓
-            </Button>
-          </Link>
-        </div>
+                {/* Rows */}
+                <div className="space-y-3.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#8A8A8A] text-[14px] font-medium transition-colors group-hover/row:text-[#f5f0e8]">Divine paid rent</span>
+                    <span className="clash-display font-bold text-lg text-[#F7F3EC]">500 <span className="text-[10px] dm-mono opacity-30 font-normal">cUSD</span></span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#8A8A8A] text-[14px] font-medium">John owes you</span>
+                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">cUSD</span></span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#8A8A8A] text-[14px] font-medium">Sarah owes you</span>
+                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">cUSD</span></span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#8A8A8A] text-[14px] font-medium">Mike owes you</span>
+                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">cUSD</span></span>
+                  </div>
+                </div>
 
-        <div className="pt-12 flex flex-wrap justify-center gap-6 text-[10px] dm-mono text-text-muted uppercase tracking-widest">
-          <div className="flex items-center gap-2">
-            <span className="text-brand">✦</span> Built on Celo
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-brand">✦</span> Powered by MiniPay
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-brand">✦</span> Open Source
+                {/* Net Balance Section */}
+                <div className="pt-5 border-t border-[#222222] flex justify-between items-center">
+                  <div className="flex flex-col gap-2.5">
+                    <span className="dm-mono text-[8px] text-[#4A4A4A] tracking-[0.2em] uppercase font-bold">Net Balance</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#00C896]/15 bg-[#00C896]/5 text-[#00C896] text-[8px] font-bold tracking-[0.1em] uppercase">
+                      Settled Onchain ✓
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="clash-display font-bold text-4xl text-[#00C896] tracking-tight">+498 <span className="text-xs dm-mono opacity-50 font-medium">cUSD</span></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Decorative glow */}
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[#00C896]/5 blur-[60px] rounded-full pointer-events-none" />
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Decorative elements */}
-      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[120%] h-96 bg-brand/5 blur-[120px] rounded-full z-0" />
     </section>
   );
 };

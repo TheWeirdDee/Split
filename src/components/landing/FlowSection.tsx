@@ -1,186 +1,189 @@
 "use client";
 
-import React from 'react';
-import { Card } from '../common/Card';
-import { cn } from '@/lib/utils';
-import { ChevronLeft, Settings, Plus, ArrowRight, UserCheck, Smartphone } from 'lucide-react';
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { 
+  Zap, 
+  Users, 
+  Plus, 
+  MessageCircle, 
+  QrCode, 
+  Wallet 
+} from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const FlowSection = () => {
+  const wrapperRef = useRef(null);
+  const stickyRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // See It In Action (Sticky Section)
+      const siaTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: stickyRef.current,
+          start: "top top",
+          end: "+=500%",
+          scrub: 0.5,
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+        }
+      });
+      
+      // Step 1 -> 2 (Design -> Launch)
+      siaTl.to(".sia-state-1", { autoAlpha: 0, y: -20, duration: 0.5 }, 0.5)
+           .to(".sia-state-2", { autoAlpha: 1, y: 0, duration: 0.5 }, 1.2)
+           .to(".sia-indicator-1", { opacity: 0.3, duration: 0.4 }, 0.5)
+           .to(".sia-indicator-2", { color: "#00C896", borderColor: "#00C896", backgroundColor: "rgba(0,200,150,0.08)", opacity: 1, duration: 0.4 }, 1.2);
+      
+      // Step 2 -> 3 (Launch -> Track)
+      siaTl.to(".sia-state-2", { autoAlpha: 0, y: -20, duration: 0.5 }, 2.5)
+           .to(".sia-state-3", { autoAlpha: 1, y: 0, duration: 0.5 }, 3.2)
+           .to(".sia-indicator-2", { opacity: 0.3, duration: 0.4 }, 2.5)
+           .to(".sia-indicator-3", { color: "#00C896", borderColor: "#00C896", backgroundColor: "rgba(0,200,150,0.08)", opacity: 1, duration: 0.4 }, 3.2);
+
+      // Step 3 -> 4 (Track -> Settle)
+      siaTl.to(".sia-state-3", { autoAlpha: 0, y: -20, duration: 0.5 }, 4.5)
+           .to(".sia-state-4", { autoAlpha: 1, y: 0, duration: 0.5 }, 5.2)
+           .to(".sia-indicator-3", { opacity: 0.3, duration: 0.4 }, 4.5)
+           .to(".sia-indicator-4", { color: "#00C896", borderColor: "#00C896", backgroundColor: "rgba(0,200,150,0.08)", opacity: 1, duration: 0.4 }, 5.2);
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="py-32 px-6 max-w-7xl mx-auto overflow-hidden">
-      <div className="text-center mb-20 space-y-4">
-        <h2 className="clash-display font-bold text-4xl md:text-6xl tracking-tight">
-          How we <span className="text-brand italic">simplify</span> splitting
-        </h2>
-        <p className="text-text-secondary max-w-2xl mx-auto text-lg">
-          From tracking expenses to final settlement, Split handles the complexity so you don't have to.
-        </p>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-12 items-start">
-        {/* Step 1: The Ledger */}
-        <div className="space-y-8 group">
-          <div className="text-center lg:text-left">
-            <span className="dm-mono text-brand font-bold text-sm uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">Step 01</span>
-            <h3 className="clash-display font-bold text-3xl mt-4">The Ledger</h3>
-            <p className="text-text-muted mt-2">Track every expense with total transparency.</p>
+    <section ref={wrapperRef} className="see-in-action-wrapper relative bg-[#0a0a0a]">
+      <div ref={stickyRef} className="see-in-action-sticky w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#0a0a0a]">
+        <div className="text-center z-50">
+          <h2 className="clash-display font-bold text-3xl text-[#f5f0e8] mt-10 mb-3">How Split works.</h2>
+          <div className="flex flex-wrap gap-3 justify-center mt-8">
+             <span className="sia-indicator-1 dm-mono text-[10px] px-5 py-2 rounded-full border border-[#00C896] text-[#00C896] bg-[rgba(0,200,150,0.08)]">01 DESIGN</span>
+             <span className="sia-indicator-2 dm-mono text-[10px] px-5 py-2 rounded-full border border-[#242424] text-[#3a3a3a]">02 LAUNCH</span>
+             <span className="sia-indicator-3 dm-mono text-[10px] px-5 py-2 rounded-full border border-[#242424] text-[#3a3a3a]">03 TRACK</span>
+             <span className="sia-indicator-4 dm-mono text-[10px] px-5 py-2 rounded-full border border-[#242424] text-[#3a3a3a]">04 SETTLE</span>
           </div>
-          
-          {/* Mobile Screen Mockup */}
-          <div className="relative mx-auto max-w-[280px] aspect-[9/19] bg-surface rounded-[3rem] border-8 border-surface-2 shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-6 bg-surface-2 rounded-b-2xl z-20" />
+        </div>
+
+        <div className="relative w-full max-w-[960px] px-6 h-[320px] mt-10">
+          {/* Common Card Container */}
+          <div className="absolute inset-0 bg-[#141414] border border-[#242424] md:rounded-[32px] rounded-0 p-8 shadow-2xl flex items-center justify-center">
             
-            <div className="p-4 pt-10 space-y-4">
-              <div className="flex items-center justify-between text-xs font-bold text-text-muted px-1">
-                <ChevronLeft className="w-4 h-4" />
-                <span>Ski Trip '24</span>
-                <Settings className="w-4 h-4" />
+            {/* State 1: Design */}
+            <div className="sia-state-1 absolute inset-0 p-8 flex flex-col items-center justify-center text-center space-y-6 w-full transition-all z-10">
+              <div className="w-12 h-12 bg-[#0c1a16] border border-[#00c89633] rounded-xl flex items-center justify-center text-2xl shadow-inner group">
+              </div>
+              
+              <div className="space-y-2 w-full max-w-lg">
+                <h3 className="clash-display font-bold text-2xl text-[#f5f0e8]">Name your group</h3>
+                <p className="text-[#8A8A8A] text-sm leading-relaxed mx-auto max-w-md">
+                  Set up in seconds. Share an invite link via WhatsApp or QR code. Friends join with their MiniPay wallet.
+                </p>
               </div>
 
-              <div className="flex -space-x-2 justify-center py-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-brand/20 border-2 border-surface" />
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                <div className="bg-surface-2 p-3 rounded-xl border border-brand/20 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-brand/10" />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold">Sarah paid $120</span>
-                      <span className="text-[8px] text-text-muted">(Dinner)</span>
-                    </div>
+              {/* New Feature Row */}
+              <div className="grid grid-cols-3 gap-8 w-full max-w-md pt-4">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center text-[#00C896]">
+                    <MessageCircle size={20} />
                   </div>
+                  <span className="text-[10px] font-mono text-[#4A4A4A] uppercase tracking-wider">Share Link</span>
                 </div>
-                <div className="bg-surface-2 p-3 rounded-xl border border-border flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-surface" />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold">Mike paid $450</span>
-                      <span className="text-[8px] text-text-muted">(Airbnb)</span>
-                    </div>
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center text-[#00C896]">
+                    <QrCode size={20} />
                   </div>
+                  <span className="text-[10px] font-mono text-[#4A4A4A] uppercase tracking-wider">Scan QR</span>
+                </div>
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center text-[#00C896]">
+                    <Wallet size={20} />
+                  </div>
+                  <span className="text-[10px] font-mono text-[#4A4A4A] uppercase tracking-wider">MiniPay Join</span>
                 </div>
               </div>
 
-              <div className="bg-brand/5 border border-brand/10 p-3 rounded-xl mt-6 space-y-1">
-                <div className="flex justify-between text-[10px] font-bold">
-                  <span>You owe Sarah</span>
-                  <span className="text-brand">$60</span>
-                </div>
-                <div className="flex justify-between text-[10px] font-bold text-text-muted">
-                  <span>Mike owes you</span>
-                  <span>$15</span>
-                </div>
-              </div>
-
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-brand rounded-full flex items-center justify-center shadow-lg shadow-brand/20">
-                <Plus className="w-6 h-6 text-bg" />
+              <div className="bg-[#0c1a16] border-2 border-dashed border-[#00c89633] p-3 rounded-xl flex items-center justify-center gap-3 group cursor-pointer hover:border-[#00c89688] transition-all w-full max-w-xs">
+                <span className="text-[#00c896] text-xl font-bold">+</span>
+                <span className="dm-sans font-bold text-[#00c896] tracking-tight">Create New Group</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Step 2: The Engine */}
-        <div className="space-y-8 group">
-          <div className="text-center lg:text-left">
-            <span className="dm-mono text-brand font-bold text-sm uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">Step 02</span>
-            <h3 className="clash-display font-bold text-3xl mt-4">The Engine</h3>
-            <p className="text-text-muted mt-2">We simplify multi-person debts automatically.</p>
-          </div>
+            {/* State 2: Launch */}
+            <div className="sia-state-2 absolute inset-0 p-12 flex flex-col items-center justify-center text-center space-y-8 opacity-0 pointer-events-none">
+              <div className="relative">
+                 <div className="w-20 h-20 bg-[#00c896]/10 border border-[#00c896]/30 rounded-full flex items-center justify-center">
+                    <Zap className="text-[#00c896] w-8 h-8 animate-pulse" />
+                 </div>
+                 <div className="absolute -top-2 -right-2 bg-[#00c896] w-6 h-6 rounded-full flex items-center justify-center border-4 border-[#141414]">
+                    <div className="w-1.5 h-1.5 bg-black rounded-full" />
+                 </div>
+              </div>
+              <div className="space-y-6 w-full max-w-xs">
+                 <h3 className="clash-display font-bold text-2xl">Launch On-Chain</h3>
+                 <div className="w-full h-2 bg-[#0a0a0a] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#00c896] w-3/4" />
+                 </div>
+                 <p className="text-[#00c896] dm-mono text-[10px] tracking-widest uppercase font-bold">INITIALIZING LEDGER...</p>
+                 <p className="text-[#7a7a7a] text-xs">Setting up your smart contract on Celo.</p>
+              </div>
+            </div>
 
-          <div className="relative mx-auto max-w-[280px] aspect-[9/19] bg-surface rounded-[3rem] border-8 border-surface-2 shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
-             <div className="p-6 pt-12 flex flex-col h-full items-center text-center space-y-6">
-                <h4 className="clash-display font-bold text-lg leading-tight uppercase tracking-tighter">We Simplify <br/> Group Debt</h4>
+            {/* State 3: Track */}
+            <div className="sia-state-3 absolute inset-0 p-12 flex flex-col items-center justify-center text-center space-y-8 opacity-0 pointer-events-none">
+              <div className="w-full space-y-3">
+                <div className="bg-[#0a0a0a] border border-[#242424] p-4 rounded-2xl flex justify-between items-center group hover:border-[#00c896]/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-lg bg-[#00c896]/10 flex items-center justify-center text-[#00c896]"><Users className="w-4 h-4" /></div>
+                     <div className="text-left"><p className="text-sm font-bold">Sarah paid $120</p><p className="text-[10px] text-[#3a3a3a]">Dinner</p></div>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#00c896]">ADDED</span>
+                </div>
+                <div className="bg-[#0a0a0a] border border-[#242424] p-4 rounded-2xl flex justify-between items-center opacity-60">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-lg bg-[#242424] flex items-center justify-center text-[#7a7a7a]"><Plus className="w-4 h-4" /></div>
+                     <div className="text-left"><p className="text-sm font-bold">Add new expense</p></div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                 <h3 className="clash-display font-bold text-2xl">Log Everything</h3>
+                 <p className="text-[#7a7a7a] text-xs">No more manual math. Split handles the logic.</p>
+              </div>
+            </div>
+
+            {/* State 4: Settle */}
+            <div className="sia-state-4 absolute inset-0 p-12 flex flex-col items-center justify-center text-center space-y-8 opacity-0 pointer-events-none">
+              <div className="w-full max-w-md bg-[#0c1a16] border border-[#00c89633] rounded-3xl p-6 relative overflow-hidden">
+                <span className="dm-mono text-[9px] text-[#00c896] tracking-[0.2em] font-bold uppercase block mb-3">Your Net Balance</span>
+                <div className="flex items-baseline justify-center gap-2 mb-4">
+                  <span className="clash-display font-bold text-5xl text-[#f5f0e8]">0.00</span>
+                  <span className="dm-mono text-lg text-[#7a7a7a]">cUSD</span>
+                </div>
                 
-                <div className="relative w-40 h-40 mt-4">
-                   {/* Nodes */}
-                   <div className="absolute top-0 left-0 w-8 h-8 rounded-full border-2 border-brand flex items-center justify-center font-bold text-xs">A</div>
-                   <div className="absolute top-0 right-0 w-8 h-8 rounded-full border-2 border-brand flex items-center justify-center font-bold text-xs">B</div>
-                   <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full border-2 border-brand flex items-center justify-center font-bold text-xs">C</div>
-                   <div className="absolute bottom-0 left-0 w-8 h-8 rounded-full border-2 border-brand flex items-center justify-center font-bold text-xs">D</div>
-                   
-                   {/* Center Icon */}
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-brand/10 border border-brand/20 rounded-xl flex items-center justify-center">
-                      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M65 10L35 90H48L78 10H65Z" fill="currentColor" />
-                        <path d="M48 18C33 18 21 30 21 45H31C31 35.5 38.5 28 48 28V18Z" fill="currentColor" />
-                        <path d="M12 45L21 62L30 45H12Z" fill="currentColor" />
-                        <path d="M52 82C67 82 79 70 79 55H69C69 64.5 61.5 72 52 72V82Z" fill="currentColor" />
-                        <path d="M88 55L79 38L70 55H88Z" fill="currentColor" />
-                      </svg>
-                   </div>
+                <div className="w-full h-[1px] bg-[#00c8961a] mb-6"></div>
 
-                   {/* Arrows - Mocked with div paths or simple icons */}
-                   <div className="absolute inset-0 opacity-40">
-                      <ArrowRight className="absolute top-4 left-10 w-4 h-4 rotate-[135deg] text-brand" />
-                      <ArrowRight className="absolute bottom-4 left-10 w-4 h-4 rotate-[45deg] text-brand" />
-                      <ArrowRight className="absolute top-4 right-10 w-4 h-4 rotate-[-135deg] text-brand" />
-                      <ArrowRight className="absolute bottom-4 right-10 w-4 h-4 rotate-[-45deg] text-brand" />
-                   </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <span className="dm-mono text-[8px] text-[#7a7a7a] uppercase block mb-1">You are owed</span>
+                    <span className="dm-sans font-bold text-[#00c896] text-sm">+0.00 <span className="text-[9px] opacity-60">cUSD</span></span>
+                  </div>
+                  <div className="text-center border-l border-[#00c8961a]">
+                    <span className="dm-mono text-[8px] text-[#7a7a7a] uppercase block mb-1">You owe</span>
+                    <span className="dm-sans font-bold text-[#ff4b4b] text-sm">-0.00 <span className="text-[9px] opacity-60">cUSD</span></span>
+                  </div>
                 </div>
+              </div>
 
-                <div className="pt-4">
-                   <p className="text-[10px] font-bold text-text-muted tracking-widest uppercase">Split Engine</p>
-                   <div className="mt-4 p-3 bg-surface-2 rounded-xl border border-border">
-                      <p className="text-[9px] font-medium text-text-secondary">Optimized Payments:</p>
-                      <p className="text-sm font-bold text-brand">2 total</p>
-                   </div>
-                </div>
-             </div>
-          </div>
-        </div>
+              <div className="w-full space-y-4">
+                <div className="w-full py-5 bg-[#00C896] text-black font-bold rounded-2xl text-sm shadow-xl shadow-[#00C896]/20 hover:scale-[1.02] transition-transform cursor-pointer">Settle Up Now</div>
+                <p className="dm-mono text-[9px] text-[#3a3a3a]">SECURE ON-CHAIN SETTLEMENT</p>
+              </div>
+            </div>
 
-        {/* Step 3: The Settlement */}
-        <div className="space-y-8 group">
-          <div className="text-center lg:text-left">
-            <span className="dm-mono text-brand font-bold text-sm uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">Step 03</span>
-            <h3 className="clash-display font-bold text-3xl mt-4">The Settlement</h3>
-            <p className="text-text-muted mt-2">Instant on-chain payments via MiniPay.</p>
-          </div>
-
-          <div className="relative mx-auto max-w-[280px] aspect-[9/19] bg-surface rounded-[3rem] border-8 border-brand shadow-[0_0_50px_rgba(0,200,150,0.2)] overflow-hidden group-hover:scale-105 transition-transform duration-500">
-             <div className="p-6 pt-12 flex flex-col h-full items-center space-y-8">
-                <div className="flex flex-col items-center gap-1">
-                    <div className="w-8 h-8 text-brand">
-                      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M65 10L35 90H48L78 10H65Z" fill="currentColor" />
-                        <path d="M48 18C33 18 21 30 21 45H31C31 35.5 38.5 28 48 28V18Z" fill="currentColor" />
-                        <path d="M12 45L21 62L30 45H12Z" fill="currentColor" />
-                        <path d="M52 82C67 82 79 70 79 55H69C69 64.5 61.5 72 52 72V82Z" fill="currentColor" />
-                        <path d="M88 55L79 38L70 55H88Z" fill="currentColor" />
-                      </svg>
-                   </div>
-                   <span className="clash-display font-bold text-sm tracking-tight uppercase">split</span>
-                </div>
-
-                <div className="text-center space-y-1">
-                   <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Settle Up</p>
-                   <h5 className="clash-display font-bold text-4xl">$60.00</h5>
-                   <p className="text-xs font-bold text-brand tracking-widest">cUSD</p>
-                </div>
-
-                <div className="flex items-center gap-4 bg-surface-2 p-3 rounded-2xl w-full">
-                   <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-bg shadow-lg shadow-brand/20">
-                      <Smartphone className="w-5 h-5" />
-                   </div>
-                   <ArrowRight className="w-4 h-4 text-text-muted" />
-                   <div className="w-10 h-10 rounded-xl bg-surface border border-border" />
-                   <p className="text-[10px] font-bold">to Sarah</p>
-                </div>
-
-                <div className="w-full pt-4">
-                   <div className="bg-brand text-bg font-bold py-4 rounded-2xl text-xs uppercase tracking-widest text-center shadow-xl shadow-brand/20 active:scale-95 transition-transform cursor-pointer">
-                      Pay Instantly <br/> with MiniPay
-                   </div>
-                </div>
-
-                <div className="pt-2 text-center">
-                   <p className="text-[7px] text-text-muted font-mono uppercase">Transaction ID: 0x39f2a275a60</p>
-                   <p className="text-[7px] text-brand/60 font-mono uppercase mt-0.5">On-chain proof: 0x4a...c3e1</p>
-                </div>
-             </div>
           </div>
         </div>
       </div>

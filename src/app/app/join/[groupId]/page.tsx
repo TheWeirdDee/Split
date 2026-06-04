@@ -7,10 +7,9 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
-import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI, generateGroupId } from '@/lib/contract';
+import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { truncateAddress } from '@/lib/utils';
 import { celo } from 'viem/chains';
-import { parseEther, erc20Abi } from 'viem';
 import { createNotificationSafe } from '@/lib/notifications';
 
 export default function JoinGroupPage() {
@@ -21,7 +20,7 @@ export default function JoinGroupPage() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [loadingText, setLoadingText] = useState('Joining Group (cUSD)...');
+  const [loadingText, setLoadingText] = useState('Joining Group...');
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -50,38 +49,17 @@ export default function JoinGroupPage() {
 
     setJoining(true);
     try {
-      const groupIdBytes = generateGroupId(groupId as string);
-
       const gasPrice = await publicClient.getGasPrice();
       const currentNonce = await publicClient.getTransactionCount({
         address: address as `0x${string}`,
         blockTag: 'pending',
       });
       setLoadingText('Joining Group...');
-      setLoadingText('Initiating cUSD (Step 1/2)...');
-      const transferTx = await walletClient.writeContract({
-        address: CUSD_ADDRESS as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [CONTRACT_ADDRESS as `0x${string}`, parseEther('0.0001')],
-        chain: celo,
-        account: address as `0x${string}`,
-        feeCurrency: CUSD_ADDRESS as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
-        nonce: currentNonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
-      });
-
-      await publicClient.waitForTransactionReceipt({ hash: transferTx });
-
-      setLoadingText('Joining Group (Step 2/2)...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
         functionName: 'joinGroup',
-        args: [groupIdBytes],
+        args: [BigInt(groupId as string)],
         chain: celo,
         account: address as `0x${string}`,
         value: BigInt(0),
@@ -120,7 +98,7 @@ export default function JoinGroupPage() {
       alert('Failed to join group onchain.');
     } finally {
       setJoining(false);
-      setLoadingText('Joining Group (cUSD)...');
+      setLoadingText('Joining Group...');
     }
   };
 

@@ -23,6 +23,7 @@ interface WalletContextType {
   isMiniPay: boolean;
   isInitialLoading: boolean;
   cUSDBalance: string;
+  hasNoCelo: boolean;
   publicClient: any;
   walletClient: any;
   connect: () => Promise<void>;
@@ -40,6 +41,7 @@ const MINIMAL_ERC20_ABI = parseAbi([
 export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
   const [cUSDBalance, setCUSDBalance] = useState('0.00');
+  const [hasNoCelo, setHasNoCelo] = useState(false);
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -65,6 +67,10 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         args: [address],
       });
       setCUSDBalance(formatEther(balance as bigint));
+
+      // Fetch native CELO balance to check for 0 CELO (gas warning)
+      const celoBalance = await publicClient.getBalance({ address });
+      setHasNoCelo(celoBalance === 0n);
     } catch (err) {
       console.error('Balance fetch error:', err);
     } finally {
@@ -188,6 +194,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       isMiniPay,
       isInitialLoading,
       cUSDBalance,
+      hasNoCelo,
       publicClient,
       walletClient,
       connect,

@@ -52,7 +52,15 @@ const downloadFile = (filename: string, content: string, type = 'text/csv;charse
 export default function GroupDetailPage() {
   const { groupId } = useParams();
   const router = useRouter();
-  const { address } = useWallet();
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const { address } = wallet;
+  const walletRef = React.useRef(wallet);
+  
+  React.useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
   const { showToast } = useToast();
   const { group, members, loading: groupLoading } = useGroup(groupId as string);
   const { balances } = useBalances(groupId as string);
@@ -132,8 +140,10 @@ export default function GroupDetailPage() {
   };
 
   const handleRemind = async (targetAddress: string, amount: number) => {
+    const { address } = walletRef.current;
+    if (!address) return;
     try {
-      const senderName = getMemberDisplayName(address || '');
+      const senderName = getMemberDisplayName(address);
       const targetName = getMemberDisplayName(targetAddress);
       await createNotificationSafe({
         userAddress: targetAddress,
@@ -151,6 +161,8 @@ export default function GroupDetailPage() {
   };
 
   const handleAddManual = async () => {
+    const { address } = walletRef.current;
+    if (!address) return;
     if (!manualAddress || !manualAddress.startsWith('0x')) {
       showToast('Please enter a valid wallet address (0x...)', 'error');
       return;
@@ -203,6 +215,8 @@ export default function GroupDetailPage() {
   };
 
   const handleDeleteGroup = async () => {
+    const { address } = walletRef.current;
+    if (!address) return;
     if (balances.length > 0) {
       showToast('Cannot delete group with unsettled debts.', 'error');
       return;
@@ -221,6 +235,7 @@ export default function GroupDetailPage() {
   };
 
   const handleSendMessage = async () => {
+    const { address } = walletRef.current;
     if (!address || !newMessage.trim()) return;
     setIsSendingMessage(true);
     try {
@@ -251,6 +266,7 @@ export default function GroupDetailPage() {
   };
 
   const handleSettleAll = async () => {
+    const { address } = walletRef.current;
     if (!address || oweBalances.length === 0) return;
     setSettleAllLoading(true);
     try {
@@ -330,6 +346,7 @@ export default function GroupDetailPage() {
   };
 
   const handleReverseExpense = async (expense: any) => {
+    const { address } = walletRef.current;
     if (!address) return;
     const reason = window.prompt('Reason for reversing this expense?');
     if (!reason) return;
@@ -375,6 +392,7 @@ export default function GroupDetailPage() {
   };
 
   const handleEditExpense = async (expense: any) => {
+    const { address } = walletRef.current;
     if (!address) return;
     const nextDescription = window.prompt('Update description', expense.description || '');
     if (nextDescription === null) return;
@@ -471,7 +489,7 @@ export default function GroupDetailPage() {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         danger
-        onConfirm={handleDeleteGroup}
+        onConfirm={() => requireConnection(handleDeleteGroup)}
         onCancel={() => setShowDeleteConfirm(false)}
       />
 
@@ -591,7 +609,7 @@ export default function GroupDetailPage() {
               <Button
                 className="w-full"
                 loading={settleAllLoading}
-                onClick={handleSettleAll}
+                onClick={() => requireConnection(handleSettleAll)}
               >
                 Settle all debts
               </Button>
@@ -609,7 +627,7 @@ export default function GroupDetailPage() {
                         amount={balance.amount}
                         type={isUserFrom ? 'owe' : 'owed'}
                         groupId={groupId as string}
-                        onRemind={!isUserFrom ? () => handleRemind(balance.from, balance.amount) : undefined}
+                        onRemind={!isUserFrom ? () => requireConnection(() => handleRemind(balance.from, balance.amount)) : undefined}
                       />
                     </div>
                   );
@@ -664,7 +682,7 @@ export default function GroupDetailPage() {
                   }}
                 />
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button size="sm" onClick={handleAddManual} disabled={isAdding}>Add</Button>
+                  <Button size="sm" onClick={() => requireConnection(handleAddManual)} disabled={isAdding}>Add</Button>
                   <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
                 </div>
               </div>
@@ -720,12 +738,12 @@ export default function GroupDetailPage() {
                       userShare={userSplit ? parseFloat(userSplit.amount) : 0}
                     />
                     <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEditExpense(expense)}>
+                      <Button size="sm" variant="outline" onClick={() => requireConnection(() => handleEditExpense(expense))}>
                         <Edit3 size={12} />
                         Edit
                       </Button>
                       {(expense.status || 'active') !== 'reversed' && (
-                        <Button size="sm" variant="danger" onClick={() => handleReverseExpense(expense)}>
+                        <Button size="sm" variant="danger" onClick={() => requireConnection(() => handleReverseExpense(expense))}>
                           <RotateCcw size={12} />
                           Reverse
                         </Button>
@@ -827,7 +845,7 @@ export default function GroupDetailPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    handleSendMessage();
+                    requireConnection(handleSendMessage);
                   }
                 }}
                 rows={2}
@@ -840,13 +858,12 @@ export default function GroupDetailPage() {
                 }}
               />
               <button
-                onClick={handleSendMessage}
+                onClick={() => requireConnection(handleSendMessage)}
                 disabled={isSendingMessage || !newMessage.trim()}
                 style={{
                   width: '48px', height: '48px', flexShrink: 0,
                   background: '#00C896', border: 'none', borderRadius: '14px',
                   color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', touchAction: 'manipulation',
                   opacity: !newMessage.trim() ? 0.4 : 1,
                 }}
               >

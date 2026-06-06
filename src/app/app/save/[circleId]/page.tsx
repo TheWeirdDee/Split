@@ -20,7 +20,9 @@ export default function CircleDetailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const { address, isConnected, connect } = useWallet();
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const { address, isConnected, connect } = wallet;
   const { 
     circle, members, loading, txLoading, 
     joinCircle, contribute, distribute, distributeGoal, 
@@ -284,7 +286,7 @@ export default function CircleDetailPage() {
             </p>
             <Button
               className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer hover:bg-brand-dark"
-              onClick={joinCircle}
+              onClick={() => requireConnection(joinCircle)}
               loading={txLoading}
             >
               Join Savings Circle
@@ -308,7 +310,7 @@ export default function CircleDetailPage() {
 
                 <Button
                   className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer hover:bg-brand-dark"
-                  onClick={() => contribute(circle.contributionAmount)}
+                  onClick={() => requireConnection(() => contribute(circle.contributionAmount))}
                   loading={txLoading}
                 >
                   Contribute {contributionFormatted} cUSD
@@ -328,7 +330,7 @@ export default function CircleDetailPage() {
 
                 <Button
                   className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer"
-                  onClick={distribute}
+                  onClick={() => requireConnection(distribute)}
                   loading={txLoading}
                 >
                   Distribute Pot Onchain
@@ -348,7 +350,7 @@ export default function CircleDetailPage() {
 
                 <Button
                   className="w-full h-12 bg-purple-500 text-white font-bold rounded-2xl cursor-pointer"
-                  onClick={distributeGoal}
+                  onClick={() => requireConnection(distributeGoal)}
                   loading={txLoading}
                 >
                   Distribute Goal Pot
@@ -389,7 +391,7 @@ export default function CircleDetailPage() {
                     {isMember && !isUser && !m.hasContributedThisCycle && deadlinePassed && m.status === 0 && (
                       <button
                         type="button"
-                        onClick={() => markMissed(m.address)}
+                        onClick={() => requireConnection(() => markMissed(m.address))}
                         className="text-[10px] text-yellow-500 font-bold hover:underline cursor-pointer border border-yellow-500/20 px-2 py-0.5 rounded-md hover:bg-yellow-500/5 transition-all"
                       >
                         Mark Missed
@@ -428,7 +430,7 @@ export default function CircleDetailPage() {
                     <div className="flex gap-2">
                       <Button
                         className="w-1/2 h-10 bg-yellow-500 text-black text-xs font-bold rounded-xl cursor-pointer"
-                        onClick={exitCircle}
+                        onClick={() => requireConnection(exitCircle)}
                         loading={txLoading}
                       >
                         Confirm Exit
@@ -466,7 +468,7 @@ export default function CircleDetailPage() {
                     <div className="flex gap-2">
                       <Button
                         className="w-1/2 h-10 bg-red-500 text-white text-xs font-bold rounded-xl cursor-pointer"
-                        onClick={dissolveCircle}
+                        onClick={() => requireConnection(dissolveCircle)}
                         loading={txLoading}
                       >
                         Dissolve Circle

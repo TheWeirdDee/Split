@@ -1,6 +1,4 @@
- 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/contract';
 import { celo } from 'viem/chains';
@@ -15,7 +13,6 @@ export const useSavingsCircle = (circleId?: string) => {
   }, [wallet]);
 
   const { address, walletClient, publicClient } = wallet;
-  const { address, walletClient, publicClient } = useWallet();
   const [circles, setCircles] = useState<any[]>([]);
   const [circle, setCircle] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);

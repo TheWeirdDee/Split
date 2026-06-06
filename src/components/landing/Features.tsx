@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Zap, Users } from "lucide-react";
+import { Zap, Users, PiggyBank } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -82,14 +82,14 @@ export const Features = () => {
             </div>
           </div>
 
-          {/* Card 3: Standard - Group Admin */}
+          {/* Card 3: Standard - Savings Circles */}
           <div className="feature-card relative bg-[#111111] rounded-md p-8 overflow-hidden transition-all hover:bg-[#161616] group">
             <div className="relative z-10">
-              <h3 className="clash-display font-bold text-xl text-[#f5f0e8] mb-2">Group Admin</h3>
-              <p className="dm-sans text-[#8A8A8A] text-xs leading-[1.6]">Create a group in 10 seconds. Share via WhatsApp instantly.</p>
+              <h3 className="clash-display font-bold text-xl text-[#f5f0e8] mb-2">Savings Circles</h3>
+              <p className="dm-sans text-[#8A8A8A] text-xs leading-[1.6]">Form savings groups (ROSCA) onchain. Save and cash out in turns securely.</p>
             </div>
             <div className="absolute -bottom-4 -right-4">
-              <Users size={120} strokeWidth={1.5} className="text-[#00C896] opacity-30 group-hover:opacity-70 transition-all duration-700" />
+              <PiggyBank size={120} strokeWidth={1.5} className="text-[#00C896] opacity-30 group-hover:opacity-70 transition-all duration-700" />
             </div>
           </div>
 

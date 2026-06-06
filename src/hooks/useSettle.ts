@@ -53,7 +53,7 @@ export const useSettle = () => {
         .from('user_profiles')
         .select('display_name')
         .eq('wallet_address', address.toLowerCase())
-        .single();
+        .maybeSingle();
       const debtorName = profile?.display_name || 'Someone';
 
       await createNotificationSafe({

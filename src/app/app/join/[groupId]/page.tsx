@@ -15,7 +15,13 @@ import { createNotificationSafe } from '@/lib/notifications';
 export default function JoinGroupPage() {
   const router = useRouter();
   const { groupId } = useParams();
-  const { address, walletClient, publicClient, connect, isConnected } = useWallet();
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const walletRef = React.useRef(wallet);
+  
+  React.useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
   const [group, setGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -41,10 +47,7 @@ export default function JoinGroupPage() {
   }, [groupId]);
 
   const handleJoin = async () => {
-    if (!isConnected) {
-      await connect();
-      return;
-    }
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !groupId) return;
 
     setJoining(true);
@@ -138,10 +141,10 @@ export default function JoinGroupPage() {
         <Button
           size="lg"
           className="w-full h-16 text-lg font-bold rounded-2xl"
-          onClick={handleJoin}
+          onClick={() => requireConnection(handleJoin)}
           loading={joining}
         >
-          {isConnected ? (joining ? loadingText : 'Join Group Now') : 'Connect Wallet to Join'}
+          {joining ? loadingText : 'Join Group Now'}
         </Button>
       </div>
     </>

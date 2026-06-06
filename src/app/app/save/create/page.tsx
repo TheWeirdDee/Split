@@ -12,6 +12,15 @@ import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Settings, Info } from 'l
 
 export default function CreateCirclePage() {
   const router = useRouter();
+
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const walletRef = React.useRef(wallet);
+  
+  React.useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
   const { address } = useWallet();
   const { createCircle, txLoading } = useSavingsCircle();
 
@@ -31,6 +40,7 @@ export default function CreateCirclePage() {
   const handleBack = () => setStep((prev) => prev - 1);
 
   const handleCreate = async () => {
+    const { address } = walletRef.current;
     if (!address || !name || !contribution) return;
 
     try {
@@ -391,6 +401,8 @@ export default function CreateCirclePage() {
                 Back
               </Button>
               <Button
+                className="w-2/3 h-12 bg-brand text-black font-bold rounded-2xl flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => requireConnection(handleCreate)}
                 className="w-2/3 h-12 bg-brand text-black font-bold rounded-2xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 onClick={handleCreate}
                 loading={txLoading}

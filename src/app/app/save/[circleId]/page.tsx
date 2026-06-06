@@ -19,7 +19,9 @@ export default function CircleDetailPage() {
   const { circleId } = useParams() as { circleId: string };
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const { address, isConnected, connect } = wallet;
   const { address, isConnected, connect } = useWallet();
   const { 
     circle, members, loading, txLoading, 
@@ -284,6 +286,7 @@ export default function CircleDetailPage() {
             </p>
             <Button
               className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer hover:bg-brand-dark"
+              onClick={() => requireConnection(joinCircle)}
               onClick={joinCircle}
               loading={txLoading}
             >
@@ -308,6 +311,9 @@ export default function CircleDetailPage() {
 
                 <Button
                   className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer hover:bg-brand-dark"
+ 
+                  onClick={() => requireConnection(() => contribute(circle.contributionAmount))}
+
                   onClick={() => contribute(circle.contributionAmount)}
                   loading={txLoading}
                 >
@@ -328,6 +334,7 @@ export default function CircleDetailPage() {
 
                 <Button
                   className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer"
+                  onClick={() => requireConnection(distribute)}
                   onClick={distribute}
                   loading={txLoading}
                 >
@@ -348,6 +355,8 @@ export default function CircleDetailPage() {
 
                 <Button
                   className="w-full h-12 bg-purple-500 text-white font-bold rounded-2xl cursor-pointer"
+ 
+                  onClick={() => requireConnection(distributeGoal)}
                   onClick={distributeGoal}
                   loading={txLoading}
                 >
@@ -389,6 +398,8 @@ export default function CircleDetailPage() {
                     {isMember && !isUser && !m.hasContributedThisCycle && deadlinePassed && m.status === 0 && (
                       <button
                         type="button"
+                        onClick={() => requireConnection(() => markMissed(m.address))}
+
                         onClick={() => markMissed(m.address)}
                         className="text-[10px] text-yellow-500 font-bold hover:underline cursor-pointer border border-yellow-500/20 px-2 py-0.5 rounded-md hover:bg-yellow-500/5 transition-all"
                       >
@@ -428,6 +439,8 @@ export default function CircleDetailPage() {
                     <div className="flex gap-2">
                       <Button
                         className="w-1/2 h-10 bg-yellow-500 text-black text-xs font-bold rounded-xl cursor-pointer"
+                        onClick={() => requireConnection(exitCircle)}
+
                         onClick={exitCircle}
                         loading={txLoading}
                       >
@@ -466,6 +479,8 @@ export default function CircleDetailPage() {
                     <div className="flex gap-2">
                       <Button
                         className="w-1/2 h-10 bg-red-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+ 
+                        onClick={() => requireConnection(dissolveCircle)}
                         onClick={dissolveCircle}
                         loading={txLoading}
                       >

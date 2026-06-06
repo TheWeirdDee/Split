@@ -16,7 +16,11 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const { data, error } = await supabase

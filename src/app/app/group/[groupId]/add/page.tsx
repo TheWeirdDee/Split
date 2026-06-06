@@ -20,7 +20,15 @@ export default function AddExpensePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const runId = searchParams.get('runId');
-  const { address, walletClient, publicClient } = useWallet();
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const walletRef = React.useRef(wallet);
+  
+  React.useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
+  const { address } = wallet;
   const { members } = useGroup(groupId as string);
 
   const [description, setDescription] = useState('');
@@ -67,7 +75,8 @@ export default function AddExpensePage() {
   }, [runId, prefilledFromRun]);
 
   const handleSubmit = async () => {
-    if (!description || !amount || !payer || splitWith.length === 0) return;
+    const { address, walletClient, publicClient } = walletRef.current;
+    if (!address || !description || !amount || !payer || splitWith.length === 0) return;
     setLoading(true);
 
     try {
@@ -247,7 +256,7 @@ export default function AddExpensePage() {
             size="lg"
             className="w-full h-16 text-lg font-bold rounded-2xl"
             disabled={!description || !amount || splitWith.length === 0}
-            onClick={handleSubmit}
+            onClick={() => requireConnection(handleSubmit)}
             loading={loading}
           >
             {loading ? loadingText : 'Log Expense'}

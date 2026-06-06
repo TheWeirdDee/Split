@@ -32,7 +32,7 @@ function SplitLogo({ size = 28 }: { size?: number }) {
 }
 
 export function AppHeader({ title, showBack }: AppHeaderProps) {
-  const { address, cUSDBalance, disconnect } = useWallet();
+  const { address, cUSDBalance, disconnect, connect } = useWallet();
   const { unreadCount } = useNotifications();
   const router = useRouter();
   const unreadLabel = unreadCount > 99 ? '99+' : unreadCount.toString();
@@ -191,33 +191,54 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
           </div>
         )}
 
-        {/* Disconnect/logout button */}
-        <button
-          onClick={() => {
-            if (window.confirm('Disconnect wallet?')) disconnect();
-          }}
-          title="Disconnect wallet"
-          style={{
-            background: 'transparent',
-            border: '1px solid #2C2C2C',
-            borderRadius: '2px',
-            width: '36px', height: '36px',
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#8A8A8A',
-            flexShrink: 0,
-          }}
-        >
-          {/* Logout icon — door with arrow */}
-          <svg width="16" height="16" viewBox="0 0 24 24" 
-               fill="none" stroke="currentColor" 
-               strokeWidth="2" strokeLinecap="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16,17 21,12 16,7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
+        {/* Connect or Disconnect/logout button */}
+        {!address ? (
+          <button
+            onClick={connect}
+            style={{
+              background: '#00C896',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '6px 14px',
+              color: '#000',
+              fontFamily: 'DM Sans, sans-serif',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            Connect
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              if (window.confirm('Disconnect wallet?')) disconnect();
+            }}
+            title="Disconnect wallet"
+            style={{
+              background: 'transparent',
+              border: '1px solid #2C2C2C',
+              borderRadius: '2px',
+              width: '36px', height: '36px',
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#8A8A8A',
+              flexShrink: 0,
+            }}
+          >
+            {/* Logout icon — door with arrow */}
+            <svg width="16" height="16" viewBox="0 0 24 24" 
+                 fill="none" stroke="currentColor" 
+                 strokeWidth="2" strokeLinecap="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16,17 21,12 16,7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        )}
       </div>
     </header>
   );

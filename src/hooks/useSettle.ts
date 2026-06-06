@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { supabase } from '@/lib/supabase';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
@@ -7,11 +7,18 @@ import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 
 export const useSettle = () => {
-  const { address, walletClient, publicClient, refreshBalance } = useWallet();
+  const wallet = useWallet();
+  const walletRef = useRef(wallet);
+
+  useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'idle' | 'approving' | 'sending' | 'confirmed'>('idle');
 
   const settle = async (groupId: string, creditor: string, amount: number) => {
+    const { address, walletClient, publicClient, refreshBalance } = walletRef.current;
     if (!address || !walletClient || !publicClient) return null;
 
     setLoading(true);

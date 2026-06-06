@@ -20,11 +20,20 @@ export default function SettlePage() {
   const groupId = searchParams.get('groupId');
   const amount = searchParams.get('amount');
   
-  const { address } = useWallet();
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const walletRef = React.useRef(wallet);
+  
+  React.useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
+  const { address } = wallet;
   const { settle, loading, step } = useSettle();
 
   const handleSettle = async () => {
-    if (!groupId || !creditorAddress || !amount) return;
+    const { address } = walletRef.current;
+    if (!address || !groupId || !creditorAddress || !amount) return;
     try {
       await settle(groupId, creditorAddress as string, parseFloat(amount));
     } catch (err) {
@@ -95,7 +104,7 @@ export default function SettlePage() {
           <Button 
             size="lg" 
             className="w-full h-16 text-lg font-bold rounded-2xl"
-            onClick={handleSettle}
+            onClick={() => requireConnection(handleSettle)}
             loading={loading}
           >
             {step === 'approving' ? 'Approving cUSD...' : step === 'sending' ? 'Sending Payment...' : 'Confirm & Pay'}

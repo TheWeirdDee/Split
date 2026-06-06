@@ -28,130 +28,45 @@ export default function AppHome() {
     return <div style={{ minHeight: '100vh', background: '#0D0D0D' }} />;
   }
 
-  if (!isConnected || !address) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: '#0D0D0D',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        gap: '32px',
-      }}>
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-4 mb-8">
-          <div className="relative w-16 h-16">
-            {/* Shadow/Back Layer */}
-            <div className="absolute inset-0 bg-[#005a44] rounded-[25%] translate-x-[12%] translate-y-[12%] opacity-60" />
-            {/* Main Green Layer */}
-            <div className="absolute inset-0 bg-[#00c896] rounded-[25%] flex flex-col items-center justify-center gap-[10%] overflow-hidden">
-              <div className="w-[50%] h-[6%] bg-black/20 rounded-full" />
-              <div className="w-[50%] h-[6%] bg-black/20 rounded-full" />
-              <div className="w-[50%] h-[6%] bg-black/20 rounded-full" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-[140%] h-[10%] bg-white rotate-[-45deg] shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
-              </div>
-            </div>
-          </div>
-          <span className="clash-display font-bold text-[32px] tracking-tight text-[#f5f0e8] relative group">
-            <span className="relative z-10">split</span>
-            <span className="absolute inset-0 text-[#ff0000] mix-blend-screen translate-x-[1.5px] opacity-70 pointer-events-none select-none blur-[0.6px]">split</span>
-            <span className="absolute inset-0 text-[#00ffff] mix-blend-screen translate-x-[-1.5px] opacity-70 pointer-events-none select-none blur-[0.6px]">split</span>
-          </span>
-          <p className="dm-sans text-[15px] color-[#8A8A8A] mt-2 max-w-[280px] leading-[1.5] text-center">
-            Split bills. Settle instantly with cUSD on Celo.
-          </p>
-        </div>
+  // Return the dashboard content directly without connection wall
+  return <DashboardContent hasNoCelo={hasNoCelo} />;
+}
 
-        {/* Connect button — ALWAYS show on desktop */}
-        {!isMiniPay && (
-          <button
+function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
+  const { isConnected, connect } = useWallet();
+  const { groups, loading: groupsLoading } = useGroups();
+  const { circles, loading: circlesLoading } = useSavingsCircle();
+  const { totalOwed, totalOwing } = useUserBalance();
+
+  return (
+    <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* Connect Wallet invite banner */}
+      {!isConnected && (
+        <div className="p-4 border border-brand/20 rounded-2xl bg-brand/5 text-xs text-[#00C896] flex items-center justify-between animate-fade-in mt-4">
+          <div className="pr-2 text-[11px] leading-relaxed">
+            <strong>Wallet not connected:</strong> Connect your wallet to create savings circles, join groups, and settle expenses.
+          </div>
+          <Button
             onClick={connect}
-            style={{
-              width: '100%', maxWidth: '320px',
-              height: '56px',
-              background: '#00C896',
-              border: 'none',
-              borderRadius: '2px',
-              fontFamily: 'DM Sans, sans-serif',
-              fontSize: '16px', fontWeight: '600',
-              color: '#000',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: '8px',
-            }}
+            size="sm"
+            className="shrink-0 h-8 text-black bg-brand hover:bg-brand-dark text-[11px] font-bold px-3 rounded-lg"
           >
-            Connect Wallet
-          </button>
-        )}
-
-        {/* Divider */}
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          gap: '12px', width: '100%', maxWidth: '320px'
-        }}>
-          <div style={{ flex: 1, height: '1px', background: '#2C2C2C' }} />
-          <span style={{ 
-            color: '#4A4A4A', fontSize: '12px',
-            fontFamily: 'DM Mono, monospace'
-          }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: '#2C2C2C' }} />
+            Connect
+          </Button>
         </div>
+      )}
 
-        {/* QR Code */}
-        <div style={{
-          background: '#161616',
-          border: '1px solid #2C2C2C',
-          borderRadius: '20px',
-          padding: '24px',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '16px',
-          width: '100%', maxWidth: '320px',
-        }}>
-          <div style={{
-            background: '#FFFFFF',
-            padding: '12px',
-            borderRadius: '12px',
-          }}>
-            {mounted && (
-              <QRCodeSVG 
-                value={appUrl}
-                size={160}
-                level="M"
-              />
-            )}
+      {/* CELO native gas warning banner */}
+      {isConnected && hasNoCelo && (
+        <div className="p-4 border border-yellow-500/20 rounded-2xl bg-yellow-500/5 text-xs text-yellow-500 flex items-start gap-2 animate-fade-in mt-4">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <div>
+            <strong>CELO Balance Warning:</strong> You have 0 CELO for gas. You need a tiny amount of native CELO to submit onchain expense groups or savings circle contributions. Get CELO inside MiniPay or fund this address.
           </div>
-          <p style={{
-            fontFamily: 'DM Mono, monospace',
-            fontSize: '11px',
-            color: '#4A4A4A',
-            letterSpacing: '0.1em',
-            margin: 0, textAlign: 'center'
-          }}>
-            SCAN TO OPEN IN MINIPAY
-          </p>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(appUrl);
-              alert('Link copied!');
-            }}
-            style={{
-              background: 'transparent',
-              border: '1px solid #2C2C2C',
-              borderRadius: '2px',
-              padding: '8px 20px',
-              color: '#8A8A8A',
-              fontFamily: 'DM Mono, monospace',
-              fontSize: '11px',
-              letterSpacing: '0.05em',
-              cursor: 'pointer',
-            }}
-          >
-            COPY LINK
-          </button>
         </div>
+      )}
+
       </div>
     );
   }
@@ -177,7 +92,6 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
           </div>
         </div>
       )}
-
       <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
         <DailyCheckIn />
       </div>

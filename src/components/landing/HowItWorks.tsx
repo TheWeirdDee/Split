@@ -13,9 +13,9 @@ export const HowItWorks = () => {
       <div className="grid md:grid-cols-3 gap-16 relative">
         <div className="hidden md:block absolute top-[110px] left-[15%] w-[70%] border-t border-dashed border-[#242424] z-0" />
         {[
-          { num: "01", title: "Create a Group", desc: "Set up in 10 seconds. Share an invite link via WhatsApp or QR code." },
-          { num: "02", title: "Log Expenses", desc: "Who paid. Who owes. Auto-calculated shares. No more manual math." },
-          { num: "03", title: "Settle with cUSD", desc: "One tap. Instant. Onchain forever. No need for bank transfers." },
+          { num: "01", title: "Create Group or Circle", desc: "Create a split group or a collaborative savings circle in 10 seconds." },
+          { num: "02", title: "Log Costs or Contribute", desc: "Log shared expenses or make regular cUSD contributions to your circle." },
+          { num: "03", title: "Settle & Cashout", desc: "Settle net balances or withdraw your circular savings payout pot instantly." },
         ].map((s, i) => (
           <div key={i} className="reveal relative z-10 flex flex-col items-center text-center">
             <span className="dm-mono text-[72px] md:text-[80px] font-bold text-[#00C896] opacity-[0.1] leading-none mb-6">{s.num}</span>

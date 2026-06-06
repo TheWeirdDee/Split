@@ -51,7 +51,13 @@ const IconMap: Record<string, any> = {
 
 export default function CreateGroupPage() {
   const router = useRouter();
-  const { address, walletClient, publicClient } = useWallet();
+  const wallet = useWallet();
+  const { requireConnection } = wallet;
+  const walletRef = React.useRef(wallet);
+  
+  React.useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('Users');
@@ -60,6 +66,7 @@ export default function CreateGroupPage() {
   const [loadingText, setLoadingText] = useState('Creating Onchain (cUSD)...');
 
   const handleCreate = async () => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !name) return;
     setLoading(true);
 
@@ -214,7 +221,7 @@ export default function CreateGroupPage() {
                 opacity: name ? 1 : 0.5
               }}
               disabled={!name || loading}
-              onClick={() => handleCreate()}
+              onClick={() => requireConnection(handleCreate)}
               loading={loading}
             >
               {loading ? loadingText : 'Create Group'}

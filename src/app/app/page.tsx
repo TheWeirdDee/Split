@@ -67,6 +67,31 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
         </div>
       )}
 
+      </div>
+    );
+  }
+
+  // Connected — show groups and circles list
+  return <DashboardContent hasNoCelo={hasNoCelo} />;
+}
+
+function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
+  const { groups, loading: groupsLoading } = useGroups();
+  const { circles, loading: circlesLoading } = useSavingsCircle();
+  const { totalOwed, totalOwing } = useUserBalance();
+
+  return (
+    <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* CELO native gas warning banner */}
+      {hasNoCelo && (
+        <div className="p-4 border border-yellow-500/20 rounded-2xl bg-yellow-500/5 text-xs text-yellow-500 flex items-start gap-2 animate-fade-in mt-4">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <div>
+            <strong>CELO Balance Warning:</strong> You have 0 CELO for gas. You need a tiny amount of native CELO to submit onchain expense groups or savings circle contributions. Get CELO inside MiniPay or fund this address.
+          </div>
+        </div>
+      )}
       <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
         <DailyCheckIn />
       </div>

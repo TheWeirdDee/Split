@@ -15,10 +15,8 @@ import { PiggyBank, AlertTriangle } from 'lucide-react';
 import { formatEther } from 'viem';
 
 export default function AppHome() {
-  const { isConnected, address, isMiniPay, isInitialLoading, connect, hasNoCelo } = useWallet();
+  const { isInitialLoading, hasNoCelo } = useWallet();
   const [mounted, setMounted] = useState(false);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL 
-    || 'https://split-five-eta.vercel.app/app';
 
   useEffect(() => {
     setMounted(true);
@@ -48,7 +46,7 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
             <strong>Wallet not connected:</strong> Connect your wallet to create savings circles, join groups, and settle expenses.
           </div>
           <Button
-            onClick={connect}
+            onClick={() => connect()}
             size="sm"
             className="shrink-0 h-8 text-black bg-brand hover:bg-brand-dark text-[11px] font-bold px-3 rounded-lg"
           >
@@ -59,32 +57,6 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
 
       {/* CELO native gas warning banner */}
       {isConnected && hasNoCelo && (
-        <div className="p-4 border border-yellow-500/20 rounded-2xl bg-yellow-500/5 text-xs text-yellow-500 flex items-start gap-2 animate-fade-in mt-4">
-          <AlertTriangle className="w-5 h-5 shrink-0" />
-          <div>
-            <strong>CELO Balance Warning:</strong> You have 0 CELO for gas. You need a tiny amount of native CELO to submit onchain expense groups or savings circle contributions. Get CELO inside MiniPay or fund this address.
-          </div>
-        </div>
-      )}
-
-      </div>
-    );
-  }
-
-  // Connected — show groups and circles list
-  return <DashboardContent hasNoCelo={hasNoCelo} />;
-}
-
-function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
-  const { groups, loading: groupsLoading } = useGroups();
-  const { circles, loading: circlesLoading } = useSavingsCircle();
-  const { totalOwed, totalOwing } = useUserBalance();
-
-  return (
-    <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
-      {/* CELO native gas warning banner */}
-      {hasNoCelo && (
         <div className="p-4 border border-yellow-500/20 rounded-2xl bg-yellow-500/5 text-xs text-yellow-500 flex items-start gap-2 animate-fade-in mt-4">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <div>

@@ -10,13 +10,6 @@ export default function AppLayout({
 }: { 
   children: React.ReactNode 
 }) {
-  const { isConnected } = useWallet();
-
-  // No chrome when not connected
-  if (!isConnected) {
-    return <ToastProvider>{children}</ToastProvider>;
-  }
-
   return (
     <ToastProvider>
       <div style={{

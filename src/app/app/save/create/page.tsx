@@ -21,7 +21,7 @@ export default function CreateCirclePage() {
     walletRef.current = wallet;
   }, [wallet]);
 
-  const { address } = useWallet();
+  const { address } = wallet;
   const { createCircle, txLoading } = useSavingsCircle();
 
   const [step, setStep] = useState(1);
@@ -403,8 +403,6 @@ export default function CreateCirclePage() {
               <Button
                 className="w-2/3 h-12 bg-brand text-black font-bold rounded-2xl flex items-center justify-center gap-2 cursor-pointer"
                 onClick={() => requireConnection(handleCreate)}
-                className="w-2/3 h-12 bg-brand text-black font-bold rounded-2xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                onClick={handleCreate}
                 loading={txLoading}
               >
                 {txLoading ? 'Deploying Onchain...' : 'Deploy Circle'}

@@ -46,6 +46,26 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+  const [injectedProviders, setInjectedProviders] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleAnnounce = (event: any) => {
+      const detail = event.detail;
+      setInjectedProviders((prev) => {
+        if (prev.some((p) => p.info.uuid === detail.info.uuid)) return prev;
+        return [...prev, detail];
+      });
+    };
+
+    window.addEventListener("eip6963:announceProvider", handleAnnounce as EventListener);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+    return () => {
+      window.removeEventListener("eip6963:announceProvider", handleAnnounce as EventListener);
+    };
+  }, []);
 
   const pendingActionRef = useRef<(() => void) | null>(null);
 
@@ -82,39 +102,46 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [address, publicClient]);
 
-  const connect = useCallback(async (force = true) => {
-    if (!window.ethereum) {
-      if (force) alert('Please install MetaMask to use Split on desktop, or open in MiniPay on mobile');
+  const connect = useCallback(async (selectedProvider?: any) => {
+    let provider = selectedProvider;
+    
+    // If no provider is passed, open the modal to select
+    if (!provider) {
+      if (typeof window === 'undefined' || !window.ethereum) {
+        alert('Please install MetaMask or another Celo wallet, or open inside MiniPay.');
+        return;
+      }
+      setIsConnectModalOpen(true);
       return;
     }
 
     // Detect MiniPay FIRST before any other wallet checks
-    const isMP = !!(window.ethereum as any).isMiniPay;
+    const isMP = !!(provider as any).isMiniPay;
 
     try {
-      if (force && !isMP) {
+      if (!isMP) {
         // Only request permissions popup for non-MiniPay wallets
         localStorage.removeItem('manualDisconnect');
-        await window.ethereum.request({
+        await provider.request({
           method: 'wallet_requestPermissions',
           params: [{ eth_accounts: {} }]
         });
       }
 
-      const accounts = await window.ethereum.request({
+      const accounts = await provider.request({
         method: 'eth_requestAccounts'
       });
 
       // Switch to Celo Mainnet — skip for MiniPay (always on Celo)
       if (!isMP) {
         try {
-          await window.ethereum.request({
+          await provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0xA4EC' }]
           });
         } catch (e: any) {
           if (e.code === 4902) {
-            await window.ethereum.request({
+            await provider.request({
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: '0xA4EC',
@@ -133,14 +160,14 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       const { createWalletClient, custom } = await import('viem');
       const client = createWalletClient({
         chain: celo,
-        transport: custom(window.ethereum)
+        transport: custom(provider)
       });
       setAddress(addr);
       setWalletClient(client);
       setIsMiniPay(isMP);
       await refreshBalance();
     } catch (e: any) {
-      if (force && e.code !== 4001) console.error('Connect error:', e);
+      if (e.code !== 4001) console.error('Connect error:', e);
       throw e;
     }
   }, [refreshBalance]);
@@ -167,9 +194,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [address]);
 
-  const handleModalConnect = async () => {
+  const handleModalConnect = async (provider: any) => {
     try {
-      await connect(true);
+      await connect(provider);
       setIsConnectModalOpen(false);
       // Wait a tick for address state update to propagate, then execute
       setTimeout(() => {
@@ -201,11 +228,11 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (isMP) {
-          await connect(false).catch(() => {});
+          await connect(window.ethereum).catch(() => {});
         } else {
-          const [addr] = await window.ethereum.request({ method: 'eth_accounts' });
+          const [addr] = await window.ethereum.request({ method: 'eth_accounts' }).catch(() => []);
           if (addr) {
-            await connect(false).catch(() => {});
+            await connect(window.ethereum).catch(() => {});
           }
         }
       }
@@ -298,34 +325,119 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px', width: '100%' }}>
+              {injectedProviders.length > 0 ? (
+                injectedProviders.map((providerDetail) => (
+                  <button
+                    key={providerDetail.info.uuid}
+                    onClick={() => handleModalConnect(providerDetail.provider)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      height: '52px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid #2C2C2C',
+                      borderRadius: '14px',
+                      padding: '0 16px',
+                      fontFamily: 'DM Sans, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#f5f0e8',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 200, 150, 0.08)';
+                      e.currentTarget.style.borderColor = '#00C896';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                      e.currentTarget.style.borderColor = '#2C2C2C';
+                    }}
+                  >
+                    <img 
+                      src={providerDetail.info.icon} 
+                      alt={providerDetail.info.name} 
+                      style={{ width: '24px', height: '24px', borderRadius: '6px' }}
+                    />
+                    <span style={{ flex: 1 }}>{providerDetail.info.name}</span>
+                    <span style={{ fontSize: '10px', color: '#00C896', background: 'rgba(0,200,150,0.1)', padding: '2px 6px', borderRadius: '6px' }}>Ready</span>
+                  </button>
+                ))
+              ) : (
+                typeof window !== 'undefined' && window.ethereum && (
+                  <button
+                    onClick={() => handleModalConnect(window.ethereum)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      height: '52px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid #2C2C2C',
+                      borderRadius: '14px',
+                      padding: '0 16px',
+                      fontFamily: 'DM Sans, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#f5f0e8',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 200, 150, 0.08)';
+                      e.currentTarget.style.borderColor = '#00C896';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                      e.currentTarget.style.borderColor = '#2C2C2C';
+                    }}
+                  >
+                    <div style={{
+                      width: '24px', height: '24px',
+                      borderRadius: '6px',
+                      background: '#00C896',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#000',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                    }}>
+                      W
+                    </div>
+                    <span>Default Provider</span>
+                  </button>
+                )
+              )}
+              
               <button
                 onClick={handleModalClose}
                 style={{
-                  flex: 1, height: '44px',
+                  height: '44px',
                   background: 'transparent',
                   border: '1px solid #2C2C2C',
-                  borderRadius: '2px',
+                  borderRadius: '14px',
                   fontFamily: 'DM Sans, sans-serif',
-                  fontSize: '14px', fontWeight: 'bold',
-                  color: '#8a8a8a', cursor: 'pointer'
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  color: '#8a8a8a',
+                  cursor: 'pointer',
+                  marginTop: '6px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#f5f0e8';
+                  e.currentTarget.style.borderColor = '#4A4A4A';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#8a8a8a';
+                  e.currentTarget.style.borderColor = '#2C2C2C';
                 }}
               >
                 Cancel
-              </button>
-              <button
-                onClick={handleModalConnect}
-                style={{
-                  flex: 1, height: '44px',
-                  background: '#00C896',
-                  border: 'none',
-                  borderRadius: '2px',
-                  fontFamily: 'DM Sans, sans-serif',
-                  fontSize: '14px', fontWeight: 'bold',
-                  color: '#000', cursor: 'pointer'
-                }}
-              >
-                Connect
               </button>
             </div>
           </div>

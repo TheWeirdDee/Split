@@ -60,14 +60,14 @@ export const Hero = () => {
           </div>
 
           <h1 className="hero-h1 clash-display font-bold text-[clamp(40px,5.8vw,68px)] leading-[0.95] tracking-[-0.04em] mb-6 flex flex-col">
-            <span className="text-[#f5f0e8]">Split bills.</span>
-            <span className="text-[#00c896]">Settle instantly.</span>
+            <span className="text-[#f5f0e8]">Split expenses.</span>
+            <span className="text-[#00c896]">Save together.</span>
             <span className="text-4xl md:text-7xl block mt-2">No awkwardness.</span>
           </h1>
 
           <p className="hero-sub dm-sans text-[#7a7a7a] text-[16px] leading-[1.6] max-w-[460px] mb-8">
-            Pay shared expenses with cUSD on Celo. No banks, no waiting. 
-            Every settlement is permanent and instant.
+            Split shared expenses and save towards collective goals with cUSD on Celo. 
+            Manage split groups and collaborative Savings Circles with zero delays.
           </p>
 
           <div className="hero-cta flex flex-wrap gap-3">

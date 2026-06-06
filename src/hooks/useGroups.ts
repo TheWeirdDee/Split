@@ -8,7 +8,11 @@ export const useGroups = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchGroups = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     
     const { data: memberData, error: memberError } = await supabase

@@ -29,6 +29,7 @@ interface WalletContextType {
   connect: () => Promise<void>;
   disconnect: () => void;
   refreshBalance: () => Promise<void>;
+  requireConnection: (onConfirm: () => void) => void;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -44,6 +45,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasNoCelo, setHasNoCelo] = useState(false);
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+
+  const pendingActionRef = useRef<(() => void) | null>(null);
 
   const publicClient = useMemo(() => createPublicClient({
     chain: celo,
@@ -137,6 +141,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       await refreshBalance();
     } catch (e: any) {
       if (force && e.code !== 4001) console.error('Connect error:', e);
+      throw e;
     }
   }, [refreshBalance]);
 
@@ -153,6 +158,36 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     window.location.replace('/app');
   }, []);
 
+  const requireConnection = useCallback((onConfirm: () => void) => {
+    if (address) {
+      onConfirm();
+    } else {
+      pendingActionRef.current = onConfirm;
+      setIsConnectModalOpen(true);
+    }
+  }, [address]);
+
+  const handleModalConnect = async () => {
+    try {
+      await connect(true);
+      setIsConnectModalOpen(false);
+      // Wait a tick for address state update to propagate, then execute
+      setTimeout(() => {
+        if (pendingActionRef.current) {
+          pendingActionRef.current();
+          pendingActionRef.current = null;
+        }
+      }, 300);
+    } catch (err) {
+      console.error('Modal connection failed:', err);
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsConnectModalOpen(false);
+    pendingActionRef.current = null;
+  };
+
   useEffect(() => {
     const checkConnection = async () => {
       if (typeof window !== 'undefined' && window.ethereum) {
@@ -166,11 +201,11 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (isMP) {
-          await connect(false);
+          await connect(false).catch(() => {});
         } else {
           const [addr] = await window.ethereum.request({ method: 'eth_accounts' });
           if (addr) {
-            await connect(false);
+            await connect(false).catch(() => {});
           }
         }
       }
@@ -199,9 +234,103 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       walletClient,
       connect,
       disconnect,
-      refreshBalance
+      refreshBalance,
+      requireConnection
     }}>
       {children}
+      {isConnectModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: '#161616',
+            border: '1px solid #2C2C2C',
+            borderRadius: '24px',
+            padding: '32px',
+            width: '100%',
+            maxWidth: '360px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{
+              width: '56px', height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(0, 200, 150, 0.1)',
+              border: '1px solid rgba(0, 200, 150, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto',
+              color: '#00C896',
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h3 style={{
+                fontFamily: 'Clash Display, sans-serif',
+                fontSize: '20px', fontWeight: 'bold',
+                color: '#f5f0e8', margin: 0
+              }}>
+                Connect Wallet
+              </h3>
+              <p style={{
+                fontFamily: 'DM Sans, sans-serif',
+                fontSize: '13px', color: '#8a8a8a',
+                lineHeight: 1.5, margin: 0
+              }}>
+                Please connect your Celo wallet to confirm this action onchain.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button
+                onClick={handleModalClose}
+                style={{
+                  flex: 1, height: '44px',
+                  background: 'transparent',
+                  border: '1px solid #2C2C2C',
+                  borderRadius: '2px',
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontSize: '14px', fontWeight: 'bold',
+                  color: '#8a8a8a', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleModalConnect}
+                style={{
+                  flex: 1, height: '44px',
+                  background: '#00C896',
+                  border: 'none',
+                  borderRadius: '2px',
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontSize: '14px', fontWeight: 'bold',
+                  color: '#000', cursor: 'pointer'
+                }}
+              >
+                Connect
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </WalletContext.Provider>
   );
 };

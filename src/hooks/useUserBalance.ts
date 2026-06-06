@@ -9,7 +9,12 @@ export const useUserBalance = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchUserBalance = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      setTotalOwed(0);
+      setTotalOwing(0);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {

@@ -84,9 +84,9 @@ export default function LandingPage() {
           <div className="w-full bg-[#00C896] p-8 md:p-10 text-center space-y-6 relative overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-black/5 rounded-full pointer-events-none" />
             <div className="relative z-10 space-y-3">
-              <span className="dm-mono text-[10px] font-bold tracking-[0.2em] text-black/60 uppercase">READY TO SPLIT?</span>
-              <h2 className="clash-display font-bold text-[clamp(32px,5vw,56px)] text-black leading-[1.1] max-w-2xl mx-auto">Stop chasing people<br />for money.</h2>
-              <p className="dm-sans text-black/70 text-[14px] font-medium max-w-xl mx-auto leading-relaxed">The simplest way to handle group expenses. Instant settlements, zero awkward conversations.</p>
+              <span className="dm-mono text-[10px] font-bold tracking-[0.2em] text-black/60 uppercase">READY TO SPLIT & SAVE?</span>
+              <h2 className="clash-display font-bold text-[clamp(32px,5vw,56px)] text-black leading-[1.1] max-w-2xl mx-auto">Stop chasing people.<br />Start saving together.</h2>
+              <p className="dm-sans text-black/70 text-[14px] font-medium max-w-xl mx-auto leading-relaxed">The simplest way to handle group expenses and collaborative savings circles on Celo. Instant payouts, zero awkwardness.</p>
             </div>
             <div className="relative z-10 flex flex-col items-center gap-6">
               <Link href="/app">

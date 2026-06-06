@@ -1,11 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/contract';
 import { celo } from 'viem/chains';
 import { erc20Abi } from 'viem';
 
 export const useSavingsCircle = (circleId?: string) => {
-  const { address, walletClient, publicClient } = useWallet();
+  const wallet = useWallet();
+  const walletRef = useRef(wallet);
+
+  useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
+  const { address, walletClient, publicClient } = wallet;
   const [circles, setCircles] = useState<any[]>([]);
   const [circle, setCircle] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
@@ -15,7 +22,10 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // Helper to fetch the list of all circles the user is a member of
   const fetchCircles = useCallback(async () => {
-    if (!publicClient || !SAVINGS_CIRCLE_ADDRESS) return;
+    if (!publicClient || !SAVINGS_CIRCLE_ADDRESS) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -79,7 +89,10 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // Helper to fetch a single circle details + member details
   const fetchCircleDetails = useCallback(async () => {
-    if (!publicClient || !circleId || !SAVINGS_CIRCLE_ADDRESS) return;
+    if (!publicClient || !circleId || !SAVINGS_CIRCLE_ADDRESS) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -177,6 +190,7 @@ export const useSavingsCircle = (circleId?: string) => {
     goalDeadline: bigint,
     reminderLeadTime: bigint
   ) => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -224,6 +238,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // JOIN CIRCLE
   const joinCircle = async () => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -260,6 +275,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // CONTRIBUTE TO CIRCLE (Approve cUSD first, then contribute)
   const contribute = async (amount: bigint) => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -314,6 +330,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // DISTRIBUTE (Rotating mode pot distribution)
   const distribute = async () => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -350,6 +367,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // DISTRIBUTE GOAL (Goal mode pot distribution)
   const distributeGoal = async () => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -386,6 +404,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // MARK MISSED MEMBER
   const markMissed = async (memberAddr: string) => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -422,6 +441,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // EXIT CIRCLE
   const exitCircle = async () => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
@@ -458,6 +478,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // DISSOLVE CIRCLE
   const dissolveCircle = async () => {
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);

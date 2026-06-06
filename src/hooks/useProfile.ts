@@ -27,9 +27,9 @@ export const useProfile = () => {
       .from('user_profiles')
       .select('*')
       .eq('wallet_address', address.toLowerCase())
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Error fetching profile:', error);
     }
 
@@ -71,7 +71,7 @@ export const useProfile = () => {
       .from('user_profiles')
       .select('*')
       .eq('wallet_address', address.toLowerCase())
-      .single();
+      .maybeSingle();
 
     if (current?.last_checkin === today) {
       // Already checked in today

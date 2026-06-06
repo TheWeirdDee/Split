@@ -34,7 +34,7 @@ export default function JoinGroupPage() {
         .from('groups')
         .select('*, group_members(count)')
         .eq('id', groupId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching group:', error);

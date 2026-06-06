@@ -67,19 +67,23 @@ export const useGroup = (groupId: string) => {
       .from('groups')
       .select('*')
       .eq('id', groupId)
-      .single();
+      .maybeSingle();
 
     if (groupError) {
       console.error('Error fetching group:', groupError);
     } else {
       setGroup(groupData);
       
-      const { data: memberData, error: memberError } = await supabase
-        .from('group_members')
-        .select('*')
-        .eq('group_id', groupId);
-      
-      setMembers(memberData || []);
+      if (groupData) {
+        const { data: memberData, error: memberError } = await supabase
+          .from('group_members')
+          .select('*')
+          .eq('group_id', groupId);
+        
+        setMembers(memberData || []);
+      } else {
+        setMembers([]);
+      }
     }
     setLoading(false);
   }, [groupId]);

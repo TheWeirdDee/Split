@@ -103,7 +103,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   }, [address, publicClient]);
 
   const connect = useCallback(async (selectedProvider?: any) => {
-    let provider = selectedProvider;
+    const provider = selectedProvider && typeof selectedProvider.request === 'function'
+      ? selectedProvider
+      : null;
     
     // If no provider is passed, open the modal to select
     if (!provider) {

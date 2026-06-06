@@ -60,13 +60,13 @@ export const useNotificationPreferences = () => {
         ...defaults,
         updated_at: new Date().toISOString(),
       };
-      const { error: seedError } = await supabase.from('notification_preferences').insert(seed);
+      const { error: seedError } = await supabase
+        .from('notification_preferences')
+        .upsert(seed, { onConflict: 'wallet_address' });
       if (seedError) {
         console.error('Error creating default preferences:', seedError);
-        setPreferences(seed as NotificationPreferences);
-      } else {
-        setPreferences(seed as NotificationPreferences);
       }
+      setPreferences(seed as NotificationPreferences);
       setLoading(false);
       return;
     }

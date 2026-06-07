@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "divine": "ts-node --project tsconfig.json private/scripts/divine-celo.ts"
+    "lint": "eslint"
   },
   "dependencies": {
     "@fontsource/dm-mono": "^5.2.7",

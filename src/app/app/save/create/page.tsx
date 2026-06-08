@@ -46,7 +46,7 @@ export default function CreateCirclePage() {
     try {
       const parsedContribution = parseEther(contribution);
       
-      // Calculate frequency in seconds
+       
       let freqSecs = BigInt(604800); // 1 week default
       if (frequencyType === 'daily') freqSecs = BigInt(86400);
       else if (frequencyType === 'monthly') freqSecs = BigInt(2592000);

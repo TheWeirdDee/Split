@@ -77,7 +77,6 @@ export default function CreateGroupPage() {
         blockTag: 'pending'
       });
 
-      // STEP 1: Create Group Onchain
       setLoadingText('Creating Group...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
@@ -114,7 +113,7 @@ export default function CreateGroupPage() {
       }
 
       if (!onchainGroupId) {
-        // Fallback: fetch groupCount variable
+         
         const count = await publicClient.readContract({
           address: CONTRACT_ADDRESS as `0x${string}`,
           abi: SPLIT_ABI,

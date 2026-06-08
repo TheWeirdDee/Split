@@ -26,7 +26,7 @@ export default function AppHome() {
     return <div style={{ minHeight: '100vh', background: '#0D0D0D' }} />;
   }
 
-  // Return the dashboard content directly without connection wall
+   
   return <DashboardContent hasNoCelo={hasNoCelo} />;
 }
 

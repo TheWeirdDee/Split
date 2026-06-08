@@ -35,7 +35,7 @@ export default function HistoryPage() {
         toBlock: 'latest',
       });
 
-      // Filter logs by circleId index
+    
       const filteredLogs = allLogs.filter((log: any) => 
         log.topics[1] && log.topics[1].toLowerCase() === circleIdHex.toLowerCase()
       );

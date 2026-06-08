@@ -39,7 +39,6 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
   return (
     <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* Connect Wallet invite banner */}
       {!isConnected && (
         <div className="p-4 border border-brand/20 rounded-2xl bg-brand/5 text-xs text-[#00C896] flex items-center justify-between animate-fade-in mt-4">
           <div className="pr-2 text-[11px] leading-relaxed">

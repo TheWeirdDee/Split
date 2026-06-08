@@ -47,7 +47,7 @@ export default function LandingPage() {
       <main className="pt-20">
         <Hero />
 
-        {/* --- Marquee Ticker Bar --- */}
+    
         <section className="relative h-11 bg-[#00c896] flex items-center overflow-hidden z-20">
           <div className="flex gap-12 whitespace-nowrap animate-marquee py-2">
             {[1, 2, 3, 4].map(i => (

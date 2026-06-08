@@ -46,7 +46,7 @@ export default function CircleDetailPage() {
 
   useEffect(() => {
     if (circle && members.length > 0 && circle.mode === 0) {
-      // Find next active member who hasn't received yet
+       
       const list = circle.memberAddrs;
       const idx = Number(circle.rotationIndex);
       let found: string | null = null;

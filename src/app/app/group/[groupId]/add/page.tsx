@@ -98,9 +98,7 @@ export default function AddExpensePage() {
         address: address as `0x${string}`,
         blockTag: 'pending',
       });
-
-      // STEP 1: Add Expense Onchain
-      setLoadingText('Logging Expense...');
+       setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,

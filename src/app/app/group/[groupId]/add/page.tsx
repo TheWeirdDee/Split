@@ -75,7 +75,7 @@ export default function AddExpensePage() {
   }, [runId, prefilledFromRun]);
 
   const handleSubmit = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay, hasNoCelo } = walletRef.current;
     if (!address || !description || !amount || !payer || splitWith.length === 0) return;
     setLoading(true);
 
@@ -93,12 +93,14 @@ export default function AddExpensePage() {
       const splitMembers = splitWith.map(addr => addr as `0x${string}`);
       const descriptionWithMeta = `${description} |cat:${category}`;
 
-      const gasPrice = await publicClient.getGasPrice();
-      const currentNonce = await publicClient.getTransactionCount({
-        address: address as `0x${string}`,
-        blockTag: 'pending',
-      });
-       setLoadingText('Logging Expense...');
+      const useCeloFee = isMiniPay || hasNoCelo;
+      const [gasParams, currentNonce] = await Promise.all([
+        useCeloFee
+          ? Promise.resolve({ feeCurrency: '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}` })
+          : publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
+        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
+      ]);
+      setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
@@ -106,12 +108,9 @@ export default function AddExpensePage() {
         args: [BigInt(groupId as string), totalAmountWei, descriptionWithMeta, splitMembers, splitAmounts],
         chain: celo,
         account: address as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
         nonce: currentNonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
-      });
+        ...gasParams,
+      } as any);
 
       await publicClient.waitForTransactionReceipt({ hash: tx });
 

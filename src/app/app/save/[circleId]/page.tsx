@@ -134,8 +134,13 @@ export default function CircleDetailPage() {
   return (
     <>
       <AppHeader />
-      
+
       <div className="px-6 pt-24 pb-48 space-y-8 animate-fade-in">
+        {txError && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#f87171' }}>
+            {txError}
+          </div>
+        )}
         {/* HEADER SECTION */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">

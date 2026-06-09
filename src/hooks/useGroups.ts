@@ -14,20 +14,25 @@ export const useGroups = () => {
       return;
     }
     setLoading(true);
-    
-    const { data: memberData, error: memberError } = await supabase
+
+    const lowerAddr = address.toLowerCase();
+
+    // Groups where user has a membership row
+    const { data: memberData } = await supabase
       .from('group_members')
       .select('group_id')
-      .eq('wallet_address', address.toLowerCase());
+      .eq('wallet_address', lowerAddr);
+    const memberGroupIds: string[] = (memberData || []).map((m: any) => m.group_id);
 
-    if (memberError) {
-      console.error('Error fetching member groups:', memberError);
-      setLoading(false);
-      return;
-    }
+    // Groups created by this user (creator may not have a group_members row)
+    const { data: createdData } = await supabase
+      .from('groups')
+      .select('id')
+      .eq('created_by', lowerAddr);
+    const createdGroupIds: string[] = (createdData || []).map((g: any) => g.id);
 
-    const groupIds = memberData.map(m => m.group_id);
-    if (groupIds.length === 0) {
+    const allGroupIds = Array.from(new Set([...memberGroupIds, ...createdGroupIds]));
+    if (allGroupIds.length === 0) {
       setGroups([]);
       setLoading(false);
       return;
@@ -36,7 +41,7 @@ export const useGroups = () => {
     const { data: groupData, error: groupError } = await supabase
       .from('groups')
       .select('*, group_members(*)')
-      .in('id', groupIds)
+      .in('id', allGroupIds)
       .order('created_at', { ascending: false });
 
     if (groupError) {

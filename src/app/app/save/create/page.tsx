@@ -44,6 +44,14 @@ export default function CreateCirclePage() {
     if (!address || !name || !contribution) return;
 
     try {
+      if (Number(contribution) <= 0) {
+        alert('Contribution amount must be greater than 0.');
+        return;
+      }
+      if (mode === 1 && Number(goalAmount) <= 0) {
+        alert('Goal amount must be greater than 0.');
+        return;
+      }
       const parsedContribution = parseEther(contribution);
       
        
@@ -98,8 +106,8 @@ export default function CreateCirclePage() {
   const isStep1Valid = name.trim().length > 0;
   const isStep2Valid =
     mode === 0
-      ? contribution.trim().length > 0 && Number(maxMembers) > 1
-      : contribution.trim().length > 0 && goalAmount.trim().length > 0 && Number(goalDeadlineDays) > 0;
+      ? Number(contribution) > 0 && Number(maxMembers) > 1
+      : Number(contribution) > 0 && Number(goalAmount) > 0 && Number(goalDeadlineDays) > 0;
 
   return (
     <>
@@ -178,6 +186,7 @@ export default function CreateCirclePage() {
               label="Contribution Size (cUSD)"
               placeholder="e.g. 10"
               type="number"
+              min="0.001"
               value={contribution}
               onChange={(e) => setContribution(e.target.value)}
             />
@@ -226,6 +235,7 @@ export default function CreateCirclePage() {
                   label="Target Goal Size (cUSD)"
                   placeholder="e.g. 100"
                   type="number"
+                  min="0.001"
                   value={goalAmount}
                   onChange={(e) => setGoalAmount(e.target.value)}
                 />

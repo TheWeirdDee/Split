@@ -66,16 +66,18 @@ export default function CreateGroupPage() {
   const [loadingText, setLoadingText] = useState('Creating Onchain (cUSD)...');
 
   const handleCreate = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay, hasNoCelo } = walletRef.current;
     if (!address || !name) return;
     setLoading(true);
 
     try {
-      const gasPrice = await publicClient.getGasPrice();
-      let currentNonce = await publicClient.getTransactionCount({
-        address: address as `0x${string}`,
-        blockTag: 'pending'
-      });
+      const useCeloFee = isMiniPay || hasNoCelo;
+      const [gasParams, currentNonce] = await Promise.all([
+        useCeloFee
+          ? Promise.resolve({ feeCurrency: '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}` })
+          : publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
+        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
+      ]);
 
       setLoadingText('Creating Group...');
       const tx = await walletClient.writeContract({
@@ -85,12 +87,9 @@ export default function CreateGroupPage() {
         args: [name, []],
         chain: celo,
         account: address as `0x${string}`,
-        value: BigInt(0),
-        gasPrice,
         nonce: currentNonce,
-        maxFeePerGas: undefined,
-        maxPriorityFeePerGas: undefined,
-      });
+        ...gasParams,
+      } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
 

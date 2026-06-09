@@ -84,6 +84,7 @@ export default function GroupDetailPage() {
 
   const inviteLink = generateInviteLink(groupId as string);
   const isCreator = group?.created_by?.toLowerCase() === address?.toLowerCase();
+  const isReadOnly = !address;
 
   const getMemberDisplayName = (walletAddress: string) => {
     const member = members.find((m) => m.wallet_address.toLowerCase() === walletAddress.toLowerCase());
@@ -493,7 +494,31 @@ export default function GroupDetailPage() {
         onCancel={() => setShowDeleteConfirm(false)}
       />
 
-      <div className="pt-20 px-4 pb-28 space-y-5">
+      {isReadOnly && (
+        <div style={{
+          position: 'fixed', top: '64px', left: 0, right: 0, zIndex: 40,
+          background: 'rgba(0,200,150,0.08)', borderBottom: '1px solid rgba(0,200,150,0.2)',
+          padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '12px',
+        }}>
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: '#8A8A8A', margin: 0 }}>
+            Viewing as guest — connect to settle or add expenses
+          </p>
+          <button
+            onClick={() => requireConnection(() => {})}
+            style={{
+              background: '#00C896', color: '#000', border: 'none',
+              borderRadius: '8px', padding: '5px 12px',
+              fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '700',
+              cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            Connect
+          </button>
+        </div>
+      )}
+
+      <div className="pt-20 px-4 pb-28 space-y-5" style={isReadOnly ? { paddingTop: '100px' } : {}}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
             <div style={{
@@ -605,87 +630,130 @@ export default function GroupDetailPage() {
 
         {activeTab === 'balances' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {oweBalances.length > 0 && (
-              <Button
-                className="w-full"
-                loading={settleAllLoading}
-                onClick={() => requireConnection(handleSettleAll)}
-              >
-                Settle all debts
-              </Button>
-            )}
+            {isReadOnly ? (
+              <>
+                {balances.length > 0 ? (
+                  <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
+                    {balances.map((balance, i) => (
+                      <div key={i} className="px-4">
+                        <BalanceRow
+                          address={balance.from}
+                          displayName={`${getMemberDisplayName(balance.from)} → ${getMemberDisplayName(balance.to)}`}
+                          amount={balance.amount}
+                          type="owe"
+                          groupId={groupId as string}
+                        />
+                      </div>
+                    ))}
+                  </Card>
+                ) : (
+                  <div style={{
+                    textAlign: 'center', padding: '48px 24px',
+                    border: '2px dashed #2C2C2C', borderRadius: '20px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  }}>
+                    <CheckCircle2 style={{ width: '32px', height: '32px', color: '#4A4A4A' }} />
+                    <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', margin: 0 }}>Everyone is settled!</p>
+                  </div>
+                )}
+                <button
+                  onClick={() => requireConnection(() => {})}
+                  style={{
+                    width: '100%', padding: '14px',
+                    background: 'rgba(0,200,150,0.05)', border: '1px solid rgba(0,200,150,0.2)',
+                    borderRadius: '16px', color: '#00C896',
+                    fontFamily: 'DM Sans, sans-serif', fontSize: '14px', fontWeight: '600',
+                    cursor: 'pointer', touchAction: 'manipulation',
+                  }}
+                >
+                  Connect wallet to see your balance &amp; settle
+                </button>
+              </>
+            ) : (
+              <>
+                {oweBalances.length > 0 && (
+                  <Button
+                    className="w-full"
+                    loading={settleAllLoading}
+                    onClick={() => requireConnection(handleSettleAll)}
+                  >
+                    Settle all debts
+                  </Button>
+                )}
 
-            {personalBalances.length > 0 ? (
-              <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
-                {personalBalances.map((balance, i) => {
-                  const isUserFrom = balance.from.toLowerCase() === address?.toLowerCase();
-                  return (
-                    <div key={i} className="px-4">
-                      <BalanceRow
-                        address={isUserFrom ? balance.to : balance.from}
-                        displayName={getMemberDisplayName(isUserFrom ? balance.to : balance.from)}
-                        amount={balance.amount}
-                        type={isUserFrom ? 'owe' : 'owed'}
-                        groupId={groupId as string}
-                        onRemind={!isUserFrom ? () => requireConnection(() => handleRemind(balance.from, balance.amount)) : undefined}
-                      />
+                {personalBalances.length > 0 ? (
+                  <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
+                    {personalBalances.map((balance, i) => {
+                      const isUserFrom = balance.from.toLowerCase() === address?.toLowerCase();
+                      return (
+                        <div key={i} className="px-4">
+                          <BalanceRow
+                            address={isUserFrom ? balance.to : balance.from}
+                            displayName={getMemberDisplayName(isUserFrom ? balance.to : balance.from)}
+                            amount={balance.amount}
+                            type={isUserFrom ? 'owe' : 'owed'}
+                            groupId={groupId as string}
+                            onRemind={!isUserFrom ? () => requireConnection(() => handleRemind(balance.from, balance.amount)) : undefined}
+                          />
+                        </div>
+                      );
+                    })}
+                  </Card>
+                ) : (
+                  <div style={{
+                    textAlign: 'center', padding: '48px 24px',
+                    border: '2px dashed #2C2C2C', borderRadius: '20px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  }}>
+                    <CheckCircle2 style={{ width: '32px', height: '32px', color: '#4A4A4A' }} />
+                    <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', margin: 0 }}>Everyone is settled!</p>
+                  </div>
+                )}
+
+                {!isAdding ? (
+                  <button
+                    onClick={() => setIsAdding(true)}
+                    style={{
+                      width: '100%', padding: '14px',
+                      background: 'transparent', border: '1px dashed #2C2C2C',
+                      borderRadius: '16px', color: '#8A8A8A',
+                      fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
+                      cursor: 'pointer', touchAction: 'manipulation',
+                    }}
+                  >
+                    + Add Member by Address
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <input
+                      value={manualAddress}
+                      onChange={(e) => setManualAddress(e.target.value)}
+                      placeholder="0x... wallet address"
+                      style={{
+                        width: '100%', height: '46px', background: '#161616',
+                        border: '1px solid #2C2C2C', borderRadius: '12px',
+                        padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
+                        fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+                      }}
+                    />
+                    <input
+                      value={newMemberName}
+                      onChange={(e) => setNewMemberName(e.target.value)}
+                      placeholder="Display name (optional)"
+                      style={{
+                        width: '100%', height: '46px', background: '#161616',
+                        border: '1px solid #2C2C2C', borderRadius: '12px',
+                        padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
+                        fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Button size="sm" onClick={() => requireConnection(handleAddManual)} disabled={isAdding}>Add</Button>
+                      <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
                     </div>
-                  );
-                })}
-              </Card>
-            ) : (
-              <div style={{
-                textAlign: 'center', padding: '48px 24px',
-                border: '2px dashed #2C2C2C', borderRadius: '20px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-              }}>
-                <CheckCircle2 style={{ width: '32px', height: '32px', color: '#4A4A4A' }} />
-                <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', margin: 0 }}>Everyone is settled!</p>
-              </div>
-            )}
-
-            {!isAdding ? (
-              <button
-                onClick={() => setIsAdding(true)}
-                style={{
-                  width: '100%', padding: '14px',
-                  background: 'transparent', border: '1px dashed #2C2C2C',
-                  borderRadius: '16px', color: '#8A8A8A',
-                  fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
-                  cursor: 'pointer', touchAction: 'manipulation',
-                }}
-              >
-                + Add Member by Address
-              </button>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <input
-                  value={manualAddress}
-                  onChange={(e) => setManualAddress(e.target.value)}
-                  placeholder="0x... wallet address"
-                  style={{
-                    width: '100%', height: '46px', background: '#161616',
-                    border: '1px solid #2C2C2C', borderRadius: '12px',
-                    padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
-                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
-                  }}
-                />
-                <input
-                  value={newMemberName}
-                  onChange={(e) => setNewMemberName(e.target.value)}
-                  placeholder="Display name (optional)"
-                  style={{
-                    width: '100%', height: '46px', background: '#161616',
-                    border: '1px solid #2C2C2C', borderRadius: '12px',
-                    padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
-                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
-                  }}
-                />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button size="sm" onClick={() => requireConnection(handleAddManual)} disabled={isAdding}>Add</Button>
-                  <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
-                </div>
-              </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -737,18 +805,20 @@ export default function GroupDetailPage() {
                       expense={expense}
                       userShare={userSplit ? parseFloat(userSplit.amount) : 0}
                     />
-                    <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={() => requireConnection(() => handleEditExpense(expense))}>
-                        <Edit3 size={12} />
-                        Edit
-                      </Button>
-                      {(expense.status || 'active') !== 'reversed' && (
-                        <Button size="sm" variant="danger" onClick={() => requireConnection(() => handleReverseExpense(expense))}>
-                          <RotateCcw size={12} />
-                          Reverse
+                    {!isReadOnly && (
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => requireConnection(() => handleEditExpense(expense))}>
+                          <Edit3 size={12} />
+                          Edit
                         </Button>
-                      )}
-                    </div>
+                        {(expense.status || 'active') !== 'reversed' && (
+                          <Button size="sm" variant="danger" onClick={() => requireConnection(() => handleReverseExpense(expense))}>
+                            <RotateCcw size={12} />
+                            Reverse
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -838,38 +908,53 @@ export default function GroupDetailPage() {
               <div ref={chatEndRef} />
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    requireConnection(handleSendMessage);
-                  }
-                }}
-                rows={2}
-                placeholder="Write a message..."
-                style={{
-                  width: '100%', background: '#161616', border: '1px solid #2C2C2C',
-                  borderRadius: '16px', padding: '12px 14px', color: '#F7F3EC',
-                  fontSize: '14px', outline: 'none', resize: 'none',
-                  fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box', lineHeight: '1.5',
-                }}
-              />
+            {isReadOnly ? (
               <button
-                onClick={() => requireConnection(handleSendMessage)}
-                disabled={isSendingMessage || !newMessage.trim()}
+                onClick={() => requireConnection(() => {})}
                 style={{
-                  width: '48px', height: '48px', flexShrink: 0,
-                  background: '#00C896', border: 'none', borderRadius: '14px',
-                  color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: !newMessage.trim() ? 0.4 : 1,
+                  width: '100%', padding: '14px',
+                  background: 'rgba(0,200,150,0.05)', border: '1px solid rgba(0,200,150,0.2)',
+                  borderRadius: '16px', color: '#00C896',
+                  fontFamily: 'DM Sans, sans-serif', fontSize: '14px', fontWeight: '600',
+                  cursor: 'pointer', touchAction: 'manipulation',
                 }}
               >
-                <Send style={{ width: '18px', height: '18px' }} />
+                Connect wallet to join the conversation
               </button>
-            </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      requireConnection(handleSendMessage);
+                    }
+                  }}
+                  rows={2}
+                  placeholder="Write a message..."
+                  style={{
+                    width: '100%', background: '#161616', border: '1px solid #2C2C2C',
+                    borderRadius: '16px', padding: '12px 14px', color: '#F7F3EC',
+                    fontSize: '14px', outline: 'none', resize: 'none',
+                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box', lineHeight: '1.5',
+                  }}
+                />
+                <button
+                  onClick={() => requireConnection(handleSendMessage)}
+                  disabled={isSendingMessage || !newMessage.trim()}
+                  style={{
+                    width: '48px', height: '48px', flexShrink: 0,
+                    background: '#00C896', border: 'none', borderRadius: '14px',
+                    color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: !newMessage.trim() ? 0.4 : 1,
+                  }}
+                >
+                  <Send style={{ width: '18px', height: '18px' }} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -880,7 +965,7 @@ export default function GroupDetailPage() {
       }}>
         <Button
           className="w-full h-14 rounded-2xl shadow-xl"
-          onClick={() => router.push(`/app/group/${groupId}/add`)}
+          onClick={() => requireConnection(() => router.push(`/app/group/${groupId}/add`))}
           style={{ background: '#00C896', color: '#000', fontWeight: '700', pointerEvents: 'auto', touchAction: 'manipulation' }}
         >
           <Plus style={{ width: '22px', height: '22px', marginRight: '8px' }} />

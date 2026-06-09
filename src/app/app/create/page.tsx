@@ -133,14 +133,6 @@ export default function CreateGroupPage() {
 
       if (groupError) throw groupError;
 
-      const { error: memberError } = await supabase.from('group_members').insert({
-        group_id: onchainGroupId,
-        wallet_address: address.toLowerCase(),
-        onchain_tx: tx,
-      });
-
-      if (memberError) throw memberError;
-
       router.push(`/app/group/${onchainGroupId}`);
     } catch (err) {
       console.error('Group creation failed:', err);

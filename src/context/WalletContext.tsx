@@ -234,14 +234,21 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           const [addr] = await window.ethereum.request({ method: 'eth_accounts' }).catch(() => []);
           if (addr) {
-            await connect(window.ethereum).catch(() => {});
+            // Silent restore — wallet already authorized, skip wallet_requestPermissions
+            try {
+              const { createWalletClient: cwc, custom: cust } = await import('viem');
+              const client = cwc({ chain: celo, transport: cust(window.ethereum) });
+              setAddress(addr as `0x${string}`);
+              setWalletClient(client);
+            } catch {}
           }
         }
       }
       setIsInitialLoading(false);
     };
     checkConnection();
-  }, [connect]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (address) {

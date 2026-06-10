@@ -18,13 +18,17 @@ export const useSettle = () => {
   const [step, setStep] = useState<'idle' | 'approving' | 'sending' | 'confirmed'>('idle');
 
   const settle = async (groupId: string, creditor: string, amount: number) => {
-    const { address, walletClient, publicClient, refreshBalance } = walletRef.current;
+    const { address, walletClient, publicClient, refreshBalance, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient) return null;
 
     setLoading(true);
     try {
       const amountRaw = parseEther(amount.toFixed(18));
-      const gasParams = { gasPrice: await publicClient.getGasPrice() };
+      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
+      const gasParams = {
+        gasPrice: await publicClient.getGasPrice(),
+        feeCurrency: isMiniPay ? (CUSD_ADDRESS as `0x${string}`) : undefined,
+      };
 
       setStep('approving');
       let nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });

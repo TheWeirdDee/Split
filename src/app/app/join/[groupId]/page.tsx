@@ -47,13 +47,13 @@ export default function JoinGroupPage() {
   }, [groupId]);
 
   const handleJoin = async () => {
-    const { address, walletClient, publicClient, isMiniPay, hasNoCelo } = walletRef.current;
+    const { address, walletClient, publicClient } = walletRef.current;
     if (!address || !groupId) return;
 
     setJoining(true);
     try {
       const [gasParams, currentNonce] = await Promise.all([
-        Promise.resolve({ feeCurrency: '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}` }),
+        publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
       setLoadingText('Joining Group...');

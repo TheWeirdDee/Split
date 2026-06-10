@@ -24,9 +24,7 @@ export const useSettle = () => {
     setLoading(true);
     try {
       const amountRaw = parseEther(amount.toFixed(18));
-      const gasParams = (isMiniPay || hasNoCelo)
-        ? { feeCurrency: CUSD_ADDRESS as `0x${string}` }
-        : { gasPrice: await publicClient.getGasPrice() };
+      const gasParams = { feeCurrency: CUSD_ADDRESS as `0x${string}` };
 
       setStep('approving');
       let nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });

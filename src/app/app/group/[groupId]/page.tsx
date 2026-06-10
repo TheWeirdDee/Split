@@ -313,14 +313,16 @@ export default function GroupDetailPage() {
             .eq('id', item.id);
         } catch (error: any) {
           failures += 1;
+          const errMsg = error?.shortMessage || error?.message || 'Failed settlement';
           await supabase
             .from('settlement_batch_items')
             .update({
               status: 'failed',
-              error_message: error?.message || 'Failed settlement',
+              error_message: errMsg,
               updated_at: new Date().toISOString(),
             })
             .eq('id', item.id);
+          showToast(`Settlement failed: ${errMsg}`, 'error');
         }
       }
 
@@ -334,8 +336,6 @@ export default function GroupDetailPage() {
 
       if (failures === 0) {
         showToast('All debts settled successfully.', 'success');
-      } else {
-        showToast(`Settle all finished with ${failures} failure(s).`, 'error');
       }
       window.location.reload();
     } catch (error) {

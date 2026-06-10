@@ -208,10 +208,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -220,7 +218,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [name, mode, contributionAmount, frequency, gracePeriod, maxMissed, maxMembers, maxCycles, goalAmount, goalDeadline, reminderLeadTime],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -243,10 +240,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -255,7 +250,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -281,8 +275,9 @@ export const useSavingsCircle = (circleId?: string) => {
     try {
       const gasParams = await buildGasParams(publicClient, isMiniPay);
 
+      // No explicit nonce — let the wallet manage it. We await the approve
+      // receipt before contributing, so the wallet sequences both correctly.
       // Step 1: Approve cUSD spend
-      let nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });
       const approveTx = await walletClient.writeContract({
         address: CUSD_ADDRESS,
         abi: erc20Abi,
@@ -290,13 +285,11 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [SAVINGS_CIRCLE_ADDRESS, amount],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
 
-      // Step 2: Contribute (re-fetch nonce after approve confirms)
-      nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });
+      // Step 2: Contribute
       const contributeTx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
         abi: SAVINGS_CIRCLE_ABI,
@@ -304,7 +297,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -328,10 +320,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -340,7 +330,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -364,10 +353,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -376,7 +363,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -400,10 +386,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -412,7 +396,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId), memberAddr as `0x${string}`],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -436,10 +419,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -448,7 +429,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
@@ -472,10 +452,8 @@ export const useSavingsCircle = (circleId?: string) => {
     setTxError(null);
 
     try {
-      const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient, isMiniPay),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       const tx = await walletClient.writeContract({
         address: SAVINGS_CIRCLE_ADDRESS,
@@ -484,7 +462,6 @@ export const useSavingsCircle = (circleId?: string) => {
         args: [BigInt(circleId)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 

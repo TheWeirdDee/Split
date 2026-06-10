@@ -97,9 +97,10 @@ export default function CreateCirclePage() {
 
       // On successful creation, go back to the save dashboard
       router.push('/app/save');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to deploy savings circle onchain:', err);
-      alert('Transaction failed. Make sure you have enough CELO for gas and try again.');
+      const reason = err?.shortMessage || err?.message || 'Unknown error';
+      alert(`Transaction failed: ${reason}`);
     }
   };
 

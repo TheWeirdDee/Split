@@ -75,7 +75,7 @@ export default function AddExpensePage() {
   }, [runId, prefilledFromRun]);
 
   const handleSubmit = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !description || !amount || !payer || splitWith.length === 0) return;
     setLoading(true);
 
@@ -93,10 +93,13 @@ export default function AddExpensePage() {
       const splitMembers = splitWith.map(addr => addr as `0x${string}`);
       const descriptionWithMeta = `${description} |cat:${category}`;
 
-      const [gasParams, currentNonce] = await Promise.all([
-        publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      const gasPrice = await publicClient.getGasPrice();
+      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = {
+        gasPrice,
+        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
+      };
       setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
@@ -105,7 +108,6 @@ export default function AddExpensePage() {
         args: [BigInt(groupId as string), totalAmountWei, descriptionWithMeta, splitMembers, splitAmounts],
         chain: celo,
         account: address as `0x${string}`,
-        nonce: currentNonce,
         ...gasParams,
       } as any);
 

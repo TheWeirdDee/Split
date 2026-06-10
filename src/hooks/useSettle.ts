@@ -18,16 +18,21 @@ export const useSettle = () => {
   const [step, setStep] = useState<'idle' | 'approving' | 'sending' | 'confirmed'>('idle');
 
   const settle = async (groupId: string, creditor: string, amount: number) => {
-    const { address, walletClient, publicClient, refreshBalance } = walletRef.current;
+    const { address, walletClient, publicClient, refreshBalance, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient) return null;
 
     setLoading(true);
     try {
       const amountRaw = parseEther(amount.toFixed(18));
-      const gasParams = { gasPrice: await publicClient.getGasPrice() };
+      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
+      const gasParams = {
+        gasPrice: await publicClient.getGasPrice(),
+        feeCurrency: isMiniPay ? (CUSD_ADDRESS as `0x${string}`) : undefined,
+      };
 
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      // We await the approve receipt before settling, so the wallet sequences both correctly.
       setStep('approving');
-      let nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });
       const approveTx = await walletClient.writeContract({
         address: CUSD_ADDRESS,
         abi: erc20Abi,
@@ -35,14 +40,12 @@ export const useSettle = () => {
         args: [CONTRACT_ADDRESS, amountRaw],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
 
       setStep('sending');
-      nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });
       const settleTx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS,
         abi: SPLIT_ABI,
@@ -50,7 +53,6 @@ export const useSettle = () => {
         args: [BigInt(groupId), creditor as `0x${string}`, amountRaw],
         chain: celo,
         account: address as `0x${string}`,
-        nonce,
         ...gasParams,
       } as any);
 

@@ -47,15 +47,18 @@ export default function JoinGroupPage() {
   }, [groupId]);
 
   const handleJoin = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !groupId) return;
 
     setJoining(true);
     try {
-      const [gasParams, currentNonce] = await Promise.all([
-        publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
-        publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
-      ]);
+      const gasPrice = await publicClient.getGasPrice();
+      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
+      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
+      const gasParams = {
+        gasPrice,
+        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
+      };
       setLoadingText('Joining Group...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
@@ -64,7 +67,6 @@ export default function JoinGroupPage() {
         args: [BigInt(groupId as string)],
         chain: celo,
         account: address as `0x${string}`,
-        nonce: currentNonce,
         ...gasParams,
       } as any);
 

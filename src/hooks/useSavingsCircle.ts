@@ -179,9 +179,13 @@ export const useSavingsCircle = (circleId?: string) => {
     }
   }, [circleId, publicClient]);
 
-  const buildGasParams = async (publicClient: any) => {
+  // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
+  const buildGasParams = async (publicClient: any, isMiniPay: boolean) => {
     const gasPrice = await publicClient.getGasPrice();
-    return { gasPrice };
+    return {
+      gasPrice,
+      feeCurrency: isMiniPay ? (CUSD_ADDRESS as `0x${string}`) : undefined,
+    };
   };
 
   // CREATE CIRCLE
@@ -198,14 +202,14 @@ export const useSavingsCircle = (circleId?: string) => {
     goalDeadline: bigint,
     reminderLeadTime: bigint
   ) => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 
@@ -233,14 +237,14 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // JOIN CIRCLE
   const joinCircle = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 
@@ -269,13 +273,13 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // CONTRIBUTE TO CIRCLE — approve cUSD first, then contribute
   const contribute = async (amount: bigint) => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
-      const gasParams = await buildGasParams(publicClient);
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       // Step 1: Approve cUSD spend
       let nonce = await publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' });
@@ -318,14 +322,14 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // DISTRIBUTE (Rotating mode pot distribution)
   const distribute = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 
@@ -354,14 +358,14 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // DISTRIBUTE GOAL (Goal mode pot distribution)
   const distributeGoal = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 
@@ -390,14 +394,14 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // MARK MISSED MEMBER
   const markMissed = async (memberAddr: string) => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 
@@ -426,14 +430,14 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // EXIT CIRCLE
   const exitCircle = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 
@@ -462,14 +466,14 @@ export const useSavingsCircle = (circleId?: string) => {
 
   // DISSOLVE CIRCLE
   const dissolveCircle = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
     setTxLoading(true);
     setTxError(null);
 
     try {
       const [gasParams, nonce] = await Promise.all([
-        buildGasParams(publicClient),
+        buildGasParams(publicClient, isMiniPay),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
 

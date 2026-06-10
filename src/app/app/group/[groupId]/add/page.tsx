@@ -93,11 +93,8 @@ export default function AddExpensePage() {
       const splitMembers = splitWith.map(addr => addr as `0x${string}`);
       const descriptionWithMeta = `${description} |cat:${category}`;
 
-      const useCeloFee = isMiniPay || hasNoCelo;
       const [gasParams, currentNonce] = await Promise.all([
-        useCeloFee
-          ? Promise.resolve({ feeCurrency: '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}` })
-          : publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
+        Promise.resolve({ feeCurrency: '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}` }),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
       setLoadingText('Logging Expense...');

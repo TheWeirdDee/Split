@@ -75,7 +75,7 @@ export default function AddExpensePage() {
   }, [runId, prefilledFromRun]);
 
   const handleSubmit = async () => {
-    const { address, walletClient, publicClient } = walletRef.current;
+    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !description || !amount || !payer || splitWith.length === 0) return;
     setLoading(true);
 
@@ -93,10 +93,15 @@ export default function AddExpensePage() {
       const splitMembers = splitWith.map(addr => addr as `0x${string}`);
       const descriptionWithMeta = `${description} |cat:${category}`;
 
-      const [gasParams, currentNonce] = await Promise.all([
-        publicClient.getGasPrice().then((gp: bigint) => ({ gasPrice: gp })),
+      const [gasPrice, currentNonce] = await Promise.all([
+        publicClient.getGasPrice(),
         publicClient.getTransactionCount({ address: address as `0x${string}`, blockTag: 'pending' }),
       ]);
+      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
+      const gasParams = {
+        gasPrice,
+        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
+      };
       setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,

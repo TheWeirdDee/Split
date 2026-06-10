@@ -179,14 +179,8 @@ export const useSavingsCircle = (circleId?: string) => {
     }
   }, [circleId, publicClient]);
 
-  // Returns gas params: feeCurrency for MiniPay/no-CELO wallets, gasPrice for regular wallets.
-  // CIP-64 (feeCurrency) is EIP-1559 based and incompatible with legacy gasPrice field.
-  const buildGasParams = async (publicClient: any, isMiniPay: boolean, hasNoCelo: boolean) => {
-    if (isMiniPay || hasNoCelo) {
-      return { feeCurrency: CUSD_ADDRESS as `0x${string}` };
-    }
-    const gasPrice = await publicClient.getGasPrice();
-    return { gasPrice };
+  const buildGasParams = async (_publicClient: any, _isMiniPay: boolean, _hasNoCelo: boolean) => {
+    return { feeCurrency: CUSD_ADDRESS as `0x${string}` };
   };
 
   // CREATE CIRCLE

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Card } from '../common/Card';
 import { AmountDisplay } from '../common/AmountDisplay';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface BalanceSummaryCardProps {
   totalOwed: number;
@@ -10,6 +11,7 @@ interface BalanceSummaryCardProps {
 }
 
 export const BalanceSummaryCard = ({ totalOwed, totalOwing }: BalanceSummaryCardProps) => {
+  const { formatAmount } = useCurrency();
   const net = totalOwed - totalOwing;
 
   return (
@@ -20,9 +22,8 @@ export const BalanceSummaryCard = ({ totalOwed, totalOwing }: BalanceSummaryCard
         </span>
         <div className="flex items-baseline justify-center gap-2 mb-4">
           <span className="clash-display font-bold text-5xl text-[#f5f0e8]">
-            {net.toFixed(2)}
+            {net >= 0 ? '+' : ''}{formatAmount(net)}
           </span>
-          <span className="dm-mono text-lg text-[#7a7a7a]">cUSD</span>
         </div>
         
         <div className="w-full h-[1px] bg-[#00c8961a] mb-6"></div>
@@ -30,11 +31,11 @@ export const BalanceSummaryCard = ({ totalOwed, totalOwing }: BalanceSummaryCard
         <div className="grid grid-cols-2 gap-4 w-full">
           <div className="text-center">
             <span className="dm-mono text-[8px] text-[#7a7a7a] uppercase block mb-1">You are owed</span>
-            <span className="dm-sans font-bold text-[#00c896] text-sm">+{totalOwed.toFixed(2)} <span className="text-[9px] opacity-60">cUSD</span></span>
+            <span className="dm-sans font-bold text-[#00c896] text-sm">+{formatAmount(totalOwed)}</span>
           </div>
           <div className="text-center border-l border-[#00c8961a]">
             <span className="dm-mono text-[8px] text-[#7a7a7a] uppercase block mb-1">You owe</span>
-            <span className="dm-sans font-bold text-[#ff4b4b] text-sm">-{totalOwing.toFixed(2)} <span className="text-[9px] opacity-60">cUSD</span></span>
+            <span className="dm-sans font-bold text-[#ff4b4b] text-sm">-{formatAmount(totalOwing)}</span>
           </div>
         </div>
       </div>

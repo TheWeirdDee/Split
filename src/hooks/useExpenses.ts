@@ -50,11 +50,21 @@ export const useExpenses = (groupId: string) => {
 
               let cleanDescription = rawDescription;
               let category = 'other';
-              const catIndex = rawDescription.lastIndexOf(' |cat:');
-              if (catIndex !== -1) {
-                cleanDescription = rawDescription.substring(0, catIndex);
-                category = rawDescription.substring(catIndex + 6);
+              let attachmentUrl = '';
+
+              const catMatch = rawDescription.match(/ \|cat:(\S+)/);
+              const imgMatch = rawDescription.match(/ \|img:(\S+)/);
+
+              if (catMatch) {
+                category = catMatch[1];
               }
+              if (imgMatch) {
+                attachmentUrl = imgMatch[1];
+              }
+
+              cleanDescription = rawDescription
+                .replace(/ \|cat:\S+/, '')
+                .replace(/ \|img:\S+/, '');
 
               const expenseId = expenseIndex.toString();
 
@@ -63,6 +73,7 @@ export const useExpenses = (groupId: string) => {
                 group_id: groupId,
                 description: cleanDescription,
                 category,
+                attachment_url: attachmentUrl,
                 total_amount: parseFloat(formatEther(amountWei)),
                 paid_by: paidBy.toLowerCase(),
                 created_by: paidBy.toLowerCase(),

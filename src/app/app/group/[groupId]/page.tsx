@@ -15,6 +15,7 @@ import { Card } from '@/components/common/Card';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useToast } from '@/components/common/Toast';
 import { GroupIcon } from '@/components/common/GroupIcon';
+import { AmountDisplay } from '@/components/common/AmountDisplay';
 import {
   Plus,
   Share2,
@@ -81,6 +82,8 @@ export default function GroupDetailPage() {
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('all');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [showAudit, setShowAudit] = useState(false);
+  const [auditFilter, setAuditFilter] = useState<'all' | 'my'>('all');
 
   const inviteLink = generateInviteLink(groupId as string);
   const isCreator = group?.created_by?.toLowerCase() === address?.toLowerCase();
@@ -117,6 +120,38 @@ export default function GroupDetailPage() {
       return bySearch && byCategory;
     });
   }, [expenses, expenseSearch, expenseCategory]);
+
+  const itemizedDebts = useMemo(() => {
+    const list: any[] = [];
+    expenses.forEach((expense) => {
+      if (expense.status === 'reversed') return;
+      const expenseSplits = splits.filter((s) => s.expense_id === expense.id);
+      expenseSplits.forEach((s) => {
+        const debtor = s.wallet_address.toLowerCase();
+        const creditor = expense.paid_by.toLowerCase();
+        if (debtor !== creditor) {
+          list.push({
+            expenseId: expense.id,
+            description: expense.description,
+            date: expense.created_at,
+            from: debtor,
+            to: creditor,
+            amount: parseFloat(s.amount),
+          });
+        }
+      });
+    });
+    return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [expenses, splits]);
+
+  const filteredAuditDebts = useMemo(() => {
+    if (auditFilter === 'my' && address) {
+      return itemizedDebts.filter(
+        (d) => d.from === address.toLowerCase() || d.to === address.toLowerCase()
+      );
+    }
+    return itemizedDebts;
+  }, [itemizedDebts, auditFilter, address]);
 
   const handleShare = () => {
     const shareData = {
@@ -755,6 +790,103 @@ export default function GroupDetailPage() {
                 )}
               </>
             )}
+
+            {/* Ledger Audit section */}
+            <div style={{ marginTop: '16px' }}>
+              <button
+                onClick={() => setShowAudit(!showAudit)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'rgba(0, 200, 150, 0.05)',
+                  border: '1px solid rgba(0, 200, 150, 0.2)',
+                  borderRadius: '16px',
+                  color: '#00C896',
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>{showAudit ? 'Hide' : 'Show'} Ledger Audit Breakdown</span>
+              </button>
+
+              {showAudit && (
+                <Card className="mt-4 bg-[#161616] border-[#2C2C2C] p-4 text-[#F7F3EC]">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="clash-display text-base font-semibold text-[#F7F3EC]">Ledger Audit Breakdown</h3>
+                    {!isReadOnly && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setAuditFilter('all')}
+                          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                            auditFilter === 'all'
+                              ? 'bg-[#00C896] text-[#000] border-[#00C896]'
+                              : 'bg-transparent border-[#2C2C2C] text-[#8A8A8A]'
+                          }`}
+                        >
+                          All Debts
+                        </button>
+                        <button
+                          onClick={() => setAuditFilter('my')}
+                          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                            auditFilter === 'my'
+                              ? 'bg-[#00C896] text-[#000] border-[#00C896]'
+                              : 'bg-transparent border-[#2C2C2C] text-[#8A8A8A]'
+                          }`}
+                        >
+                          My Debts
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {filteredAuditDebts.length === 0 ? (
+                    <p style={{ color: '#8A8A8A', fontSize: '13px', textAlign: 'center', margin: '20px 0' }}>
+                      No items to audit in this category.
+                    </p>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', fontFamily: 'DM Sans, sans-serif' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid #2C2C2C', textAlign: 'left', color: '#8A8A8A' }}>
+                            <th style={{ padding: '8px 4px' }}>Item</th>
+                            <th style={{ padding: '8px 4px' }}>From</th>
+                            <th style={{ padding: '8px 4px' }}>To</th>
+                            <th style={{ padding: '8px 4px', textAlign: 'right' }}>Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredAuditDebts.map((debt, index) => (
+                            <tr key={index} style={{ borderBottom: '1px solid rgba(44, 44, 44, 0.5)' }}>
+                              <td style={{ padding: '8px 4px' }}>
+                                <div style={{ fontWeight: '500', color: '#F7F3EC' }}>{debt.description}</div>
+                                <div style={{ fontSize: '10px', color: '#8A8A8A' }}>
+                                  {new Date(debt.date).toLocaleDateString()}
+                                </div>
+                              </td>
+                              <td style={{ padding: '8px 4px', color: '#8A8A8A' }}>
+                                {getMemberDisplayName(debt.from)}
+                              </td>
+                              <td style={{ padding: '8px 4px', color: '#8A8A8A' }}>
+                                {getMemberDisplayName(debt.to)}
+                              </td>
+                              <td style={{ padding: '8px 4px', textAlign: 'right' }}>
+                                <AmountDisplay amount={debt.amount} variant={debt.from === address?.toLowerCase() ? 'negative' : debt.to === address?.toLowerCase() ? 'positive' : 'neutral'} />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Card>
+              )}
+            </div>
           </div>
         )}
 

@@ -13,6 +13,8 @@ import { Button } from '@/components/common/Button';
 import { DailyCheckIn } from '@/components/app/DailyCheckIn';
 import { PiggyBank, AlertTriangle } from 'lucide-react';
 import { formatEther } from 'viem';
+import { useCurrency } from '@/context/CurrencyContext';
+import { useRecurringCheck } from '@/hooks/useRecurringCheck';
 
 export default function AppHome() {
   const { isInitialLoading, hasNoCelo } = useWallet();
@@ -35,6 +37,10 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
   const { groups, loading: groupsLoading } = useGroups();
   const { circles, loading: circlesLoading } = useSavingsCircle();
   const { totalOwed, totalOwing } = useUserBalance();
+  const { formatAmount } = useCurrency();
+
+  const groupIds = React.useMemo(() => groups.map((g) => g.id), [groups]);
+  const { pendingRuns } = useRecurringCheck(groupIds, isConnected);
 
   return (
     <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -53,6 +59,29 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
           </Button>
         </div>
       )}
+
+      {/* Pending recurring drafts banner */}
+      {isConnected && pendingRuns.length > 0 && (
+        <div className="p-4 border border-brand/20 rounded-2xl bg-brand/5 text-xs text-[#00C896] flex flex-col gap-3 animate-fade-in mt-4">
+          <div className="flex items-start gap-2">
+            <PiggyBank className="w-5 h-5 shrink-0 text-[#00C896]" />
+            <div>
+              <strong>Pending Recurring Drafts:</strong> You have {pendingRuns.length} recurring expense {pendingRuns.length === 1 ? 'draft' : 'drafts'} waiting to be logged.
+            </div>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {pendingRuns.map((run) => (
+              <Link key={run.id} href={`/app/group/${run.group_id}/add?runId=${run.id}`} className="shrink-0">
+                <div className="bg-[#161616] border border-[#2C2C2C] px-3 py-2 rounded-xl text-[10px] hover:border-[#00C896] transition-all flex flex-col gap-1">
+                  <span className="font-semibold text-[#F7F3EC]">{run.recurring_expense_rules?.description || 'Recurring draft'}</span>
+                  <span className="text-[#8A8A8A]">{run.recurring_expense_rules?.amount} cUSD</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* CELO native gas warning banner */}
       {isConnected && hasNoCelo && (
@@ -141,7 +170,7 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
                     </div>
                   </div>
                   <div className="font-mono text-xs text-brand">
-                    {Number(formatEther(circle.mode === 1 ? circle.totalSaved : circle.currentPot)).toFixed(2)} cUSD
+                    {formatAmount(Number(formatEther(circle.mode === 1 ? circle.totalSaved : circle.currentPot)))}
                   </div>
                 </div>
               </Link>

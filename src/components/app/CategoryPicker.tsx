@@ -21,9 +21,14 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
           className={cn(
             "flex flex-col items-center justify-center p-3 rounded-xl border transition-all",
             selectedId === cat.id 
-              ? "bg-brand/10 border-brand text-brand" 
+              ? "" 
               : "bg-surface border-border text-text-secondary hover:border-text-muted"
           )}
+          style={selectedId === cat.id ? {
+            borderColor: cat.color,
+            color: cat.color,
+            backgroundColor: `${cat.color}15`,
+          } : undefined}
         >
           <GroupIcon name={cat.iconName} size={24} className="mb-1" />
           <span className="text-[10px] font-medium uppercase tracking-wider">{cat.label}</span>

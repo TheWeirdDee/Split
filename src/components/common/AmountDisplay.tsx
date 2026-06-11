@@ -1,5 +1,8 @@
+"use client";
+
 import React from 'react';
-import { cn, formatAmount } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface AmountDisplayProps {
   amount: number | string;
@@ -14,6 +17,8 @@ export const AmountDisplay = ({
   size = 'md',
   className,
 }: AmountDisplayProps) => {
+  const { formatAmount } = useCurrency();
+
   const colors = {
     positive: 'text-money-positive',
     negative: 'text-money-negative',
@@ -28,12 +33,13 @@ export const AmountDisplay = ({
     xl: 'text-4xl',
   };
 
+  const amountNum = Math.abs(Number(amount));
+
   return (
     <div className={cn("dm-mono font-medium whitespace-nowrap", colors[variant], sizes[size], className)}>
       {variant === 'positive' && '+'}
       {variant === 'negative' && '-'}
-      {formatAmount(Math.abs(Number(amount)))}
-      <span className="text-[0.7em] ml-1 opacity-70">cUSD</span>
+      {formatAmount(amountNum)}
     </div>
   );
 };

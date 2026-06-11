@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/context/WalletContext";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -43,7 +44,9 @@ export default function RootLayout({
       </head>
       <body className={`${dmSans.variable} ${dmMono.variable} antialiased`} suppressHydrationWarning>
         <WalletProvider>
-          {children}
+          <CurrencyProvider>
+            {children}
+          </CurrencyProvider>
         </WalletProvider>
       </body>
     </html>

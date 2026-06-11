@@ -23,7 +23,7 @@ export default function CircleDetailPage() {
   const { requireConnection } = wallet;
   const { address, isConnected, connect } = wallet;
   const { 
-    circle, members, loading, txLoading, 
+    circle, members, loading, txLoading, txError,
     joinCircle, contribute, distribute, distributeGoal, 
     markMissed, exitCircle, dissolveCircle, refreshCircle 
   } = useSavingsCircle(circleId);
@@ -128,8 +128,11 @@ export default function CircleDetailPage() {
     : 0;
 
   // Check if grace period is expired for anyone
-  const nowSecs = Math.floor(Date.now() / 1000);
-  const deadlinePassed = nowSecs > Number(circle.nextDeadline);
+  const [nowSecs, setNowSecs] = useState<number>(0);
+  useEffect(() => {
+    setNowSecs(Math.floor(Date.now() / 1000));
+  }, []);
+  const deadlinePassed = circle ? nowSecs > Number(circle.nextDeadline) : false;
 
   return (
     <>

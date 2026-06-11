@@ -14,6 +14,92 @@ import { cn, truncateAddress } from '@/lib/utils';
 import { parseEther } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
+import Tesseract from 'tesseract.js';
+import { Camera, Loader2 } from 'lucide-react';
+
+function parseCSV(text: string) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return null;
+  
+  const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/['"]/g, ''));
+  const values = lines[1].split(',').map(v => v.trim().replace(/['"]/g, ''));
+  
+  const result: Record<string, string> = {};
+  headers.forEach((header, index) => {
+    if (values[index] !== undefined) {
+      result[header] = values[index];
+    }
+  });
+  return result;
+}
+
+function getSplitAmountsWei(
+  totalAmountWei: bigint,
+  splitWith: string[],
+  splitType: 'equal' | 'percentage' | 'share' | 'exact',
+  splitValues: Record<string, string>
+): bigint[] {
+  if (splitWith.length === 0) return [];
+
+  if (splitType === 'percentage') {
+    let sumWei = 0n;
+    return splitWith.map((addr, index) => {
+      if (index === splitWith.length - 1) {
+        const remaining = totalAmountWei - sumWei;
+        return remaining > 0n ? remaining : 0n;
+      }
+      const pct = parseFloat(splitValues[addr] || '0');
+      const bps = BigInt(Math.round(pct * 100));
+      const amt = (totalAmountWei * bps) / 10000n;
+      sumWei += amt;
+      return amt;
+    });
+  }
+
+  if (splitType === 'share') {
+    const shares = splitWith.map(addr => parseFloat(splitValues[addr] || '1'));
+    const totalShares = shares.reduce((a, b) => a + b, 0);
+    if (totalShares <= 0) {
+      const memberCount = BigInt(splitWith.length);
+      const baseShare = totalAmountWei / memberCount;
+      const remainder = totalAmountWei % memberCount;
+      return splitWith.map((_, index) => index < remainder ? baseShare + 1n : baseShare);
+    }
+    let sumWei = 0n;
+    const totalSharesBps = BigInt(Math.round(totalShares * 100));
+    return splitWith.map((addr, index) => {
+      if (index === splitWith.length - 1) {
+        const remaining = totalAmountWei - sumWei;
+        return remaining > 0n ? remaining : 0n;
+      }
+      const sh = parseFloat(splitValues[addr] || '1');
+      const shBps = BigInt(Math.round(sh * 100));
+      const amt = (totalAmountWei * shBps) / totalSharesBps;
+      sumWei += amt;
+      return amt;
+    });
+  }
+
+  if (splitType === 'exact') {
+    let sumWei = 0n;
+    return splitWith.map((addr, index) => {
+      if (index === splitWith.length - 1) {
+        const remaining = totalAmountWei - sumWei;
+        return remaining > 0n ? remaining : 0n;
+      }
+      const val = splitValues[addr] || '0';
+      const amt = parseEther(val || '0');
+      sumWei += amt;
+      return amt;
+    });
+  }
+
+  // default 'equal'
+  const memberCount = BigInt(splitWith.length);
+  const baseShare = totalAmountWei / memberCount;
+  const remainder = totalAmountWei % memberCount;
+  return splitWith.map((_, index) => index < remainder ? baseShare + 1n : baseShare);
+}
 
 export default function AddExpensePage() {
   const { groupId } = useParams();
@@ -36,9 +122,133 @@ export default function AddExpensePage() {
   const [category, setCategory] = useState('other');
   const [payer, setPayer] = useState('');
   const [splitWith, setSplitWith] = useState<string[]>([]);
+  const [splitType, setSplitType] = useState<'equal' | 'percentage' | 'share' | 'exact'>('equal');
+  const [splitValues, setSplitValues] = useState<Record<string, string>>({});
+  const [validationError, setValidationError] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('Logging Expense...');
   const [prefilledFromRun, setPrefilledFromRun] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentPreview, setAttachmentPreview] = useState<string>('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAttachmentFile(file);
+    setAttachmentPreview(URL.createObjectURL(file));
+  };
+
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const parsed = parseCSV(text);
+      if (!parsed) {
+        alert('Invalid or empty CSV file.');
+        return;
+      }
+
+      const desc = parsed.description || parsed.item || parsed.title || '';
+      const amt = parsed.amount || parsed.price || parsed.cost || '';
+      const cat = parsed.category || parsed.type || 'other';
+      const pyr = parsed.payer || parsed.paid_by || '';
+      const sType = parsed.split_type || 'equal';
+
+      if (desc) setDescription(desc);
+      if (amt) setAmount(amt);
+      if (cat) {
+        setCategory(cat.toLowerCase());
+      }
+      if (pyr) {
+        const matchedMember = members.find(
+          (m) => m.wallet_address.toLowerCase() === pyr.toLowerCase() ||
+                 m.display_name?.toLowerCase() === pyr.toLowerCase()
+        );
+        if (matchedMember) {
+          setPayer(matchedMember.wallet_address.toLowerCase());
+        }
+      }
+      if (['equal', 'percentage', 'share', 'exact'].includes(sType.toLowerCase())) {
+        setSplitType(sType.toLowerCase() as any);
+      }
+
+      alert('CSV successfully parsed and populated the expense form!');
+    };
+    reader.readAsText(file);
+  };
+
+  const handleReceiptScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachmentFile(file);
+    setAttachmentPreview(URL.createObjectURL(file));
+
+    setScanning(true);
+    try {
+      const ret = await Tesseract.recognize(file, 'eng');
+      const text = ret.data.text;
+      console.log('OCR Raw Text:', text);
+
+      let detectedAmount = '';
+      let detectedMerchant = '';
+
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      const priceRegex = /(?:\$|cUSD)?\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/gi;
+      
+      let maxAmount = 0;
+      for (const line of lines) {
+        let match;
+        priceRegex.lastIndex = 0;
+        while ((match = priceRegex.exec(line)) !== null) {
+          const val = parseFloat(match[1].replace(/,/g, ''));
+          if (val > maxAmount && val < 50000) {
+            maxAmount = val;
+          }
+        }
+      }
+
+      if (maxAmount > 0) {
+        detectedAmount = maxAmount.toFixed(2);
+      }
+
+      const merchantRegex = /^[A-Za-z0-9\s&'-]{3,30}$/;
+      for (let i = 0; i < Math.min(5, lines.length); i++) {
+        const line = lines[i];
+        if (
+          merchantRegex.test(line) && 
+          !/total|date|tax|invoice|phone|tel|cashier|welcome|receipt|store|street|road|ave/i.test(line) &&
+          !/\d{4,}/.test(line)
+        ) {
+          detectedMerchant = line.trim();
+          break;
+        }
+      }
+
+      if (detectedAmount) {
+        setAmount(detectedAmount);
+      }
+      if (detectedMerchant) {
+        setDescription(`Receipt from ${detectedMerchant}`);
+      } else {
+        setDescription('Receipt Expense');
+      }
+
+      alert(`Successfully scanned receipt!\nMerchant: ${detectedMerchant || 'Unknown'}\nTotal: ${detectedAmount || '0.00'} cUSD`);
+    } catch (err) {
+      console.error('OCR scanning failed:', err);
+      alert('Failed to parse receipt image. Please verify permissions or upload a clearer photo.');
+    } finally {
+      setScanning(false);
+    }
+  };
 
   useEffect(() => {
     if (address && !payer) setPayer(address.toLowerCase());
@@ -74,32 +284,95 @@ export default function AddExpensePage() {
     loadRecurringDraft();
   }, [runId, prefilledFromRun]);
 
+  // Validation logic
+  useEffect(() => {
+    setValidationError('');
+    if (!amount || splitWith.length === 0) return;
+
+    if (splitType === 'percentage') {
+      const percentages = splitWith.map(addr => parseFloat(splitValues[addr] || '0'));
+      const totalPercent = percentages.reduce((a, b) => a + b, 0);
+      if (Math.abs(totalPercent - 100) > 0.01) {
+        setValidationError(`Total percentage must equal 100% (currently ${totalPercent.toFixed(1)}%)`);
+      }
+    } else if (splitType === 'share') {
+      const shares = splitWith.map(addr => parseFloat(splitValues[addr] || '1'));
+      const totalShares = shares.reduce((a, b) => a + b, 0);
+      if (totalShares <= 0) {
+        setValidationError('Total shares must be greater than 0');
+      }
+    } else if (splitType === 'exact') {
+      const exacts = splitWith.map(addr => parseFloat(splitValues[addr] || '0'));
+      const totalExact = exacts.reduce((a, b) => a + b, 0);
+      if (Math.abs(totalExact - parseFloat(amount)) > 0.001) {
+        setValidationError(`Total split amount must equal total expense of ${amount} cUSD (currently ${totalExact.toFixed(2)} cUSD)`);
+      }
+    }
+  }, [amount, splitWith, splitType, splitValues]);
+
   const handleSubmit = async () => {
     const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
-    if (!address || !description || !amount || !payer || splitWith.length === 0) return;
+    if (!address || !description || !amount || !payer || splitWith.length === 0 || validationError) return;
     setLoading(true);
 
     try {
+      let attachmentUrl = '';
+      if (attachmentFile) {
+        setLoadingText('Uploading attachment...');
+        try {
+          // Attempt to ensure bucket exists
+          try {
+            await supabase.storage.createBucket('receipts', { public: true });
+          } catch (_) {}
+
+          const fileExt = attachmentFile.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+          const filePath = `${groupId}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('receipts')
+            .upload(filePath, attachmentFile);
+
+          if (uploadError) throw uploadError;
+
+          const { data: publicUrlData } = supabase.storage
+            .from('receipts')
+            .getPublicUrl(filePath);
+
+          attachmentUrl = publicUrlData.publicUrl;
+        } catch (uploadErr) {
+          console.error('Failed to upload image to Supabase storage:', uploadErr);
+          // Fallback to Data URL for small files, otherwise mock/placeholder URL
+          try {
+            const reader = new FileReader();
+            const base64Promise = new Promise<string>((resolve) => {
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(attachmentFile);
+            });
+            const base64Data = await base64Promise;
+            if (base64Data.length < 60000) {
+              attachmentUrl = base64Data;
+            } else {
+              attachmentUrl = URL.createObjectURL(attachmentFile);
+            }
+          } catch (_) {
+            attachmentUrl = '';
+          }
+        }
+      }
+
       const totalAmountNum = parseFloat(amount);
       const totalAmountWei = parseEther(amount);
-      const memberCount = BigInt(splitWith.length);
-      const baseShare = totalAmountWei / memberCount;
-      const remainder = totalAmountWei % memberCount;
-
-      const splitAmounts = splitWith.map((member, index) => {
-        return index < remainder ? baseShare + 1n : baseShare;
-      });
-
+      const splitAmounts = getSplitAmountsWei(totalAmountWei, splitWith, splitType, splitValues);
       const splitMembers = splitWith.map(addr => addr as `0x${string}`);
-      const descriptionWithMeta = `${description} |cat:${category}`;
+      const descriptionWithMeta = `${description} |cat:${category}${attachmentUrl ? ` |img:${attachmentUrl}` : ''}`;
 
       const gasPrice = await publicClient.getGasPrice();
-      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
-      // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
       const gasParams = {
         gasPrice,
         feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
       };
+
       setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
@@ -171,13 +444,51 @@ export default function AddExpensePage() {
       <AppHeader />
 
       <div className="px-6 pt-24 pb-12 space-y-10 animate-fade-in">
+        {/* CSV Importer Section */}
+        <div className="bg-[#121212] border border-[#2C2C2C] p-4 rounded-2xl space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider text-[#00C896]">Spreadsheet Import</span>
+            <span className="text-[10px] text-text-muted">CSV Format</span>
+          </div>
+          <p className="text-[11px] text-text-muted leading-relaxed">
+            Quickly fill this form by uploading a CSV. Columns supported: <code>description,amount,category,payer,split_type</code>
+          </p>
+          <label className="flex items-center justify-center gap-2 border border-dashed border-[#2C2C2C] hover:border-[#00C896]/40 bg-[#161616] rounded-xl p-3 cursor-pointer transition-colors text-xs text-[#8A8A8A]">
+            <span>Upload CSV Spreadsheet</span>
+            <input
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCSVUpload}
+            />
+          </label>
+        </div>
+
         <div className="space-y-6">
-          <Input
-            label="Description"
-            placeholder="What was it for?"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                label="Description"
+                placeholder="What was it for?"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <label className="cursor-pointer bg-surface-2 hover:bg-border border border-border rounded-xl p-3 h-[46px] w-[46px] flex items-center justify-center text-text-secondary transition-colors shrink-0">
+              {scanning ? (
+                <Loader2 className="w-5 h-5 animate-spin text-brand" />
+              ) : (
+                <Camera className="w-5 h-5" />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={scanning}
+                onChange={handleReceiptScan}
+              />
+            </label>
+          </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Category</label>
@@ -195,6 +506,54 @@ export default function AddExpensePage() {
                 onChange={(e) => setAmount(e.target.value)}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">cUSD</span>
+            </div>
+          </div>
+
+          {/* Receipt Attachment UI */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Receipt Image (Optional)</label>
+            <div className="flex flex-col gap-3">
+              {attachmentPreview ? (
+                <div className="relative w-full h-32 rounded-xl overflow-hidden border border-[#2C2C2C]">
+                  <img src={attachmentPreview} alt="Receipt preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAttachmentFile(null);
+                      setAttachmentPreview('');
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      background: 'rgba(0,0,0,0.6)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center border border-dashed border-[#2C2C2C] hover:border-brand/40 bg-surface-2/30 rounded-xl p-4 cursor-pointer transition-colors">
+                  <Camera className="w-6 h-6 text-[#8A8A8A] mb-1" />
+                  <span className="text-xs text-[#8A8A8A]">Upload receipt image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              )}
             </div>
           </div>
 
@@ -217,7 +576,11 @@ export default function AddExpensePage() {
           </div>
 
           <div className="space-y-4">
-            <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Split with</label>
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-xs font-medium text-text-secondary uppercase tracking-wider">Split with</label>
+              <span className="text-xs font-semibold capitalize text-brand">{splitType} split</span>
+            </div>
+            
             <div className="grid grid-cols-2 gap-2">
               {members.map((m) => (
                 <button
@@ -238,20 +601,111 @@ export default function AddExpensePage() {
               ))}
             </div>
           </div>
+
+          {/* Split Type Selector */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Split Type</label>
+            <div className="flex bg-surface-2 p-1 rounded-xl border border-border">
+              {(['equal', 'percentage', 'share', 'exact'] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setSplitType(type)}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-semibold rounded-lg capitalize transition-all",
+                    splitType === type ? "bg-brand text-bg shadow-sm" : "text-text-secondary hover:text-text-primary"
+                  )}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Split Values Inputs */}
+          {splitType !== 'equal' && splitWith.length > 0 && (
+            <div className="space-y-3 bg-surface border border-border p-4 rounded-2xl animate-slide-down">
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider block">Custom Split Details</span>
+              <div className="space-y-3">
+                {splitWith.map((addr) => {
+                  const m = members.find((mem) => mem.wallet_address.toLowerCase() === addr);
+                  const name = addr === address?.toLowerCase() ? 'You' : (m?.display_name || truncateAddress(addr));
+                  return (
+                    <div key={addr} className="flex items-center justify-between gap-4">
+                      <span className="text-xs font-medium truncate flex-1">{name}</span>
+                      <div className="relative flex items-center w-32">
+                        <input
+                          type="number"
+                          placeholder={splitType === 'percentage' ? '0' : splitType === 'share' ? '1' : '0.00'}
+                          className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-right pr-10 dm-mono text-brand focus:outline-none focus:border-brand"
+                          value={splitValues[addr] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSplitValues(prev => ({ ...prev, [addr]: val }));
+                          }}
+                        />
+                        <span className="absolute right-3 text-[10px] font-bold text-text-muted select-none">
+                          {splitType === 'percentage' ? '%' : splitType === 'share' ? 'sh' : 'cUSD'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Validation Errors */}
+        {validationError && (
+          <div className="p-3 bg-money-negative/10 border border-money-negative/20 text-money-negative text-xs rounded-xl font-medium animate-shake">
+            {validationError}
+          </div>
+        )}
+
         <div className="pt-4 space-y-4">
-          <div className="bg-surface-2 p-4 rounded-2xl border border-border flex justify-between items-center">
-            <span className="text-sm text-text-secondary">Each pays:</span>
-            <span className="text-xl dm-mono font-bold text-text-primary">
-              {amount && splitWith.length > 0 ? (parseFloat(amount) / splitWith.length).toFixed(2) : '0.00'} cUSD
-            </span>
+          <div className="bg-surface-2 p-4 rounded-2xl border border-border flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Splitting:</span>
+              <span className="text-sm font-semibold capitalize text-brand">{splitType} split</span>
+            </div>
+            {splitType === 'equal' ? (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-secondary">Each pays:</span>
+                <span className="text-xl dm-mono font-bold text-text-primary">
+                  {amount && splitWith.length > 0 ? (parseFloat(amount) / splitWith.length).toFixed(2) : '0.00'} cUSD
+                </span>
+              </div>
+            ) : (
+              <div className="space-y-1.5 pt-2 border-t border-border/50 max-h-48 overflow-y-auto">
+                {splitWith.map((addr) => {
+                  const m = members.find((mem) => mem.wallet_address.toLowerCase() === addr);
+                  const name = addr === address?.toLowerCase() ? 'You' : (m?.display_name || truncateAddress(addr));
+                  
+                  let shareStr = '0.00';
+                  if (amount && splitWith.length > 0) {
+                    const totalWei = parseEther(amount);
+                    const amountsWei = getSplitAmountsWei(totalWei, splitWith, splitType, splitValues);
+                    const index = splitWith.indexOf(addr);
+                    if (index !== -1 && amountsWei[index] !== undefined) {
+                      shareStr = (Number(amountsWei[index]) / 1e18).toFixed(2);
+                    }
+                  }
+                  return (
+                    <div key={addr} className="flex justify-between items-center text-xs">
+                      <span className="text-text-secondary truncate pr-4">{name}</span>
+                      <span className="dm-mono text-text-primary font-semibold">{shareStr} cUSD</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <Button
             size="lg"
             className="w-full h-16 text-lg font-bold rounded-2xl"
-            disabled={!description || !amount || splitWith.length === 0}
+            disabled={!description || !amount || splitWith.length === 0 || !!validationError}
             onClick={() => requireConnection(handleSubmit)}
             loading={loading}
           >

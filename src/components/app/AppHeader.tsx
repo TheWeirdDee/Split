@@ -4,6 +4,8 @@ import { useWallet } from '@/context/WalletContext';
 import { useRouter } from 'next/navigation';
 import { Bell, ChevronLeft } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useCurrency } from '@/context/CurrencyContext';
+import { CURRENCIES, CurrencyCode } from '@/lib/fiat';
 
 interface AppHeaderProps {
   title?: string;
@@ -36,12 +38,8 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
   const { unreadCount } = useNotifications();
   const router = useRouter();
   const unreadLabel = unreadCount > 99 ? '99+' : unreadCount.toString();
+  const { selectedCurrency, setSelectedCurrency, formatAmount } = useCurrency();
 
-  const formattedBalance = (() => {
-    const num = parseFloat(cUSDBalance);
-    return isNaN(num) ? '0.00' : num.toFixed(2);
-  })();
-  
   return (
     <header style={{
       position: 'fixed',
@@ -109,6 +107,30 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
 
       {/* Right: Wallet badge + disconnect */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 1 }}>
+        {address && (
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
+            style={{
+              background: '#161616',
+              color: '#8A8A8A',
+              border: '1px solid #2C2C2C',
+              borderRadius: '10px',
+              padding: '0 8px',
+              fontSize: '11px',
+              fontFamily: 'DM Sans, sans-serif',
+              cursor: 'pointer',
+              outline: 'none',
+              flexShrink: 0,
+              height: '36px',
+            }}
+          >
+            {CURRENCIES.map(c => (
+              <option key={c.code} value={c.code}>{c.code}</option>
+            ))}
+          </select>
+        )}
+
         {address && (
           <button
             onClick={() => router.push('/app/notifications')}
@@ -186,7 +208,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               paddingLeft: '6px',
               whiteSpace: 'nowrap',
             }}>
-              {formattedBalance} cUSD
+              {formatAmount(parseFloat(cUSDBalance) || 0)}
             </span>
           </div>
         )}

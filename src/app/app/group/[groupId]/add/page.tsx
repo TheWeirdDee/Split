@@ -140,6 +140,50 @@ export default function AddExpensePage() {
     setAttachmentPreview(URL.createObjectURL(file));
   };
 
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const parsed = parseCSV(text);
+      if (!parsed) {
+        alert('Invalid or empty CSV file.');
+        return;
+      }
+
+      const desc = parsed.description || parsed.item || parsed.title || '';
+      const amt = parsed.amount || parsed.price || parsed.cost || '';
+      const cat = parsed.category || parsed.type || 'other';
+      const pyr = parsed.payer || parsed.paid_by || '';
+      const sType = parsed.split_type || 'equal';
+
+      if (desc) setDescription(desc);
+      if (amt) setAmount(amt);
+      if (cat) {
+        setCategory(cat.toLowerCase());
+      }
+      if (pyr) {
+        const matchedMember = members.find(
+          (m) => m.wallet_address.toLowerCase() === pyr.toLowerCase() ||
+                 m.display_name?.toLowerCase() === pyr.toLowerCase()
+        );
+        if (matchedMember) {
+          setPayer(matchedMember.wallet_address.toLowerCase());
+        }
+      }
+      if (['equal', 'percentage', 'share', 'exact'].includes(sType.toLowerCase())) {
+        setSplitType(sType.toLowerCase() as any);
+      }
+
+      alert('CSV successfully parsed and populated the expense form!');
+    };
+    reader.readAsText(file);
+  };
+
   useEffect(() => {
     if (address && !payer) setPayer(address.toLowerCase());
     if (members.length > 0 && splitWith.length === 0) {
@@ -337,7 +381,7 @@ export default function AddExpensePage() {
         {showScanner ? (
           <ReceiptScanner
             members={members}
-            currentUserAddress={address}
+            currentUserAddress={address || undefined}
             onScanComplete={(total, merch, splits, file) => {
               setAmount(total);
               setDescription(`Receipt from ${merch}`);

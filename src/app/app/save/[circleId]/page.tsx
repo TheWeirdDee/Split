@@ -6,12 +6,13 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
+import { useMoolaYield } from '@/hooks/useMoolaYield';
 import { Button } from '@/components/common/Button';
 import { WalletAvatar } from '@/components/common/WalletAvatar';
 import { 
   PiggyBank, Users, Calendar, Target, Clock, 
   UserPlus, CheckCircle2, AlertCircle, Sparkles, 
-  Trash2, LogOut, ArrowUpRight, Copy, Check 
+  Trash2, LogOut, ArrowUpRight, Copy, Check, TrendingUp
 } from 'lucide-react';
 import { formatEther } from 'viem';
 
@@ -27,6 +28,7 @@ export default function CircleDetailPage() {
     joinCircle, contribute, distribute, distributeGoal, 
     markMissed, exitCircle, dissolveCircle, refreshCircle 
   } = useSavingsCircle(circleId);
+  const { apy, loading: apyLoading } = useMoolaYield();
 
   const [copied, setCopied] = useState(false);
   const [refundConfirm, setRefundConfirm] = useState(false);
@@ -197,6 +199,11 @@ export default function CircleDetailPage() {
               {isGoal ? totalSavedFormatted : potFormatted}
               <span className="text-xs font-sans font-medium text-text-secondary">cUSD</span>
             </div>
+            {!apyLoading && apy > 0 && (
+              <div className="flex items-center gap-1 mt-1 text-[10px] text-green-400 font-medium bg-green-500/10 px-2 py-0.5 rounded-full w-fit">
+                <TrendingUp className="w-3 h-3" /> Earning {apy}% APY on Moola
+              </div>
+            )}
           </div>
           <div className="p-4 border border-border rounded-3xl bg-surface space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">

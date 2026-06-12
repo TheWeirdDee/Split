@@ -130,6 +130,8 @@ export default function AddExpensePage() {
   const [loadingText, setLoadingText] = useState('Logging Expense...');
   const [prefilledFromRun, setPrefilledFromRun] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringFrequency, setRecurringFrequency] = useState('monthly');
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string>('');
 
@@ -346,6 +348,23 @@ export default function AddExpensePage() {
         );
       }
 
+      if (isRecurring && !runId) {
+        setLoadingText('Saving Recurring Rule...');
+        const { error: ruleError } = await supabase.from('recurring_expense_rules').insert({
+          group_id: Number(groupId),
+          creator_address: address?.toLowerCase(),
+          amount: parseFloat(amount),
+          description: description,
+          category: category,
+          payer_address: payer,
+          participant_addresses: splitWith,
+          frequency: recurringFrequency,
+          next_run_date: new Date(Date.now() + (recurringFrequency === 'monthly' ? 30 : recurringFrequency === 'weekly' ? 7 : 365) * 24 * 60 * 60 * 1000).toISOString(),
+          is_active: true
+        });
+        if (ruleError) console.error('Error saving recurring rule:', ruleError);
+      }
+
       if (runId) {
         const { error: runError } = await supabase
           .from('recurring_expense_runs')
@@ -443,6 +462,45 @@ export default function AddExpensePage() {
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Category</label>
             <CategoryPicker selectedId={category} onSelect={setCategory} />
+          </div>
+
+          <div className="bg-surface border border-border p-4 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-text-primary">Make this a recurring expense?</span>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(!isRecurring)}
+                className={cn(
+                  "w-11 h-6 rounded-full transition-colors relative",
+                  isRecurring ? "bg-brand" : "bg-surface-2 border border-border"
+                )}
+              >
+                <div className={cn(
+                  "w-4 h-4 rounded-full bg-bg absolute top-1 transition-all",
+                  isRecurring ? "left-6" : "left-1 bg-text-muted"
+                )} />
+              </button>
+            </div>
+            
+            {isRecurring && (
+              <div className="flex gap-2 animate-fade-in pt-2">
+                {(['weekly', 'monthly', 'yearly']).map((freq) => (
+                  <button
+                    key={freq}
+                    type="button"
+                    onClick={() => setRecurringFrequency(freq)}
+                    className={cn(
+                      "flex-1 py-2 text-xs font-semibold rounded-lg capitalize transition-all border",
+                      recurringFrequency === freq 
+                        ? "bg-brand/10 text-brand border-brand/30" 
+                        : "bg-surface-2 text-text-secondary border-transparent hover:border-border"
+                    )}
+                  >
+                    {freq}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">

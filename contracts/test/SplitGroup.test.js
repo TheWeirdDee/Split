@@ -60,7 +60,7 @@ describe("SplitGroup", function () {
 
     it("skips duplicate addresses in initial members", async function () {
       await splitGroup.connect(alice).createGroup("Trip", [bob.address, bob.address]);
-      const group = await splitGroup.groups(1n);
+      const group = await splitGroup.getGroup(1n);
       // alice + bob (deduplicated)
       expect(group.members.length).to.equal(2n);
     });
@@ -119,11 +119,11 @@ describe("SplitGroup", function () {
         [half, half]
       );
 
-      // alice paid 10, is owed 5 by bob (her own half cancels)
+      // alice paid 10, her share is 5, so she is owed 5
       const aliceBalance = await splitGroup.getMemberBalance(groupId, alice.address);
       const bobBalance = await splitGroup.getMemberBalance(groupId, bob.address);
 
-      expect(aliceBalance).to.equal(0n); // +5 (from bob's half) - 5 (her own half) = 0
+      expect(aliceBalance).to.equal(5n * ONE_CUSD); // is owed 5
       expect(bobBalance).to.equal(-5n * ONE_CUSD); // owes 5
     });
 

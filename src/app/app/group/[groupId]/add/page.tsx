@@ -14,8 +14,8 @@ import { cn, truncateAddress } from '@/lib/utils';
 import { parseEther } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
-import Tesseract from 'tesseract.js';
-import { Camera, Loader2 } from 'lucide-react';
+import { ReceiptScanner } from '@/components/groups/ReceiptScanner';
+import { Camera, Loader2, ScanLine } from 'lucide-react';
 
 function parseCSV(text: string) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -129,7 +129,7 @@ export default function AddExpensePage() {
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('Logging Expense...');
   const [prefilledFromRun, setPrefilledFromRun] = useState(false);
-  const [scanning, setScanning] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string>('');
 
@@ -138,116 +138,6 @@ export default function AddExpensePage() {
     if (!file) return;
     setAttachmentFile(file);
     setAttachmentPreview(URL.createObjectURL(file));
-  };
-
-  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
-
-      const parsed = parseCSV(text);
-      if (!parsed) {
-        alert('Invalid or empty CSV file.');
-        return;
-      }
-
-      const desc = parsed.description || parsed.item || parsed.title || '';
-      const amt = parsed.amount || parsed.price || parsed.cost || '';
-      const cat = parsed.category || parsed.type || 'other';
-      const pyr = parsed.payer || parsed.paid_by || '';
-      const sType = parsed.split_type || 'equal';
-
-      if (desc) setDescription(desc);
-      if (amt) setAmount(amt);
-      if (cat) {
-        setCategory(cat.toLowerCase());
-      }
-      if (pyr) {
-        const matchedMember = members.find(
-          (m) => m.wallet_address.toLowerCase() === pyr.toLowerCase() ||
-                 m.display_name?.toLowerCase() === pyr.toLowerCase()
-        );
-        if (matchedMember) {
-          setPayer(matchedMember.wallet_address.toLowerCase());
-        }
-      }
-      if (['equal', 'percentage', 'share', 'exact'].includes(sType.toLowerCase())) {
-        setSplitType(sType.toLowerCase() as any);
-      }
-
-      alert('CSV successfully parsed and populated the expense form!');
-    };
-    reader.readAsText(file);
-  };
-
-  const handleReceiptScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setAttachmentFile(file);
-    setAttachmentPreview(URL.createObjectURL(file));
-
-    setScanning(true);
-    try {
-      const ret = await Tesseract.recognize(file, 'eng');
-      const text = ret.data.text;
-      console.log('OCR Raw Text:', text);
-
-      let detectedAmount = '';
-      let detectedMerchant = '';
-
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-      const priceRegex = /(?:\$|cUSD)?\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/gi;
-      
-      let maxAmount = 0;
-      for (const line of lines) {
-        let match;
-        priceRegex.lastIndex = 0;
-        while ((match = priceRegex.exec(line)) !== null) {
-          const val = parseFloat(match[1].replace(/,/g, ''));
-          if (val > maxAmount && val < 50000) {
-            maxAmount = val;
-          }
-        }
-      }
-
-      if (maxAmount > 0) {
-        detectedAmount = maxAmount.toFixed(2);
-      }
-
-      const merchantRegex = /^[A-Za-z0-9\s&'-]{3,30}$/;
-      for (let i = 0; i < Math.min(5, lines.length); i++) {
-        const line = lines[i];
-        if (
-          merchantRegex.test(line) && 
-          !/total|date|tax|invoice|phone|tel|cashier|welcome|receipt|store|street|road|ave/i.test(line) &&
-          !/\d{4,}/.test(line)
-        ) {
-          detectedMerchant = line.trim();
-          break;
-        }
-      }
-
-      if (detectedAmount) {
-        setAmount(detectedAmount);
-      }
-      if (detectedMerchant) {
-        setDescription(`Receipt from ${detectedMerchant}`);
-      } else {
-        setDescription('Receipt Expense');
-      }
-
-      alert(`Successfully scanned receipt!\nMerchant: ${detectedMerchant || 'Unknown'}\nTotal: ${detectedAmount || '0.00'} cUSD`);
-    } catch (err) {
-      console.error('OCR scanning failed:', err);
-      alert('Failed to parse receipt image. Please verify permissions or upload a clearer photo.');
-    } finally {
-      setScanning(false);
-    }
   };
 
   useEffect(() => {
@@ -444,7 +334,29 @@ export default function AddExpensePage() {
       <AppHeader />
 
       <div className="px-6 pt-24 pb-12 space-y-10 animate-fade-in">
-        {/* CSV Importer Section */}
+        {showScanner ? (
+          <ReceiptScanner
+            members={members}
+            currentUserAddress={address}
+            onScanComplete={(total, merch, splits, file) => {
+              setAmount(total);
+              setDescription(`Receipt from ${merch}`);
+              setSplitType('exact');
+              setSplitValues(splits);
+              setAttachmentFile(file);
+              setAttachmentPreview(URL.createObjectURL(file));
+              
+              const assignedMembers = Object.keys(splits).filter(addr => parseFloat(splits[addr]) > 0);
+              if (assignedMembers.length > 0) {
+                setSplitWith(assignedMembers);
+              }
+              setShowScanner(false);
+            }}
+            onClose={() => setShowScanner(false)}
+          />
+        ) : (
+          <div className="space-y-10 animate-fade-in">
+            {/* CSV Importer Section */}
         <div className="bg-[#121212] border border-[#2C2C2C] p-4 rounded-2xl space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider text-[#00C896]">Spreadsheet Import</span>
@@ -474,20 +386,14 @@ export default function AddExpensePage() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-            <label className="cursor-pointer bg-surface-2 hover:bg-border border border-border rounded-xl p-3 h-[46px] w-[46px] flex items-center justify-center text-text-secondary transition-colors shrink-0">
-              {scanning ? (
-                <Loader2 className="w-5 h-5 animate-spin text-brand" />
-              ) : (
-                <Camera className="w-5 h-5" />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={scanning}
-                onChange={handleReceiptScan}
-              />
-            </label>
+            <button
+              type="button"
+              onClick={() => setShowScanner(true)}
+              className="cursor-pointer bg-surface-2 hover:bg-brand/10 hover:border-brand/40 border border-border rounded-xl p-3 h-[46px] w-[46px] flex items-center justify-center text-brand transition-colors shrink-0"
+              title="Scan Receipt"
+            >
+              <ScanLine className="w-5 h-5" />
+            </button>
           </div>
 
           <div className="space-y-1.5">
@@ -712,6 +618,8 @@ export default function AddExpensePage() {
             {loading ? loadingText : 'Log Expense'}
           </Button>
         </div>
+          </div>
+        )}
       </div>
     </>
   );

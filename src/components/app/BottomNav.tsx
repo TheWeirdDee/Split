@@ -20,6 +20,18 @@ export function BottomNav() {
       ),
     },
     {
+      href: '/app/explore',
+      label: 'Explore',
+      icon: (active: boolean) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+             stroke={active ? '#00C896' : '#4A4A4A'} strokeWidth="2"
+             strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/>
+        </svg>
+      ),
+    },
+    {
       href: '/app/save',
       label: 'Save',
       icon: (active: boolean) => (

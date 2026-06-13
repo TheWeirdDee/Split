@@ -33,6 +33,11 @@ export default function CircleDetailPage() {
   const [copied, setCopied] = useState(false);
   const [refundConfirm, setRefundConfirm] = useState(false);
   const [dissolveConfirm, setDissolveConfirm] = useState(false);
+  const [nowSecs, setNowSecs] = useState<number>(0);
+
+  useEffect(() => {
+    setNowSecs(Math.floor(Date.now() / 1000));
+  }, []);
 
   const isInvite = searchParams.get('invite') === 'true';
 
@@ -130,10 +135,6 @@ export default function CircleDetailPage() {
     : 0;
 
   // Check if grace period is expired for anyone
-  const [nowSecs, setNowSecs] = useState<number>(0);
-  useEffect(() => {
-    setNowSecs(Math.floor(Date.now() / 1000));
-  }, []);
   const deadlinePassed = circle ? nowSecs > Number(circle.nextDeadline) : false;
 
   return (

@@ -420,7 +420,7 @@ export default function ExplorePage() {
                   <div className="space-y-4">
                     {communityGoals.map((c: any) => {
                       const savedEth = Number(formatEther(c.totalSaved));
-                      const goalEth = Number(formatEther(c.config.goalAmount));
+                      const goalEth = c.config?.goalAmount ? Number(formatEther(c.config.goalAmount)) : 100;
                       const percent = Math.min(100, Math.round((savedEth / (goalEth || 1)) * 100));
                       
                       return (

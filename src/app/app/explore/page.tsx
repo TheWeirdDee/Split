@@ -418,7 +418,7 @@ export default function ExplorePage() {
                   </div>
                   
                   <div className="space-y-4">
-                    {communityGoals.map((c) => {
+                    {communityGoals.map((c: any) => {
                       const savedEth = Number(formatEther(c.totalSaved));
                       const goalEth = Number(formatEther(c.config.goalAmount));
                       const percent = Math.min(100, Math.round((savedEth / (goalEth || 1)) * 100));
@@ -500,7 +500,7 @@ export default function ExplorePage() {
                   </div>
 
                   <div className="space-y-4">
-                    {rotatingCircles.map((c) => {
+                    {rotatingCircles.map((c: any) => {
                       const contributionEth = Number(formatEther(c.contributionAmount));
                       const estimatedPayout = contributionEth * (c.memberAddrs.length || 1);
                       

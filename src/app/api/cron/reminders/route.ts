@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, fallback } from 'viem';
 import { celo } from 'viem/chains';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI } from '@/lib/contract';
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,7 +22,11 @@ export async function GET(req: NextRequest) {
 
   const publicClient = createPublicClient({
     chain: celo,
-    transport: http('https://forno.celo.org'),
+    transport: fallback([
+      http('https://forno.celo.org'),
+      http('https://rpc.ankr.com/celo'),
+      http('https://celo.drpc.org'),
+    ]),
   });
 
   if (!SAVINGS_CIRCLE_ADDRESS) {

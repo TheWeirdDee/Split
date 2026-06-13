@@ -6,6 +6,7 @@ import {
   createWalletClient, 
   custom, 
   http, 
+  fallback,
   formatEther,
   parseAbi
 } from 'viem';
@@ -71,7 +72,11 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 
   const publicClient = useMemo(() => createPublicClient({
     chain: celo,
-    transport: http('https://forno.celo.org'),
+    transport: fallback([
+      http('https://forno.celo.org'),
+      http('https://rpc.ankr.com/celo'),
+      http('https://celo.drpc.org'),
+    ]),
     batch: { multicall: true },
   }), []);
 

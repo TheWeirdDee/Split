@@ -52,13 +52,14 @@ const IconMap: Record<string, any> = {
 export default function CreateGroupPage() {
   const router = useRouter();
   const wallet = useWallet();
-  const { requireConnection } = wallet;
+  const { requireConnection, address } = wallet;
   const walletRef = React.useRef(wallet);
   
   React.useEffect(() => {
     walletRef.current = wallet;
   }, [wallet]);
   const [step, setStep] = useState(1);
+  const [groupMode, setGroupMode] = useState<'local' | 'onchain'>('local');
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('Users');
   const [description, setDescription] = useState('');
@@ -66,8 +67,39 @@ export default function CreateGroupPage() {
   const [loadingText, setLoadingText] = useState('Creating Onchain (cUSD)...');
 
   const handleCreate = async () => {
-    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
-    if (!address || !name) return;
+    if (groupMode === 'local') {
+      setLoading(true);
+      try {
+        const localId = 'local-' + Date.now();
+        const newGroup = {
+          id: localId,
+          name,
+          emoji,
+          description,
+          created_by: address ? address.toLowerCase() : 'local-user',
+          created_at: new Date().toISOString(),
+          members: [
+            {
+              wallet_address: address ? address.toLowerCase() : 'local-user',
+              display_name: 'You',
+              avatar_emoji: '👤'
+            }
+          ]
+        };
+        const localGroups = JSON.parse(localStorage.getItem('split_local_groups') || '[]');
+        localStorage.setItem('split_local_groups', JSON.stringify([...localGroups, newGroup]));
+        router.push(`/app/group/${localId}`);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to create local group.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const { address: walletAddr, walletClient, publicClient, isMiniPay } = walletRef.current;
+    if (!walletAddr || !name) return;
     setLoading(true);
 
     try {
@@ -86,7 +118,7 @@ export default function CreateGroupPage() {
         functionName: 'createGroup',
         args: [name, []],
         chain: celo,
-        account: address as `0x${string}`,
+        account: walletAddr as `0x${string}`,
         ...gasParams,
       } as any);
 
@@ -125,7 +157,7 @@ export default function CreateGroupPage() {
         name,
         emoji,
         description,
-        created_by: address.toLowerCase(),
+        created_by: walletAddr.toLowerCase(),
         onchain_tx: tx,
       });
 
@@ -178,7 +210,39 @@ export default function CreateGroupPage() {
               </div>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#8A8A8A] ml-1">Group Type</label>
+                <div className="flex bg-[#161616] p-1 border border-[#2C2C2C] rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setGroupMode('local')}
+                    className={cn(
+                      "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all",
+                      groupMode === 'local' ? "bg-[#00C896] text-black shadow-lg" : "text-[#8A8A8A] hover:text-[#F7F3EC]"
+                    )}
+                  >
+                    ⚡ Local Offline (Instant)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGroupMode('onchain')}
+                    className={cn(
+                      "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all",
+                      groupMode === 'onchain' ? "bg-[#00C896] text-black shadow-lg" : "text-[#8A8A8A] hover:text-[#F7F3EC]"
+                    )}
+                  >
+                    🌐 Onchain Celo (cUSD)
+                  </button>
+                </div>
+                <p className="text-[10px] text-[#8A8A8A] px-1 leading-normal">
+                  {groupMode === 'local' 
+                    ? 'Works instantly offline without a wallet. Perfect for quick local splitting.'
+                    : 'Saves transactions to the blockchain. Requires a connected wallet and CELO/cUSD.'
+                  }
+                </p>
+              </div>
+
               <Input 
                 label="Group Name" 
                 placeholder="e.g. Ski Trip 2024" 
@@ -210,7 +274,7 @@ export default function CreateGroupPage() {
                 opacity: name ? 1 : 0.5
               }}
               disabled={!name || loading}
-              onClick={() => requireConnection(handleCreate)}
+              onClick={() => groupMode === 'local' ? handleCreate() : requireConnection(handleCreate)}
               loading={loading}
             >
               {loading ? loadingText : 'Create Group'}

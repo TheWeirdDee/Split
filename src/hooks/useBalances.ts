@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { formatEther } from 'viem';
-import { calculateGroupBalancesFromOnchain } from '@/lib/balanceEngine';
+import { calculateGroupBalancesFromOnchain, calculateGroupBalances } from '@/lib/balanceEngine';
 
 export const useBalances = (groupId: string) => {
   const { publicClient } = useWallet();
@@ -10,7 +10,34 @@ export const useBalances = (groupId: string) => {
   const [loading, setLoading] = useState(true);
 
   const fetchBalances = useCallback(async () => {
-    if (!groupId || !publicClient) return;
+    if (!groupId) return;
+
+    if (groupId.startsWith('local-')) {
+      setLoading(true);
+      if (typeof window !== 'undefined') {
+        try {
+          const allExpenses = JSON.parse(localStorage.getItem('split_local_expenses') || '[]');
+          const allSplits = JSON.parse(localStorage.getItem('split_local_splits') || '[]');
+
+          const filteredExpenses = allExpenses.filter((e: any) => e.group_id === groupId);
+          const filteredSplits = allSplits.filter((s: any) => s.expense_id && filteredExpenses.some((e: any) => e.id === s.expense_id));
+
+          // Compute balances offline
+          const calculatedBalances = calculateGroupBalances(filteredExpenses, filteredSplits, []);
+          setBalances(calculatedBalances);
+        } catch (err) {
+          console.error('Error calculating local balances:', err);
+        }
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (!publicClient) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
 
     try {

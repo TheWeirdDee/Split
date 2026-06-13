@@ -9,9 +9,52 @@ export const useUserBalance = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchUserBalance = useCallback(async () => {
+    let localNet = 0;
+    if (typeof window !== 'undefined') {
+      try {
+        const allExpenses = JSON.parse(localStorage.getItem('split_local_expenses') || '[]');
+        const allSplits = JSON.parse(localStorage.getItem('split_local_splits') || '[]');
+        const allSettlements = JSON.parse(localStorage.getItem('split_local_settlements') || '[]');
+
+        allExpenses.forEach((expense: any) => {
+          if (expense.status !== 'active') return;
+          const payer = expense.paid_by.toLowerCase();
+          const expenseSplits = allSplits.filter((s: any) => s.expense_id === expense.id);
+
+          if (payer === 'local-user') {
+            expenseSplits.forEach((split: any) => {
+              if (split.wallet_address.toLowerCase() !== 'local-user') {
+                localNet += parseFloat(split.amount) || 0;
+              }
+            });
+          } else {
+            const userSplit = expenseSplits.find((s: any) => s.wallet_address.toLowerCase() === 'local-user');
+            if (userSplit) {
+              localNet -= parseFloat(userSplit.amount) || 0;
+            }
+          }
+        });
+
+        allSettlements.forEach((settlement: any) => {
+          const debtor = settlement.debtor.toLowerCase();
+          const creditor = settlement.creditor.toLowerCase();
+          const amt = parseFloat(settlement.amount) || 0;
+
+          if (debtor === 'local-user') {
+            localNet += amt; // debt reduced (we paid)
+          }
+          if (creditor === 'local-user') {
+            localNet -= amt; // credit reduced (we got paid)
+          }
+        });
+      } catch (err) {
+        console.error('Error calculating local balance summary:', err);
+      }
+    }
+
     if (!address) {
-      setTotalOwed(0);
-      setTotalOwing(0);
+      setTotalOwed(Math.max(0, localNet));
+      setTotalOwing(Math.max(0, -localNet));
       setLoading(false);
       return;
     }
@@ -26,6 +69,8 @@ export const useUserBalance = () => {
 
       if (settlementError) {
         console.error('Error fetching settlements:', settlementError);
+        setTotalOwed(Math.max(0, localNet));
+        setTotalOwing(Math.max(0, -localNet));
         setLoading(false);
         return;
       }
@@ -38,6 +83,8 @@ export const useUserBalance = () => {
 
       if (memberError) {
         console.error('Error fetching groups:', memberError);
+        setTotalOwed(Math.max(0, localNet));
+        setTotalOwing(Math.max(0, -localNet));
         setLoading(false);
         return;
       }
@@ -55,8 +102,10 @@ export const useUserBalance = () => {
             owing += amount;
           }
         });
-        setTotalOwed(owed);
-        setTotalOwing(owing);
+        const combinedOwed = owed + Math.max(0, localNet);
+        const combinedOwing = owing + Math.max(0, -localNet);
+        setTotalOwed(combinedOwed);
+        setTotalOwing(combinedOwing);
         setLoading(false);
         return;
       }
@@ -69,6 +118,8 @@ export const useUserBalance = () => {
 
       if (expenseError) {
         console.error('Error fetching expenses:', expenseError);
+        setTotalOwed(Math.max(0, localNet));
+        setTotalOwing(Math.max(0, -localNet));
         setLoading(false);
         return;
       }
@@ -121,8 +172,9 @@ export const useUserBalance = () => {
 
       // Calculate user's totals
       const userBalance = netBalances[address.toLowerCase()] || 0;
-      setTotalOwed(Math.max(0, userBalance));
-      setTotalOwing(Math.max(0, -userBalance));
+      const combined = userBalance + localNet;
+      setTotalOwed(Math.max(0, combined));
+      setTotalOwing(Math.max(0, -combined));
     } catch (error) {
       console.error('Error in useUserBalance:', error);
     } finally {

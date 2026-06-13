@@ -29,9 +29,38 @@ export default function SettlePage() {
   }, [wallet]);
 
   const { address } = wallet;
-  const { settle, loading, step } = useSettle();
+  const { settle, loading: settleLoading, step } = useSettle();
+  
+  const [localStep, setLocalStep] = useState<string | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+
+  const displayStep = groupId?.startsWith('local-') ? (localStep || 'pending') : step;
+  const displayLoading = groupId?.startsWith('local-') ? localLoading : settleLoading;
 
   const handleSettle = async () => {
+    if (groupId?.startsWith('local-')) {
+      if (!groupId || !creditorAddress || !amount) return;
+      setLocalLoading(true);
+      try {
+        const newSettlement = {
+          id: 'local-set-' + Date.now(),
+          group_id: groupId,
+          debtor: 'local-user', // debtor is always You offline
+          creditor: (creditorAddress as string).toLowerCase(),
+          amount: parseFloat(amount),
+          created_at: new Date().toISOString()
+        };
+        const allSettlements = JSON.parse(localStorage.getItem('split_local_settlements') || '[]');
+        localStorage.setItem('split_local_settlements', JSON.stringify([...allSettlements, newSettlement]));
+        setLocalStep('confirmed');
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLocalLoading(false);
+      }
+      return;
+    }
+
     const { address } = walletRef.current;
     if (!address || !groupId || !creditorAddress || !amount) return;
     try {
@@ -41,7 +70,7 @@ export default function SettlePage() {
     }
   };
 
-  if (step === 'confirmed') {
+  if (displayStep === 'confirmed') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-6 space-y-8 animate-fade-in text-center">
         <div className="w-24 h-24 bg-brand rounded-full flex items-center justify-center shadow-2xl shadow-brand/20">
@@ -49,7 +78,11 @@ export default function SettlePage() {
         </div>
         <div className="space-y-2">
           <h1 className="clash-display font-bold text-3xl">Settled!</h1>
-          <p className="text-text-secondary">Your payment has been confirmed on the Celo Mainnet.</p>
+          <p className="text-text-secondary">
+            {groupId?.startsWith('local-') 
+              ? 'Your payment has been logged locally offline.' 
+              : 'Your payment has been confirmed on the Celo Mainnet.'}
+          </p>
         </div>
         <AmountDisplay amount={amount || 0} size="xl" variant="positive" className="text-5xl" />
         <Button size="lg" className="w-full h-14 rounded-2xl" onClick={() => router.push(`/app/group/${groupId}`)}>
@@ -59,6 +92,9 @@ export default function SettlePage() {
     );
   }
 
+  const debtorAddr = groupId?.startsWith('local-') ? 'local-user' : (address || '');
+  const displayCreditor = groupId?.startsWith('local-') ? (creditorAddress as string) : (creditorAddress as string);
+
   return (
     <>
       <AppHeader />
@@ -67,15 +103,17 @@ export default function SettlePage() {
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-4 w-full justify-center">
             <div className="flex flex-col items-center gap-2">
-              <WalletAvatar address={address || ''} size={64} />
+              <WalletAvatar address={debtorAddr} size={64} />
               <span className="text-xs text-text-muted font-medium">You</span>
             </div>
             
             <ArrowRight className="w-8 h-8 text-text-muted animate-pulse" />
             
             <div className="flex flex-col items-center gap-2">
-              <WalletAvatar address={creditorAddress as string} size={64} />
-              <span className="text-xs text-text-muted font-medium">{truncateAddress(creditorAddress as string)}</span>
+              <WalletAvatar address={displayCreditor} size={64} />
+              <span className="text-xs text-text-muted font-medium">
+                {displayCreditor.startsWith('local-member-') ? displayCreditor.replace('local-member-', 'Member ') : truncateAddress(displayCreditor)}
+              </span>
             </div>
           </div>
 
@@ -88,15 +126,19 @@ export default function SettlePage() {
         <Card className="bg-surface-2 p-6 space-y-4 border-border">
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-secondary">Group</span>
-            <span className="text-text-primary font-medium">Group Expense</span>
+            <span className="text-text-primary font-medium">
+              {groupId?.startsWith('local-') ? 'Offline Local Group' : 'Group Expense'}
+            </span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-secondary">Token</span>
             <span className="text-brand font-medium">cUSD (Celo)</span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-text-secondary">Onchain Status</span>
-            <span className="text-money-negative font-medium">Pending Settlement</span>
+            <span className="text-text-secondary">Status</span>
+            <span className="text-money-negative font-medium">
+              {groupId?.startsWith('local-') ? 'Ready to log offline' : 'Pending Settlement'}
+            </span>
           </div>
         </Card>
 
@@ -104,10 +146,16 @@ export default function SettlePage() {
           <Button 
             size="lg" 
             className="w-full h-16 text-lg font-bold rounded-2xl"
-            onClick={() => requireConnection(handleSettle)}
-            loading={loading}
+            onClick={() => groupId?.startsWith('local-') ? handleSettle() : requireConnection(handleSettle)}
+            loading={displayLoading}
           >
-            {step === 'approving' ? 'Approving cUSD...' : step === 'sending' ? 'Sending Payment...' : 'Confirm & Pay'}
+            {groupId?.startsWith('local-') 
+              ? 'Confirm & Settle Offline' 
+              : step === 'approving' 
+                ? 'Approving cUSD...' 
+                : step === 'sending' 
+                  ? 'Sending Payment...' 
+                  : 'Confirm & Pay'}
           </Button>
           
           <button 

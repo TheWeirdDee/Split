@@ -7,7 +7,6 @@ import { AmountDisplay } from '../common/AmountDisplay';
 import { useWallet } from '@/context/WalletContext';
 import { useBalances } from '@/hooks/useBalances';
 import { getUserNetBalance } from '@/lib/balanceEngine';
-
 import { GroupIcon } from '../common/GroupIcon';
 
 interface GroupCardProps {
@@ -15,7 +14,8 @@ interface GroupCardProps {
     id: string;
     name: string;
     emoji: string;
-    group_members: { wallet_address: string; display_name?: string }[];
+    group_members?: { wallet_address: string; display_name?: string }[];
+    members?: { wallet_address: string; display_name?: string }[];
   };
 }
 
@@ -23,8 +23,10 @@ export const GroupCard = ({ group }: GroupCardProps) => {
   const { address } = useWallet();
   const { balances, loading } = useBalances(group.id);
   
-  const netBalance = address ? getUserNetBalance(address, balances) : 0;
+  const userAddr = address || 'local-user';
+  const netBalance = getUserNetBalance(userAddr, balances);
   const variant = netBalance > 0 ? 'positive' : netBalance < 0 ? 'negative' : 'neutral';
+  const memberCount = group.group_members?.length || group.members?.length || 0;
 
   return (
     <Link href={`/app/group/${group.id}`}>
@@ -38,7 +40,7 @@ export const GroupCard = ({ group }: GroupCardProps) => {
               {group.name}
             </h3>
             <p className="text-xs text-text-secondary">
-              {group.group_members?.length || 0} members
+              {memberCount} {memberCount === 1 ? 'member' : 'members'} {group.id.startsWith('local-') && '· ⚡ Local'}
             </p>
           </div>
         </div>

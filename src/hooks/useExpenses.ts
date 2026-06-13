@@ -10,7 +10,36 @@ export const useExpenses = (groupId: string) => {
   const [loading, setLoading] = useState(true);
 
   const fetchExpenses = useCallback(async () => {
-    if (!groupId || !publicClient) return;
+    if (!groupId) return;
+
+    if (groupId.startsWith('local-')) {
+      setLoading(true);
+      if (typeof window !== 'undefined') {
+        try {
+          const allExpenses = JSON.parse(localStorage.getItem('split_local_expenses') || '[]');
+          const allSplits = JSON.parse(localStorage.getItem('split_local_splits') || '[]');
+
+          const filteredExpenses = allExpenses.filter((e: any) => e.group_id === groupId);
+          const filteredSplits = allSplits.filter((s: any) => s.expense_id && filteredExpenses.some((e: any) => e.id === s.expense_id));
+
+          // Sort local expenses by newest first
+          filteredExpenses.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+          setExpenses(filteredExpenses);
+          setSplits(filteredSplits);
+        } catch (err) {
+          console.error('Error loading local expenses:', err);
+        }
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (!publicClient) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {

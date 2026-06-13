@@ -35,6 +35,9 @@ import { createNotificationSafe } from '@/lib/notifications';
 import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSettle } from '@/hooks/useSettle';
 import { CATEGORIES } from '@/constants/categories';
+import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { decodeEventLog } from 'viem';
+import { celo } from 'viem/chains';
 
 const toCsv = (rows: string[][]) => rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
 
@@ -84,17 +87,22 @@ export default function GroupDetailPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showAudit, setShowAudit] = useState(false);
   const [auditFilter, setAuditFilter] = useState<'all' | 'my'>('all');
+  const [syncingGroup, setSyncingGroup] = useState(false);
 
   const inviteLink = generateInviteLink(groupId as string);
-  const isCreator = group?.created_by?.toLowerCase() === address?.toLowerCase();
-  const isReadOnly = !address;
+  const isCreator = (groupId as string).startsWith('local-') || group?.created_by?.toLowerCase() === address?.toLowerCase();
+  const isReadOnly = !address && !(groupId as string).startsWith('local-');
+  const currentUserAddress = (address || 'local-user').toLowerCase();
 
   const getMemberDisplayName = (walletAddress: string) => {
+    if (walletAddress.toLowerCase() === 'local-user') return 'You';
     const member = members.find((m) => m.wallet_address.toLowerCase() === walletAddress.toLowerCase());
     return (
       getNickname(walletAddress) ||
       member?.display_name ||
-      `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+      (walletAddress.startsWith('local-member-') 
+        ? walletAddress.replace('local-member-', 'Member ')
+        : walletAddress.length > 10 ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : walletAddress)
     );
   };
 
@@ -102,15 +110,15 @@ export default function GroupDetailPage() {
     () =>
       balances.filter(
         (balance) =>
-          balance.from.toLowerCase() === address?.toLowerCase() ||
-          balance.to.toLowerCase() === address?.toLowerCase()
+          balance.from.toLowerCase() === currentUserAddress ||
+          balance.to.toLowerCase() === currentUserAddress
       ),
-    [balances, address]
+    [balances, currentUserAddress]
   );
 
   const oweBalances = useMemo(
-    () => personalBalances.filter((balance) => balance.from.toLowerCase() === address?.toLowerCase()),
-    [personalBalances, address]
+    () => personalBalances.filter((balance) => balance.from.toLowerCase() === currentUserAddress),
+    [personalBalances, currentUserAddress]
   );
 
   const filteredExpenses = useMemo(() => {
@@ -196,7 +204,127 @@ export default function GroupDetailPage() {
     }
   };
 
+  const handleSyncLocalGroupToCloud = async () => {
+    const { address: walletAddr, walletClient, publicClient, isMiniPay } = walletRef.current;
+    if (!walletAddr) return;
+    setSyncingGroup(true);
+    try {
+      const gasPrice = await publicClient.getGasPrice();
+      const gasParams = {
+        gasPrice,
+        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
+      };
+
+      // 1. Create group onchain
+      const tx = await walletClient.writeContract({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: SPLIT_ABI,
+        functionName: 'createGroup',
+        args: [group.name, []],
+        chain: celo,
+        account: walletAddr as `0x${string}`,
+        ...gasParams,
+      } as any);
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+      
+      let onchainGroupId = '';
+      for (const log of receipt.logs) {
+        try {
+          const decoded = decodeEventLog({
+            abi: SPLIT_ABI,
+            eventName: 'GroupCreated',
+            data: log.data,
+            topics: log.topics,
+          });
+          if (decoded && decoded.args) {
+            onchainGroupId = (decoded.args as any).groupId.toString();
+            break;
+          }
+        } catch (e) {}
+      }
+
+      if (!onchainGroupId) {
+        const count = await publicClient.readContract({
+          address: CONTRACT_ADDRESS as `0x${string}`,
+          abi: SPLIT_ABI,
+          functionName: 'groupCount',
+        });
+        onchainGroupId = count.toString();
+      }
+
+      // 2. Insert group in Supabase
+      const { error: groupError } = await supabase.from('groups').insert({
+        id: onchainGroupId,
+        name: group.name,
+        emoji: group.emoji || 'Users',
+        description: group.description || '',
+        created_by: walletAddr.toLowerCase(),
+        onchain_tx: tx,
+      });
+
+      if (groupError) throw groupError;
+
+      // 3. Insert local members into Supabase group_members
+      const memberInsertRows = members.map((m: any) => {
+        const isMe = m.wallet_address.toLowerCase() === 'local-user';
+        return {
+          group_id: onchainGroupId,
+          wallet_address: isMe ? walletAddr.toLowerCase() : m.wallet_address.toLowerCase(),
+          display_name: m.display_name,
+        };
+      });
+
+      const { error: membersError } = await supabase.from('group_members').insert(memberInsertRows);
+      if (membersError) throw membersError;
+
+      // 4. Remove this group from local storage list
+      const localGroups = JSON.parse(localStorage.getItem('split_local_groups') || '[]');
+      const filteredGroups = localGroups.filter((g: any) => g.id !== groupId);
+      localStorage.setItem('split_local_groups', JSON.stringify(filteredGroups));
+
+      showToast('Group successfully synced onchain!', 'success');
+      router.push(`/app/group/${onchainGroupId}`);
+    } catch (err) {
+      console.error('Migration failed:', err);
+      showToast('Failed to sync group to blockchain.', 'error');
+    } finally {
+      setSyncingGroup(false);
+    }
+  };
+
   const handleAddManual = async () => {
+    if (groupId && (groupId as string).startsWith('local-')) {
+      if (!newMemberName.trim()) {
+        showToast('Please enter a member name', 'error');
+        return;
+      }
+      setIsAdding(true);
+      try {
+        const localGroups = JSON.parse(localStorage.getItem('split_local_groups') || '[]');
+        const groupIdx = localGroups.findIndex((g: any) => g.id === groupId);
+        if (groupIdx !== -1) {
+          const fakeAddress = 'local-member-' + Date.now();
+          const newMember = {
+            wallet_address: fakeAddress,
+            display_name: newMemberName.trim(),
+            avatar_emoji: ['👩', '👨', '🧑', '🦊', '🐼', '🐨', '🐸'][Math.floor(Math.random() * 7)]
+          };
+          localGroups[groupIdx].members.push(newMember);
+          localStorage.setItem('split_local_groups', JSON.stringify(localGroups));
+          showToast('Member added!', 'success');
+          setNewMemberName('');
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to add local member', 'error');
+      } finally {
+        setIsAdding(false);
+      }
+      return;
+    }
+
     const { address } = walletRef.current;
     if (!address) return;
     if (!manualAddress || !manualAddress.startsWith('0x')) {
@@ -251,6 +379,35 @@ export default function GroupDetailPage() {
   };
 
   const handleDeleteGroup = async () => {
+    if (groupId && (groupId as string).startsWith('local-')) {
+      setShowDeleteConfirm(false);
+      setIsDeleting(true);
+      try {
+        const localGroups = JSON.parse(localStorage.getItem('split_local_groups') || '[]');
+        const filtered = localGroups.filter((g: any) => g.id !== groupId);
+        localStorage.setItem('split_local_groups', JSON.stringify(filtered));
+
+        // Clean up expenses and splits
+        const allExpenses = JSON.parse(localStorage.getItem('split_local_expenses') || '[]');
+        const allSplits = JSON.parse(localStorage.getItem('split_local_splits') || '[]');
+        
+        const filteredExpenses = allExpenses.filter((e: any) => e.group_id !== groupId);
+        const expenseIds = allExpenses.filter((e: any) => e.group_id === groupId).map((e: any) => e.id);
+        const filteredSplits = allSplits.filter((s: any) => !expenseIds.includes(s.expense_id));
+        
+        localStorage.setItem('split_local_expenses', JSON.stringify(filteredExpenses));
+        localStorage.setItem('split_local_splits', JSON.stringify(filteredSplits));
+
+        router.push('/app');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to delete local group', 'error');
+      } finally {
+        setIsDeleting(false);
+      }
+      return;
+    }
+
     const { address } = walletRef.current;
     if (!address) return;
     if (balances.length > 0) {
@@ -525,7 +682,7 @@ export default function GroupDetailPage() {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         danger
-        onConfirm={() => requireConnection(handleDeleteGroup)}
+        onConfirm={() => groupId && (groupId as string).startsWith('local-') ? handleDeleteGroup() : requireConnection(handleDeleteGroup)}
         onCancel={() => setShowDeleteConfirm(false)}
       />
 
@@ -554,6 +711,34 @@ export default function GroupDetailPage() {
       )}
 
       <div className="pt-20 px-4 pb-28 space-y-5" style={isReadOnly ? { paddingTop: '100px' } : {}}>
+        {groupId && (groupId as string).startsWith('local-') && (
+          <div className="p-4 border border-brand/20 rounded-2xl bg-brand/5 text-xs text-[#00C896] flex flex-col gap-3 animate-fade-in">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <p className="font-bold text-[11px] uppercase tracking-wider text-brand">⚡ Offline Local Group</p>
+                <p className="text-[#8A8A8A] leading-relaxed text-[11px] leading-relaxed">
+                  This group is stored locally on your device. You do not need a wallet to split bills here.
+                </p>
+              </div>
+              {address && (
+                <Button
+                  size="sm"
+                  onClick={handleSyncLocalGroupToCloud}
+                  loading={syncingGroup}
+                  className="shrink-0 text-black bg-brand hover:bg-brand-dark font-bold text-[11px] px-3.5 py-1.5 h-auto rounded-lg"
+                >
+                  Sync to Cloud
+                </Button>
+              )}
+            </div>
+            {!address && (
+              <p className="text-[10px] text-text-muted italic border-t border-[#2C2C2C] pt-2">
+                Connect your wallet at the top of the screen to sync this group to the cloud/blockchain.
+              </p>
+            )}
+          </div>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
             <div style={{
@@ -783,7 +968,7 @@ export default function GroupDetailPage() {
                       }}
                     />
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <Button size="sm" onClick={() => requireConnection(handleAddManual)} disabled={isAdding}>Add</Button>
+                      <Button size="sm" onClick={() => groupId && (groupId as string).startsWith('local-') ? handleAddManual() : requireConnection(handleAddManual)} disabled={isAdding}>Add</Button>
                       <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
                     </div>
                   </div>

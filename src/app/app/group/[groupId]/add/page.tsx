@@ -187,11 +187,21 @@ export default function AddExpensePage() {
   };
 
   useEffect(() => {
+    if (groupId && (groupId as string).startsWith('local-')) {
+      if (members.length > 0 && !payer) {
+        setPayer(members[0].wallet_address.toLowerCase());
+      }
+      if (members.length > 0 && splitWith.length === 0) {
+        setSplitWith(members.map((m) => m.wallet_address.toLowerCase()));
+      }
+      return;
+    }
+
     if (address && !payer) setPayer(address.toLowerCase());
     if (members.length > 0 && splitWith.length === 0) {
       setSplitWith(members.map((m) => m.wallet_address.toLowerCase()));
     }
-  }, [address, members, payer, splitWith.length]);
+  }, [address, members, payer, splitWith.length, groupId]);
 
   useEffect(() => {
     const loadRecurringDraft = async () => {
@@ -247,8 +257,53 @@ export default function AddExpensePage() {
   }, [amount, splitWith, splitType, splitValues]);
 
   const handleSubmit = async () => {
-    const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
-    if (!address || !description || !amount || !payer || splitWith.length === 0 || validationError) return;
+    if (groupId && (groupId as string).startsWith('local-')) {
+      if (!description || !amount || !payer || splitWith.length === 0 || validationError) return;
+      setLoading(true);
+      try {
+        const totalAmountNum = parseFloat(amount);
+        const totalAmountWei = parseEther(amount);
+        const splitAmountsWei = getSplitAmountsWei(totalAmountWei, splitWith, splitType, splitValues);
+
+        const expenseId = 'local-exp-' + Date.now();
+        const newExpense = {
+          id: expenseId,
+          group_id: groupId,
+          description: description,
+          category: category,
+          attachment_url: attachmentPreview || '',
+          total_amount: totalAmountNum,
+          paid_by: payer.toLowerCase(),
+          created_by: address ? address.toLowerCase() : 'local-user',
+          created_at: new Date().toISOString(),
+          status: 'active'
+        };
+
+        const newSplits = splitWith.map((addr, idx) => ({
+          id: `${expenseId}-${addr.toLowerCase()}`,
+          expense_id: expenseId,
+          wallet_address: addr.toLowerCase(),
+          amount: (Number(splitAmountsWei[idx]) / 1e18).toString(),
+          is_payer: addr.toLowerCase() === payer.toLowerCase()
+        }));
+
+        const allExpenses = JSON.parse(localStorage.getItem('split_local_expenses') || '[]');
+        const allSplits = JSON.parse(localStorage.getItem('split_local_splits') || '[]');
+
+        localStorage.setItem('split_local_expenses', JSON.stringify([...allExpenses, newExpense]));
+        localStorage.setItem('split_local_splits', JSON.stringify([...allSplits, ...newSplits]));
+
+        router.push(`/app/group/${groupId}`);
+      } catch (err) {
+        console.error('Adding local expense failed:', err);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const { address: walletAddr, walletClient, publicClient, isMiniPay } = walletRef.current;
+    if (!walletAddr || !description || !amount || !payer || splitWith.length === 0 || validationError) return;
     setLoading(true);
 
     try {
@@ -714,7 +769,7 @@ export default function AddExpensePage() {
             size="lg"
             className="w-full h-16 text-lg font-bold rounded-2xl"
             disabled={!description || !amount || splitWith.length === 0 || !!validationError}
-            onClick={() => requireConnection(handleSubmit)}
+            onClick={() => groupId && (groupId as string).startsWith('local-') ? handleSubmit() : requireConnection(handleSubmit)}
             loading={loading}
           >
             {loading ? loadingText : 'Log Expense'}

@@ -47,23 +47,42 @@ export const useSavingsCircle = (circleId?: string) => {
       // 2. Fetch all circles in parallel
       const circlePromises = Array.from({ length: totalCircles }, (_, i) => {
         const id = i + 1;
-        return publicClient.readContract({
-          address: SAVINGS_CIRCLE_ADDRESS,
-          abi: SAVINGS_CIRCLE_ABI,
-          functionName: 'getCircle',
-          args: [BigInt(id)],
-        }).then((res: any) => ({
-          id,
-          name: res[0],
-          mode: res[1],
-          status: res[2],
-          contributionAmount: res[3],
-          currentPot: res[4],
-          currentCycle: res[5],
-          nextDeadline: res[6],
-          totalSaved: res[7],
-          memberAddrs: res[8],
-        })).catch((err: any) => {
+        return Promise.all([
+          publicClient.readContract({
+            address: SAVINGS_CIRCLE_ADDRESS,
+            abi: SAVINGS_CIRCLE_ABI,
+            functionName: 'getCircle',
+            args: [BigInt(id)],
+          }),
+          publicClient.readContract({
+            address: SAVINGS_CIRCLE_ADDRESS,
+            abi: SAVINGS_CIRCLE_ABI,
+            functionName: 'circles',
+            args: [BigInt(id)],
+          }).catch(() => null)
+        ]).then(([res, circlesRes]: [any, any]) => {
+          const configObj = circlesRes ? circlesRes[2] : null;
+          const goalAmount = configObj && typeof configObj === 'object'
+            ? (configObj.goalAmount !== undefined ? configObj.goalAmount : configObj[8])
+            : BigInt(0);
+
+          return {
+            id,
+            name: res[0],
+            mode: res[1],
+            status: res[2],
+            contributionAmount: res[3],
+            currentPot: res[4],
+            currentCycle: res[5],
+            nextDeadline: res[6],
+            totalSaved: res[7],
+            memberAddrs: res[8],
+            creator: circlesRes ? circlesRes[1] : '',
+            config: {
+              goalAmount: goalAmount,
+            }
+          };
+        }).catch((err: any) => {
           console.error(`Failed to fetch circle ${id}:`, err);
           return null;
         });

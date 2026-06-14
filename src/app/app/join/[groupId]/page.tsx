@@ -11,6 +11,7 @@ import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { truncateAddress } from '@/lib/utils';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
+import { GroupIcon } from '@/components/common/GroupIcon';
 
 export default function JoinGroupPage() {
   const router = useRouter();
@@ -113,7 +114,9 @@ export default function JoinGroupPage() {
 
       <div className="px-6 pt-24 space-y-8 animate-fade-in">
         <Card className="p-8 text-center space-y-4">
-          <div className="text-6xl mb-2">{group.emoji}</div>
+          <div className="flex justify-center mb-4 text-[#00C896] bg-brand/10 p-4 rounded-3xl w-20 h-20 mx-auto items-center">
+            <GroupIcon name={group.emoji || 'Users'} size={40} />
+          </div>
           <h1 className="clash-display font-bold text-3xl">{group.name}</h1>
           <p className="text-text-secondary">{group.description || 'No description provided.'}</p>
 

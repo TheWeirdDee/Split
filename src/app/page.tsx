@@ -12,6 +12,7 @@ import { Features } from "@/components/landing/Features";
 import { FlowSection } from "@/components/landing/FlowSection";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Footer } from "@/components/landing/Footer";
+import { Pizza, Car, Home, PartyPopper, Plane, ShoppingCart, Coins } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -52,8 +53,13 @@ export default function LandingPage() {
           <div className="flex gap-12 whitespace-nowrap animate-marquee py-2">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="flex gap-12 items-center text-[11px] dm-mono font-semibold text-black tracking-[0.15em] uppercase">
-                <span>🍕 RESTAURANTS</span> <span>·</span> <span>🚗 TRANSPORT</span> <span>·</span> <span>🏠 RENT</span> <span>·</span>
-                <span>🎉 EVENTS</span> <span>·</span> <span>✈️ TRAVEL</span> <span>·</span> <span>🛒 GROCERIES</span> <span>·</span> <span>💸 UTILITIES</span> <span>·</span>
+                <span className="flex items-center gap-1"><Pizza className="w-3 h-3" /> RESTAURANTS</span> <span>·</span>
+                <span className="flex items-center gap-1"><Car className="w-3 h-3" /> TRANSPORT</span> <span>·</span>
+                <span className="flex items-center gap-1"><Home className="w-3 h-3" /> RENT</span> <span>·</span>
+                <span className="flex items-center gap-1"><PartyPopper className="w-3 h-3" /> EVENTS</span> <span>·</span>
+                <span className="flex items-center gap-1"><Plane className="w-3 h-3" /> TRAVEL</span> <span>·</span>
+                <span className="flex items-center gap-1"><ShoppingCart className="w-3 h-3" /> GROCERIES</span> <span>·</span>
+                <span className="flex items-center gap-1"><Coins className="w-3 h-3" /> UTILITIES</span> <span>·</span>
               </div>
             ))}
           </div>

@@ -18,49 +18,55 @@ import {
   Copy,
   Check,
   HelpCircle,
-  TrendingUp
+  TrendingUp,
+  Rocket,
+  Heart,
+  Pizza,
+  Briefcase,
+  Laptop,
+  Shield
 } from 'lucide-react';
 import Link from 'next/link';
 
 // Predefined public story templates to overlay on onchain circles to make them look premium
-const COMMUNITY_GOAL_TEMPLATES: Record<string, { title: string; description: string; emoji: string; coverColor: string }> = {
+const COMMUNITY_GOAL_TEMPLATES: Record<string, { title: string; description: string; icon: React.ComponentType<any>; coverColor: string }> = {
   'save-hack': {
     title: 'Celo Builder Hackathon Fund',
     description: 'Funding developer awards and hosting fees for the upcoming Celo mini-hackathon.',
-    emoji: '🚀',
+    icon: Rocket,
     coverColor: 'linear-gradient(135deg, #FF5E62 0%, #FF9966 100%)',
   },
   'save-relief': {
     title: 'Community Relief Fund',
     description: 'Mutual aid pool for emergency medical assistance and resources in Celo dev communities.',
-    emoji: '❤️',
+    icon: Heart,
     coverColor: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
   },
   'save-meetup': {
     title: 'Monthly Tech Meetup July',
     description: 'Pooling funds together to secure a venue and pizzas for local blockchain developers.',
-    emoji: '🍕',
+    icon: Pizza,
     coverColor: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
   }
 };
 
-const ROTATING_CIRCLE_TEMPLATES: Record<string, { title: string; description: string; emoji: string; trustScore: number }> = {
+const ROTATING_CIRCLE_TEMPLATES: Record<string, { title: string; description: string; icon: React.ComponentType<any>; trustScore: number }> = {
   'save-founder': {
     title: 'Web3 Founders Mastermind',
     description: 'Rotating trust pool among active builders to finance growth sprints.',
-    emoji: '💼',
+    icon: Briefcase,
     trustScore: 98,
   },
   'save-weekly': {
     title: 'Weekly Devs Esusu Circle',
     description: 'A small, fast-rotating group of remote developers saving weekly.',
-    emoji: '👨‍💻',
+    icon: Laptop,
     trustScore: 95,
   },
   'save-savings': {
     title: 'Peer Savings Alliance',
     description: 'Standard rotating saving group building mutual trust on Celo.',
-    emoji: '🛡️',
+    icon: Shield,
     trustScore: 92,
   }
 };
@@ -92,7 +98,7 @@ export default function ExplorePage() {
       ...c,
       title: template.title,
       description: template.description,
-      emoji: template.emoji,
+      icon: template.icon,
       coverColor: template.coverColor
     };
   });
@@ -107,7 +113,7 @@ export default function ExplorePage() {
       ...c,
       title: template.title,
       description: template.description,
-      emoji: template.emoji,
+      icon: template.icon,
       trustScore: calculatedTrust || template.trustScore
     };
   });
@@ -434,7 +440,9 @@ export default function ExplorePage() {
                           >
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="relative z-10 flex items-center gap-3">
-                              <span className="text-3xl">{c.emoji}</span>
+                              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
+                                <c.icon className="w-5 h-5 text-white" />
+                              </div>
                               <h3 className="font-bold text-base text-[#f5f0e8] drop-shadow-md">{c.title}</h3>
                             </div>
                           </div>
@@ -511,8 +519,8 @@ export default function ExplorePage() {
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-[#00C896]/10 border border-[#00C896]/20 flex items-center justify-center text-xl">
-                                {c.emoji}
+                              <div className="w-10 h-10 rounded-xl bg-[#00C896]/10 border border-[#00C896]/20 flex items-center justify-center">
+                                <c.icon className="w-5 h-5 text-[#00C896]" />
                               </div>
                               <div>
                                 <h3 className="font-bold text-sm text-[#f5f0e8] group-hover:text-[#00C896] transition-colors">{c.title}</h3>

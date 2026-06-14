@@ -58,7 +58,7 @@ const ROTATING_CIRCLE_TEMPLATES: Record<string, { title: string; description: st
     trustScore: 98,
   },
   'save-weekly': {
-    title: 'Weekly Devs Esusu Circle',
+    title: 'Weekly Devs Ajo Circle',
     description: 'A small, fast-rotating group of remote developers saving weekly.',
     icon: Laptop,
     trustScore: 95,
@@ -502,7 +502,7 @@ export default function ExplorePage() {
                   <div className="flex items-center gap-2 justify-between px-1">
                     <div className="flex items-center gap-2 text-xs text-[#8A8A8A] font-bold uppercase tracking-wider">
                       <PiggyBank className="w-4 h-4 text-[#00C896]" />
-                      <span>Open Rotating Savings (Esusu)</span>
+                      <span>Open Rotating Savings (Ajo)</span>
                     </div>
                     <span className="text-[10px] text-brand/60 dm-mono bg-brand/5 px-2 py-0.5 rounded-full border border-brand/10">{rotatingCircles.length} Open</span>
                   </div>
@@ -592,7 +592,7 @@ export default function ExplorePage() {
                 Trustless Rotating Savings
               </h4>
               <p className="text-[11px] text-[#8A8A8A] leading-relaxed">
-                Rotating Savings (Esusu) is a time-tested peer saving mechanism. At each cycle, members contribute a fixed sum and the full pot is paid out to one of the members in sequence. All contracts are verified and secured on Celo.
+                Rotating Savings (Ajo) is a time-tested peer saving mechanism. At each cycle, members contribute a fixed sum and the full pot is paid out to one of the members in sequence. All contracts are verified and secured on Celo.
               </p>
             </div>
           </div>

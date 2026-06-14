@@ -2,7 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Bell, Check, CheckCheck, ChevronRight, Trash2 } from 'lucide-react';
+import { Bell, Check, CheckCheck, ChevronRight, Trash2, BellOff, Coins, CheckCircle2, UserPlus, Receipt } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 
@@ -14,12 +14,12 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-const TYPE_ICON: Record<string, string> = {
-  reminder: '💸',
-  payment: '✅',
-  join: '👥',
-  expense: '🧾',
-  system: '🔔',
+const TYPE_ICON: Record<string, React.ComponentType<{ style?: React.CSSProperties }>> = {
+  reminder: Coins,
+  payment: CheckCircle2,
+  join: UserPlus,
+  expense: Receipt,
+  system: Bell,
 };
 
 export default function NotificationsPage() {
@@ -119,9 +119,9 @@ export default function NotificationsPage() {
             <div style={{
               width: '56px', height: '56px', background: '#161616',
               border: '1px solid #2C2C2C', borderRadius: '18px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              🔕
+              <BellOff style={{ width: '24px', height: '24px', color: '#8A8A8A' }} />
             </div>
             <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', fontSize: '14px', margin: 0, textAlign: 'center' }}>
               No notifications yet.<br />Reminders and group updates will appear here.
@@ -145,10 +145,13 @@ export default function NotificationsPage() {
                 width: '40px', height: '40px', flexShrink: 0,
                 background: '#161616', border: '1px solid #2C2C2C',
                 borderRadius: '12px', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '18px',
+                justifyContent: 'center',
                 position: 'relative',
               }}>
-                {TYPE_ICON[n.type] ?? '🔔'}
+                {(() => {
+                  const IconComp = TYPE_ICON[n.type] ?? Bell;
+                  return <IconComp style={{ width: '18px', height: '18px', color: '#00C896' }} />;
+                })()}
                 {!n.is_read && (
                   <div style={{
                     position: 'absolute', top: '-3px', right: '-3px',

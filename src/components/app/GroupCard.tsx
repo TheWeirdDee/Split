@@ -8,6 +8,7 @@ import { useWallet } from '@/context/WalletContext';
 import { useBalances } from '@/hooks/useBalances';
 import { getUserNetBalance } from '@/lib/balanceEngine';
 import { GroupIcon } from '../common/GroupIcon';
+import { Zap } from 'lucide-react';
 
 interface GroupCardProps {
   group: {
@@ -39,9 +40,16 @@ export const GroupCard = ({ group }: GroupCardProps) => {
             <h3 className="clash-display font-semibold text-text-primary">
               {group.name}
             </h3>
-            <p className="text-xs text-text-secondary">
-              {memberCount} {memberCount === 1 ? 'member' : 'members'} {group.id.startsWith('local-') && '· ⚡ Local'}
-            </p>
+            <div className="flex items-center gap-1 text-xs text-text-secondary">
+              <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
+              {group.id.startsWith('local-') && (
+                <span className="flex items-center gap-0.5 text-[#00C896] font-medium ml-1">
+                  <span>·</span>
+                  <Zap className="w-3 h-3 fill-brand/10" />
+                  <span>Local</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
         
@@ -61,3 +69,4 @@ export const GroupCard = ({ group }: GroupCardProps) => {
     </Link>
   );
 };
+

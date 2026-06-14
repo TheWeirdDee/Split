@@ -16,7 +16,8 @@ import {
   Users, Pizza, Car, House, PartyPopper, Plane, 
   ShoppingCart, Coffee, Music, Coins, Beer, 
   Popcorn, Lightbulb, Gamepad2, Volleyball, 
-  Gift, Mountain, Umbrella, CookingPot, Trophy 
+  Gift, Mountain, Umbrella, CookingPot, Trophy,
+  Zap, Globe
 } from 'lucide-react';
 
 const ICONS = [
@@ -218,21 +219,23 @@ export default function CreateGroupPage() {
                     type="button"
                     onClick={() => setGroupMode('local')}
                     className={cn(
-                      "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all",
+                      "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5",
                       groupMode === 'local' ? "bg-[#00C896] text-black shadow-lg" : "text-[#8A8A8A] hover:text-[#F7F3EC]"
                     )}
                   >
-                    ⚡ Local Offline (Instant)
+                    <Zap className="w-3.5 h-3.5 fill-current" />
+                    <span>Local Offline</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setGroupMode('onchain')}
                     className={cn(
-                      "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all",
+                      "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5",
                       groupMode === 'onchain' ? "bg-[#00C896] text-black shadow-lg" : "text-[#8A8A8A] hover:text-[#F7F3EC]"
                     )}
                   >
-                    🌐 Onchain Celo (cUSD)
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Onchain Celo</span>
                   </button>
                 </div>
                 <p className="text-[10px] text-[#8A8A8A] px-1 leading-normal">

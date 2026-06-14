@@ -18,7 +18,8 @@ import {
   Sparkles, 
   Flame,
   Calendar,
-  DollarSign
+  DollarSign,
+  User
 } from 'lucide-react';
 
 interface ProfileRecord {
@@ -143,8 +144,12 @@ export default function ProfilePage() {
           
           {/* Avatar frame */}
           <div className="relative mt-2">
-            <div className="w-20 h-20 rounded-3xl bg-[#1F1F1F] border-2 border-[#2C2C2C] flex items-center justify-center text-4xl shadow-2xl relative">
-              {avatar}
+            <div className="w-20 h-20 rounded-3xl bg-[#1F1F1F] border-2 border-[#2C2C2C] flex items-center justify-center shadow-2xl relative">
+              {avatar === '👤' ? (
+                <User className="w-10 h-10 text-[#00C896]" />
+              ) : (
+                <span className="text-4xl">{avatar}</span>
+              )}
             </div>
             {streak > 0 && (
               <div className="absolute -bottom-1.5 -right-1.5 bg-orange-500 text-black rounded-full p-1.5 border-2 border-[#161616] flex items-center justify-center shadow-lg" title="Active check-in streak!">

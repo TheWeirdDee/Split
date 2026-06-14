@@ -22,8 +22,10 @@ import {
   ExternalLink,
   ChevronDown,
   Sparkles,
-  Info
+  Info,
+  User
 } from 'lucide-react';
+import { GroupIcon } from '@/components/common/GroupIcon';
 
 interface ExpenseRecord {
   id: string;
@@ -260,8 +262,8 @@ export default function InvoicePage() {
               </h2>
               {group && (
                 <div className="flex items-center gap-1.5 text-xs text-[#8A8A8A]">
-                  <span className="bg-[#1F1F1F] px-1.5 py-0.5 rounded border border-[#2C2C2C] text-[10px]">
-                    {group.emoji || '👥'}
+                  <span className="bg-[#1F1F1F] p-1 rounded border border-[#2C2C2C] flex items-center justify-center">
+                    <GroupIcon name={group.emoji || 'Users'} size={12} />
                   </span>
                   <span>{group.name}</span>
                 </div>
@@ -269,8 +271,12 @@ export default function InvoicePage() {
             </div>
             
             <div className="flex flex-col items-end gap-1.5">
-              <div className="w-10 h-10 rounded-xl bg-[#1F1F1F] border border-[#2C2C2C] flex items-center justify-center text-xl shadow-inner">
-                {payerProfile.avatar_emoji}
+              <div className="w-10 h-10 rounded-xl bg-[#1F1F1F] border border-[#2C2C2C] flex items-center justify-center shadow-inner">
+                {payerProfile.avatar_emoji === '👤' ? (
+                  <User className="w-5 h-5 text-[#00C896]" />
+                ) : (
+                  payerProfile.avatar_emoji
+                )}
               </div>
               <span className="text-[10px] text-[#8A8A8A] font-bold text-right max-w-[80px] truncate" title={payerName}>
                 Paid by {payerName.split(' ')[0]}
@@ -322,8 +328,12 @@ export default function InvoicePage() {
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-[#0D0D0D] border border-[#2C2C2C] flex items-center justify-center text-sm relative">
-                        {profile.avatar_emoji}
+                      <div className="w-8 h-8 rounded-lg bg-[#0D0D0D] border border-[#2C2C2C] flex items-center justify-center relative">
+                        {profile.avatar_emoji === '👤' ? (
+                          <User className="w-4 h-4 text-[#00C896]" />
+                        ) : (
+                          profile.avatar_emoji
+                        )}
                         {split.is_payer && (
                           <span className="absolute -top-1.5 -right-1.5 bg-[#00C896] text-[8px] text-black font-extrabold px-1 rounded-md scale-90">
                             PAYER

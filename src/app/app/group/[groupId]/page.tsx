@@ -28,6 +28,8 @@ import {
   Repeat2,
   Edit3,
   RotateCcw,
+  Zap,
+  User,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { generateInviteLink, copyToClipboard } from '@/lib/inviteLinks';
@@ -308,7 +310,7 @@ export default function GroupDetailPage() {
           const newMember = {
             wallet_address: fakeAddress,
             display_name: newMemberName.trim(),
-            avatar_emoji: ['👩', '👨', '🧑', '🦊', '🐼', '🐨', '🐸'][Math.floor(Math.random() * 7)]
+            avatar_emoji: '👤'
           };
           localGroups[groupIdx].members.push(newMember);
           localStorage.setItem('split_local_groups', JSON.stringify(localGroups));
@@ -715,7 +717,10 @@ export default function GroupDetailPage() {
           <div className="p-4 border border-brand/20 rounded-2xl bg-brand/5 text-xs text-[#00C896] flex flex-col gap-3 animate-fade-in">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <p className="font-bold text-[11px] uppercase tracking-wider text-brand">⚡ Offline Local Group</p>
+                <p className="font-bold text-[11px] uppercase tracking-wider text-brand flex items-center gap-1">
+                  <Zap className="w-3 h-3 fill-current" />
+                  <span>Offline Local Group</span>
+                </p>
                 <p className="text-[#8A8A8A] leading-relaxed text-[11px] leading-relaxed">
                   This group is stored locally on your device. You do not need a wallet to split bills here.
                 </p>

@@ -1,14 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
-import { Flame, Star, Trophy } from "lucide-react";
+import { Flame, Star, Trophy, Sprout, Zap, Gem } from "lucide-react";
 
 const STREAK_BADGES = [
-  { days: 1, label: "First Step", emoji: "🌱" },
-  { days: 3, label: "On a Roll", emoji: "🔥" },
-  { days: 7, label: "Week Warrior", emoji: "⚡" },
-  { days: 14, label: "2-Week Streak", emoji: "💎" },
-  { days: 30, label: "Monthly Legend", emoji: "🏆" },
+  { days: 1, label: "First Step", icon: Sprout, color: "#00C896" },
+  { days: 3, label: "On a Roll", icon: Flame, color: "#FF9500" },
+  { days: 7, label: "Week Warrior", icon: Zap, color: "#FFCC00" },
+  { days: 14, label: "2-Week Streak", icon: Gem, color: "#5AC8FA" },
+  { days: 30, label: "Monthly Legend", icon: Trophy, color: "#AF52DE" },
 ];
 
 export const DailyCheckIn = () => {
@@ -34,6 +34,7 @@ export const DailyCheckIn = () => {
 
   const streak = newStreak ?? profile?.streak_count ?? 0;
   const badge = [...STREAK_BADGES].reverse().find((b) => streak >= b.days);
+  const BadgeIcon = badge?.icon;
 
   if (streak === 0) return null;
 
@@ -62,13 +63,22 @@ export const DailyCheckIn = () => {
       {/* Streak icon */}
       <div style={{
         width: "44px", height: "44px", flexShrink: 0,
-        background: "rgba(0,200,150,0.12)",
-        border: "1px solid rgba(0,200,150,0.25)",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: "12px",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "22px",
       }}>
-        {badge?.emoji ?? "🔥"}
+        {BadgeIcon ? (
+          <BadgeIcon 
+            style={{ 
+              width: "22px", 
+              height: "22px", 
+              color: badge.color,
+            }} 
+          />
+        ) : (
+          <Flame style={{ width: "22px", height: "22px", color: "#FF9500" }} />
+        )}
       </div>
 
       {/* Text */}
@@ -111,3 +121,4 @@ export const DailyCheckIn = () => {
     </div>
   );
 };
+

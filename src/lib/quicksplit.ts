@@ -43,6 +43,8 @@ export const deserializeQuickSplit = (encoded: string): QuickSplitPayload | null
     const json = decodeSafeBase64(encoded);
     const parsed = JSON.parse(json) as QuickSplitPayload;
     if (!parsed || typeof parsed !== 'object') return null;
+    // Validate required shape so malformed links don't crash downstream consumers
+    if (typeof parsed.total !== 'number' || !Array.isArray(parsed.people)) return null;
     return parsed;
   } catch {
     return null;

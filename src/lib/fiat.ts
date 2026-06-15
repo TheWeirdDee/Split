@@ -35,11 +35,13 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     if (!res.ok) throw new Error('Failed to fetch exchange rates');
     
     const data = await res.json();
+    // Some upstream responses omit `rates`; fall back to defaults instead of throwing
+    const rates = data?.rates ?? {};
     const freshRates: ExchangeRates = {
       USD: 1.0,
-      NGN: data.rates.NGN || DEFAULT_RATES.NGN,
-      KES: data.rates.KES || DEFAULT_RATES.KES,
-      EUR: data.rates.EUR || DEFAULT_RATES.EUR,
+      NGN: rates.NGN || DEFAULT_RATES.NGN,
+      KES: rates.KES || DEFAULT_RATES.KES,
+      EUR: rates.EUR || DEFAULT_RATES.EUR,
     };
 
     // Cache in local storage

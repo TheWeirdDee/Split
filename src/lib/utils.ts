@@ -12,6 +12,8 @@ export function truncateAddress(address: string) {
 
 export function formatAmount(amount: number | string) {
   const val = typeof amount === "string" ? parseFloat(amount) : amount;
+  // Guard against NaN/Infinity so the UI never renders "NaN"
+  if (!Number.isFinite(val)) return "0.00";
   return val.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

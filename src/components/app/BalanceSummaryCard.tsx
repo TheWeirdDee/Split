@@ -10,6 +10,10 @@ interface BalanceSummaryCardProps {
   totalOwing: number;
 }
 
+/**
+ * Hero card on the home screen showing the user's net position (owed minus
+ * owing) plus the two component figures broken out below it.
+ */
 export const BalanceSummaryCard = ({ totalOwed, totalOwing }: BalanceSummaryCardProps) => {
   const { formatAmount } = useCurrency();
   const net = totalOwed - totalOwing;

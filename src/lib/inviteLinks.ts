@@ -5,7 +5,8 @@ export const generateInviteLink = (groupId: string): string => {
 
 export const shareViaWhatsApp = (groupName: string, link: string) => {
   const text = `Join my group "${groupName}" on Split to manage our expenses: ${link}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  // noopener,noreferrer prevents the opened tab from accessing window.opener (reverse tabnabbing)
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
 };
 
 export const copyToClipboard = async (text: string): Promise<boolean> => {

@@ -2,6 +2,9 @@
 
 import React from "react";
 
+/**
+ * Static three-step "how it works" section (create → log/contribute → settle).
+ */
 export const HowItWorks = () => {
   return (
     <section id="how-it-works" className="bg-[#0a0a0a] py-32 px-8 max-w-[1280px] mx-auto">

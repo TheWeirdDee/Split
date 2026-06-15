@@ -10,6 +10,11 @@ interface CategoryPickerProps {
   onSelect: (id: string) => void;
 }
 
+/**
+ * Grid of selectable expense categories. The active category is styled with its
+ * accent color and reports `aria-pressed` so the selection is conveyed to
+ * assistive tech, not just visually.
+ */
 export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) => {
   return (
     <div className="grid grid-cols-3 gap-2">
@@ -17,6 +22,7 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
         <button
           key={cat.id}
           type="button"
+          aria-pressed={selectedId === cat.id}
           onClick={() => onSelect(cat.id)}
           className={cn(
             "flex flex-col items-center justify-center p-3 rounded-xl border transition-all",

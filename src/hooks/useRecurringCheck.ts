@@ -42,6 +42,14 @@ const isRuleDueToday = (rule: any) => {
   return rule.day_of_month === today.getDate();
 };
 
+/**
+ * Client-side scheduler for recurring expenses. For the given groups it
+ * generates today's `recurring_expense_runs` from any active rules due today
+ * (de-duplicated per rule/day) and returns the list of pending drafts for the UI.
+ *
+ * @param groupIds groups to evaluate rules for.
+ * @param isConnected gate so the check only runs for a connected wallet.
+ */
 export const useRecurringCheck = (groupIds: string[], isConnected: boolean) => {
   const { showToast } = useToast();
   const [pendingRuns, setPendingRuns] = useState<RecurringRun[]>([]);

@@ -50,6 +50,7 @@ const IconMap: Record<string, any> = {
   Gift, Mountain, Umbrella, CookingPot, Trophy
 };
 
+/** Create-group flow (route `/app/create`): name, members, and group icon. */
 export default function CreateGroupPage() {
   const router = useRouter();
   const wallet = useWallet();

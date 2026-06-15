@@ -16,6 +16,7 @@ import { formatEther } from 'viem';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useRecurringCheck } from '@/hooks/useRecurringCheck';
 
+/** Authenticated home dashboard (route `/app`): net balance, groups, check-in. */
 export default function AppHome() {
   const { isInitialLoading, hasNoCelo } = useWallet();
   const [mounted, setMounted] = useState(false);

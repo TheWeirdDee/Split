@@ -202,6 +202,7 @@ export const metadata: Metadata = {
   description: "Frequently asked questions about using Split with cUSD on Celo.",
 };
 
+/** FAQ page (route `/faq`) answering common questions about Split. */
 export default function FaqPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F7F3EC]">

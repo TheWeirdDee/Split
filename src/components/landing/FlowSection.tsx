@@ -14,6 +14,10 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
+/**
+ * Scroll-pinned "how the flow works" section. The sticky panel stays fixed while
+ * the surrounding wrapper scrolls, advancing through steps via GSAP ScrollTrigger.
+ */
 export const FlowSection = () => {
   const wrapperRef = useRef(null);
   const stickyRef = useRef(null);

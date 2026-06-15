@@ -5,6 +5,9 @@ import Link from "next/link";
 import { Logo } from "./Navbar";
 import { Globe } from "lucide-react";
 
+/**
+ * Landing-page footer: logo, social/util links, and a legal/credits row.
+ */
 export const Footer = () => {
   return (
     <footer className="border-t border-[#242424] py-12 px-8 bg-[#0a0a0a]">
@@ -19,7 +22,7 @@ export const Footer = () => {
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-[#242424]/50 text-[11px] dm-mono text-[#3a3a3a] tracking-wider">
           <p>© 2025 Split · Built on Celo · Open Source</p>
-          <p className="flex items-center gap-1.5 uppercase font-bold">Made in Africa <Globe className="w-3.5 h-3.5 text-[#00C896]" /></p>
+          <p className="flex items-center gap-1.5 uppercase font-bold">Made in Africa <Globe aria-hidden="true" className="w-3.5 h-3.5 text-[#00C896]" /></p>
         </div>
       </div>
     </footer>

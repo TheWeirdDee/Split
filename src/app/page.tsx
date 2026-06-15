@@ -16,6 +16,7 @@ import { Pizza, Car, Home, PartyPopper, Plane, ShoppingCart, Coins } from "lucid
 
 gsap.registerPlugin(ScrollTrigger);
 
+/** Public marketing landing page (route `/`) composing the hero and sections. */
 export default function LandingPage() {
   useEffect(() => {
     const ctx = gsap.context(() => {

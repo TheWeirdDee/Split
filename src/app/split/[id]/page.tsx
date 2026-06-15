@@ -18,6 +18,7 @@ const renderDebt = (debt: { from: string; to: string; amount: number }) => (
   </div>
 );
 
+/** Public shared quick-split result (route `/split/[id]`) decoded from the link. */
 export default function SplitResultPage({ params }: SplitPageProps) {
   const data = deserializeQuickSplit(params.id);
 

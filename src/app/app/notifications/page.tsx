@@ -22,6 +22,7 @@ const TYPE_ICON: Record<string, React.ComponentType<{ style?: React.CSSPropertie
   system: Bell,
 };
 
+/** Notifications inbox (route `/app/notifications`): list, read, mark-all-read. */
 export default function NotificationsPage() {
   const router = useRouter();
   const { address } = useWallet();

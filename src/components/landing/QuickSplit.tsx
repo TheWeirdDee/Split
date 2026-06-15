@@ -8,6 +8,11 @@ import { serializeQuickSplit } from '@/lib/quicksplit';
 
 const formatAmount = (value: number) => value.toFixed(2);
 
+/**
+ * Interactive landing demo: a wallet-free bill splitter. Lets visitors add
+ * people, set who paid, split equally or with custom amounts, preview the
+ * result, and hand off to the app via a shareable encoded link.
+ */
 export default function QuickSplit() {
   const router = useRouter();
   const [total, setTotal] = useState('');

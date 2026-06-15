@@ -20,6 +20,11 @@ interface ReceiptScannerProps {
   onClose: () => void;
 }
 
+/**
+ * Two-step receipt splitter. Step 1 ("upload"): OCR a receipt photo with
+ * Tesseract to extract merchant and line items. Step 2 ("assign"): assign each
+ * item to members and emit the computed per-member split via `onScanComplete`.
+ */
 export function ReceiptScanner({ members, currentUserAddress, onScanComplete, onClose }: ReceiptScannerProps) {
   const [scanning, setScanning] = useState(false);
   const [items, setItems] = useState<LineItem[]>([]);

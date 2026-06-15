@@ -12,6 +12,7 @@ import { useSettle } from '@/hooks/useSettle';
 import { truncateAddress } from '@/lib/utils';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
+/** Settle-up flow (route `/app/settle/[debtId]`) for paying a specific debt. */
 export default function SettlePage() {
   const { debtId: creditorAddress } = useParams();
   const searchParams = useSearchParams();

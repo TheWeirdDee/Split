@@ -9,6 +9,7 @@ import { Check, Edit3, Trash2 } from 'lucide-react';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useAddressBook } from '@/hooks/useAddressBook';
 
+/** Settings page (route `/app/settings`): profile, address book, disconnect. */
 export default function SettingsPage() {
   const { address, cUSDBalance, disconnect } = useWallet();
   const { profile, updateDisplayName } = useProfile();

@@ -7,6 +7,10 @@ import { Zap, Users, PiggyBank } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/**
+ * "Features" bento grid. Cards reveal with a staggered GSAP ScrollTrigger
+ * animation as the section scrolls into view.
+ */
 export const Features = () => {
   useEffect(() => {
     const ctx = gsap.context(() => {

@@ -3,6 +3,14 @@ import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { formatEther } from 'viem';
 
+/**
+ * Loads a group's expenses and their per-member splits. For on-chain groups it
+ * reads each expense from the contract and unpacks the `|cat:` / `|img:` tags
+ * encoded into the description; for `local-` groups it reads from localStorage.
+ * Results are sorted newest-first.
+ *
+ * @param groupId on-chain group id, or a `local-` prefixed offline group id.
+ */
 export const useExpenses = (groupId: string) => {
   const { publicClient } = useWallet();
   const [expenses, setExpenses] = useState<any[]>([]);

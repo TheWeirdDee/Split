@@ -4,6 +4,13 @@ import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { formatEther } from 'viem';
 import { calculateGroupBalancesFromOnchain, calculateGroupBalances } from '@/lib/balanceEngine';
 
+/**
+ * Returns the simplified (minimized) set of who-owes-whom balances for a group.
+ * Reads per-member net balances on-chain for real groups, or recomputes from
+ * localStorage for offline `local-` groups, then runs the debt-simplification.
+ *
+ * @param groupId on-chain group id, or a `local-` prefixed offline group id.
+ */
 export const useBalances = (groupId: string) => {
   const { publicClient } = useWallet();
   const [balances, setBalances] = useState<any[]>([]);

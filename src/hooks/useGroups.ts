@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 
+/**
+ * Lists every group the connected wallet belongs to or created, merging
+ * Supabase-backed groups with any offline `local-` groups from localStorage.
+ * Works (offline-only) even when no wallet is connected.
+ */
 export const useGroups = () => {
   const { address } = useWallet();
   const [groups, setGroups] = useState<any[]>([]);
@@ -74,6 +79,12 @@ export const useGroups = () => {
   return { groups, loading, refreshGroups: fetchGroups };
 };
 
+/**
+ * Loads a single group plus its members. Reads from localStorage for `local-`
+ * groups, otherwise from Supabase (`groups` + `group_members`).
+ *
+ * @param groupId on-chain/Supabase group id, or a `local-` offline id.
+ */
 export const useGroup = (groupId: string) => {
   const [group, setGroup] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);

@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 
-// Moola Market uses a GraphQL subgraph on Celo to track reserve data.
-// For demonstration, we simulate the fetch or use a known reliable endpoint if available.
+/**
+ * Returns the cUSD lending APY shown on the savings screens.
+ *
+ * NOTE: this is currently a mocked rate (~4.52%) with a simulated network delay.
+ * To make it live, query the Moola Market subgraph on Celo for the cUSD reserve
+ * `liquidityRate` (see the in-body comment for the GraphQL shape).
+ */
 export function useMoolaYield() {
   const [apy, setApy] = useState<number>(0);
   const [loading, setLoading] = useState(true);

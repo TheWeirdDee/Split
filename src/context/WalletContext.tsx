@@ -18,6 +18,13 @@ declare global {
   }
 }
 
+/**
+ * Wallet/session provider for the app. Detects MiniPay vs. a regular injected
+ * wallet, tracks the connected address and cUSD balance, exposes shared viem
+ * public/wallet clients, and surfaces `hasNoCelo` so the gas strategy can switch
+ * (gasPrice in CELO normally; feeCurrency cUSD for MiniPay). Consume via useWallet.
+ */
+
 interface WalletContextType {
   address: `0x${string}` | null;
   isConnected: boolean;

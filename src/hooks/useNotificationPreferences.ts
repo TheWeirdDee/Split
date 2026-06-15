@@ -28,6 +28,11 @@ const defaults: Omit<NotificationPreferences, 'wallet_address' | 'updated_at'> =
   timezone: 'UTC',
 };
 
+/**
+ * Loads the connected wallet's notification preferences, seeding sensible
+ * defaults (all channels on, quiet hours off) on first use, and exposes
+ * `updatePreferences` for partial patches.
+ */
 export const useNotificationPreferences = () => {
   const { address } = useWallet();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);

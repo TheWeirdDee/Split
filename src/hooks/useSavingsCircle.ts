@@ -4,6 +4,14 @@ import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/
 import { celo } from 'viem/chains';
 import { erc20Abi } from 'viem';
 
+/**
+ * On-chain interface to the SavingsCircle contract: lists circles and, when a
+ * `circleId` is given, exposes that circle's detail plus member actions
+ * (create / join / contribute / distribute). Follows the project gas rule —
+ * gasPrice in CELO, `feeCurrency: cUSD` only for MiniPay.
+ *
+ * @param circleId optional circle to load detail/actions for.
+ */
 export const useSavingsCircle = (circleId?: string) => {
   const wallet = useWallet();
   const walletRef = useRef(wallet);

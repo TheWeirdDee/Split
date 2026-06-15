@@ -13,6 +13,11 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
+/**
+ * App-wide display-currency provider. Persists the user's chosen currency to
+ * localStorage, loads cached/fresh fiat rates, and exposes `formatAmount` to
+ * render cUSD values in the selected currency. Consume via {@link useCurrency}.
+ */
 export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
   const [selectedCurrency, setSelectedCurrencyState] = useState<CurrencyCode>('cUSD');
   const [rates, setRates] = useState<ExchangeRates>({ USD: 1.0, NGN: 1500.0, KES: 130.0, EUR: 0.92 });

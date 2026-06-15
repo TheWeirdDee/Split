@@ -12,6 +12,13 @@ export interface AddressBookEntry {
   updated_at: string;
 }
 
+/**
+ * Manages the connected wallet's personal address book (saved contacts),
+ * backed by the Supabase `address_book` table and scoped to `owner_address`.
+ *
+ * @returns entries, loading state, and helpers to fetch, upsert, delete,
+ *          and resolve a wallet address to its saved nickname.
+ */
 export const useAddressBook = () => {
   const { address } = useWallet();
   const [entries, setEntries] = useState<AddressBookEntry[]>([]);

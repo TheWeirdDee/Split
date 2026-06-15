@@ -1,3 +1,8 @@
+// Central registry of on-chain addresses and ABIs used by the app:
+//   - SPLIT_ABI            → the expense-splitting (groups) contract
+//   - SAVINGS_CIRCLE_ABI   → the rotating/goal savings-circle contract
+//   - CUSD_ADDRESS         → Celo's cUSD stablecoin (Mainnet)
+// Addresses come from NEXT_PUBLIC_* env so deployments can be swapped per env.
 import { keccak256, toBytes } from 'viem';
 
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SPLIT_CONTRACT as `0x${string}`;

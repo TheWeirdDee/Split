@@ -6,6 +6,12 @@ import { parseEther, erc20Abi } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 
+/**
+ * Settles a debt on-chain: approves cUSD, calls `settleDebt`, then notifies the
+ * creditor. Exposes a `step` state ('approving' | 'sending' | 'confirmed') for
+ * progress UI. Gas follows the project rule — gasPrice in CELO always, with
+ * `feeCurrency: cUSD` only for MiniPay (which holds no CELO).
+ */
 export const useSettle = () => {
   const wallet = useWallet();
   const walletRef = useRef(wallet);

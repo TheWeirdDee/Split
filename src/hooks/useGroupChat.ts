@@ -10,6 +10,12 @@ export interface GroupMessage {
   created_at: string;
 }
 
+/**
+ * Loads and posts chat messages for a group via the Supabase `messages` table.
+ * Newly sent messages are appended optimistically to local state.
+ *
+ * @param groupId the group whose message thread to load.
+ */
 export const useGroupChat = (groupId: string) => {
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [loading, setLoading] = useState(true);

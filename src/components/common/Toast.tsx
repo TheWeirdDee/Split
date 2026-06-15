@@ -13,6 +13,11 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
+/**
+ * Provides the `showToast` action and renders transient toasts (auto-dismiss
+ * after 3.5s) in a fixed bottom region. The region is an `aria-live` status so
+ * screen readers announce messages as they appear. Consume via {@link useToast}.
+ */
 export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
@@ -29,6 +34,8 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
       {toasts.length > 0 && (
         <div
+          role="status"
+          aria-live="polite"
           style={{
             position: "fixed",
             bottom: "96px",

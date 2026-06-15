@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 
+/**
+ * Aggregates the connected wallet's overall position across all groups into two
+ * figures: `totalOwed` (others owe you) and `totalOwing` (you owe others).
+ * Combines Supabase expenses/splits/settlements with offline `local-user` data.
+ */
 export const useUserBalance = () => {
   const { address } = useWallet();
   const [totalOwed, setTotalOwed] = useState(0);

@@ -10,6 +10,10 @@ export interface UserProfile {
   last_checkin: string | null;
 }
 
+/**
+ * Loads and mutates the connected wallet's profile (display name, avatar emoji,
+ * daily check-in streak) from the Supabase `user_profiles` table.
+ */
 export const useProfile = () => {
   const { address } = useWallet();
   const [profile, setProfile] = useState<UserProfile | null>(null);

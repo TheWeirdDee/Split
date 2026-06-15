@@ -6,39 +6,10 @@ export interface GroupBalance {
   amount: number;
 }
 
-export const calculateGroupBalances = (
-  expenses: any[],
-  splits: any[],
-  settlements: any[]
-): GroupBalance[] => {
-  const netBalances: Record<string, number> = {};
-
-  expenses.forEach(expense => {
-    const payer = expense.paid_by;
-    const expenseSplits = splits.filter(s => s.expense_id === expense.id);
-    
-    expenseSplits.forEach(split => {
-      const borrower = split.wallet_address;
-      const amount = parseFloat(split.amount);
-      
-      if (borrower !== payer) {
-        // Borrower owes Payer
-        netBalances[borrower] = (netBalances[borrower] || 0) - amount;
-        netBalances[payer] = (netBalances[payer] || 0) + amount;
-      }
-    });
-  });
-
-  settlements.forEach(settlement => {
-    const debtor = settlement.debtor;
-    const creditor = settlement.creditor;
-    const amount = parseFloat(settlement.amount);
-    
-    // Debt is reduced
-    netBalances[debtor] = (netBalances[debtor] || 0) + amount;
-  netBalances[creditor] = (netBalances[creditor] || 0) - amount;
-  });
-
+// Greedy debt simplification: match the largest debtor against the largest
+// creditor until everyone nets to (near) zero. Shared by the on-chain and
+// off-chain balance paths so the settlement logic lives in one place.
+const minimizeTransfers = (netBalances: Record<string, number>): GroupBalance[] => {
   const debtors: { address: string; amount: number }[] = [];
   const creditors: { address: string; amount: number }[] = [];
 
@@ -75,6 +46,42 @@ export const calculateGroupBalances = (
   return results;
 };
 
+export const calculateGroupBalances = (
+  expenses: any[],
+  splits: any[],
+  settlements: any[]
+): GroupBalance[] => {
+  const netBalances: Record<string, number> = {};
+
+  expenses.forEach(expense => {
+    const payer = expense.paid_by;
+    const expenseSplits = splits.filter(s => s.expense_id === expense.id);
+    
+    expenseSplits.forEach(split => {
+      const borrower = split.wallet_address;
+      const amount = parseFloat(split.amount);
+      
+      if (borrower !== payer) {
+        // Borrower owes Payer
+        netBalances[borrower] = (netBalances[borrower] || 0) - amount;
+        netBalances[payer] = (netBalances[payer] || 0) + amount;
+      }
+    });
+  });
+
+  settlements.forEach(settlement => {
+    const debtor = settlement.debtor;
+    const creditor = settlement.creditor;
+    const amount = parseFloat(settlement.amount);
+    
+    // Debt is reduced
+    netBalances[debtor] = (netBalances[debtor] || 0) + amount;
+  netBalances[creditor] = (netBalances[creditor] || 0) - amount;
+  });
+
+  return minimizeTransfers(netBalances);
+};
+
 export const getUserNetBalance = (address: string, balances: GroupBalance[]): number => {
   let net = 0;
   balances.forEach(b => {
@@ -104,38 +111,5 @@ export const generateGroupId = (uuid: string): `0x${string}` => {
 export const calculateGroupBalancesFromOnchain = (
   onchainBalances: Record<string, number>
 ): GroupBalance[] => {
-  const debtors: { address: string; amount: number }[] = [];
-  const creditors: { address: string; amount: number }[] = [];
-
-  Object.entries(onchainBalances).forEach(([address, balance]) => {
-    if (balance < -0.0001) { // Floating point precision
-      debtors.push({ address, amount: Math.abs(balance) });
-    } else if (balance > 0.0001) {
-      creditors.push({ address, amount: balance });
-    }
-  });
-
-  const results: GroupBalance[] = [];
-  let d = 0;
-  let c = 0;
-
-  while (d < debtors.length && c < creditors.length) {
-    const debtor = debtors[d];
-    const creditor = creditors[c];
-    const settlementAmount = Math.min(debtor.amount, creditor.amount);
-
-    results.push({
-      from: debtor.address,
-      to: creditor.address,
-      amount: settlementAmount
-    });
-
-    debtor.amount -= settlementAmount;
-    creditor.amount -= settlementAmount;
-
-    if (debtor.amount < 0.0001) d++;
-    if (creditor.amount < 0.0001) c++;
-  }
-
-  return results;
+  return minimizeTransfers(onchainBalances);
 };

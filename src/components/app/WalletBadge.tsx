@@ -6,6 +6,10 @@ import { truncateAddress } from '@/lib/utils';
 import { WalletAvatar } from '../common/WalletAvatar';
 import { Button } from '../common/Button';
 
+/**
+ * Compact wallet indicator for headers: a "Connect" button when disconnected,
+ * otherwise the avatar, truncated address, and cUSD balance.
+ */
 export const WalletBadge = () => {
   const { address, isConnected, cUSDBalance, connect } = useWallet();
 

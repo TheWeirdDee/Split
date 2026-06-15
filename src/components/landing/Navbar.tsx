@@ -49,6 +49,11 @@ export const Button = ({ children, variant = "primary", className = "", ...props
   );
 };
 
+/**
+ * Landing-page top navigation. Transparent over the hero, then fades to a
+ * blurred dark bar once the user scrolls past ~60px (driven by GSAP
+ * ScrollTrigger). Holds the logo, section anchors, and the "Open App" CTA.
+ */
 export const Navbar = () => {
   const navRef = useRef(null);
 

@@ -48,6 +48,12 @@ const isInQuietHours = (start: string, end: string): boolean => {
   return nowMinutes >= startMinutes || nowMinutes < endMinutes;
 };
 
+/**
+ * Inserts a notification only if the recipient's preferences allow it.
+ * Honors per-type opt-outs (mapped via {@link mapTypeToPreference}) and the
+ * recipient's quiet-hours window, returning a `{ sent, reason }` result rather
+ * than throwing when a message is intentionally suppressed.
+ */
 export const createNotificationSafe = async (input: CreateNotificationInput) => {
   const normalizedAddress = input.userAddress.toLowerCase();
   const preferenceKey = mapTypeToPreference(input.type);

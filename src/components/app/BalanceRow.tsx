@@ -16,6 +16,11 @@ interface BalanceRowProps {
   onRemind?: () => void;
 }
 
+/**
+ * One person's line in a group's balance list: avatar, name/address, the amount
+ * (colored by direction), and a contextual action — "Pay" when you owe them,
+ * "Remind" when they owe you.
+ */
 export const BalanceRow = ({ address, displayName, amount, type, groupId, onRemind }: BalanceRowProps) => {
   return (
     <div className="flex items-center justify-between py-3 border-b border-border last:border-0">

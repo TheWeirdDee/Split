@@ -5,6 +5,10 @@ import Link from "next/link";
 import gsap from "gsap";
 import { Button } from "./Navbar";
 
+/**
+ * Landing hero: headline, subcopy, CTAs, and the floating phone mockup, with a
+ * GSAP entrance timeline that staggers each element in on first paint.
+ */
 export const Hero = () => {
   const heroRef = useRef(null);
 

@@ -12,6 +12,12 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
+/**
+ * Accessible confirmation modal. Renders nothing when closed. While open it is
+ * exposed as `role="dialog"` with `aria-modal` and is labelled by its title,
+ * closes on backdrop click or the Escape key, and stops propagation inside the
+ * panel so clicks there don't dismiss it.
+ */
 export const ConfirmDialog = ({
   isOpen,
   title,
@@ -22,6 +28,17 @@ export const ConfirmDialog = ({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) => {
+  const titleId = React.useId();
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onCancel]);
+
   if (!isOpen) return null;
 
   return (
@@ -40,6 +57,9 @@ export const ConfirmDialog = ({
       onClick={onCancel}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "#161616",
@@ -56,6 +76,7 @@ export const ConfirmDialog = ({
       >
         <div>
           <p
+            id={titleId}
             style={{
               fontFamily: "DM Sans, sans-serif",
               fontWeight: "700",

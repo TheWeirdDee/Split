@@ -23,6 +23,11 @@ interface ExpenseCardProps {
   userShare: number;
 }
 
+/**
+ * Single expense row: category accent, description, payer/date, optional receipt
+ * thumbnail (opens a lightbox), the total amount, and the viewer's share. Shows
+ * a "Reversed" marker for reversed expenses.
+ */
 export const ExpenseCard = ({ expense, userShare }: ExpenseCardProps) => {
   const { address } = useWallet();
   const { formatAmount } = useCurrency();
@@ -50,7 +55,16 @@ export const ExpenseCard = ({ expense, userShare }: ExpenseCardProps) => {
               <img
                 src={expense.attachment_url}
                 alt="Receipt thumbnail"
+                role="button"
+                tabIndex={0}
+                aria-label="View receipt"
                 onClick={() => setShowModal(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowModal(true);
+                  }
+                }}
                 style={{
                   width: '36px',
                   height: '36px',
@@ -79,6 +93,9 @@ export const ExpenseCard = ({ expense, userShare }: ExpenseCardProps) => {
 
       {showModal && expense.attachment_url && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Receipt image"
           onClick={() => setShowModal(false)}
           style={{
             position: 'fixed',

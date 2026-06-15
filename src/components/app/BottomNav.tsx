@@ -96,6 +96,7 @@ export function BottomNav() {
           <Link
             key={tab.href}
             href={tab.href}
+            aria-current={isActive ? 'page' : undefined}
             style={{
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: '3px',
@@ -105,7 +106,7 @@ export function BottomNav() {
               touchAction: 'manipulation',
             }}
           >
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} aria-hidden="true">
               {tab.icon(isActive)}
             </div>
             <span style={{

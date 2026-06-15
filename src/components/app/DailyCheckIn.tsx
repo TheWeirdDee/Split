@@ -11,6 +11,11 @@ const STREAK_BADGES = [
   { days: 30, label: "Monthly Legend", icon: Trophy, color: "#AF52DE" },
 ];
 
+/**
+ * Records a daily check-in on mount and renders the user's current streak with
+ * a tier badge (First Step → Monthly Legend). Shows a "+1 TODAY" marker when the
+ * streak advanced this open, and renders nothing until a streak exists.
+ */
 export const DailyCheckIn = () => {
   const { profile, recordDailyCheckIn } = useProfile();
   const [checkedIn, setCheckedIn] = useState(false);

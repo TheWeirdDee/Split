@@ -11,6 +11,11 @@ interface AmountDisplayProps {
   className?: string;
 }
 
+/**
+ * Renders a monetary value in the user's selected display currency with a
+ * variant-driven color and sign (`+` for positive, `-` for negative). The
+ * absolute value is formatted; the sign comes from `variant`, not the input.
+ */
 export const AmountDisplay = ({
   amount,
   variant = 'neutral',

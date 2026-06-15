@@ -65,6 +65,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
         {showBack ? (
           <button
             onClick={() => router.back()}
+            aria-label="Go back"
             style={{
               background: 'transparent',
               border: 'none',
@@ -77,7 +78,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               flexShrink: 0
             }}
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={24} aria-hidden="true" />
           </button>
         ) : (
           <Link 
@@ -111,6 +112,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
+            aria-label="Display currency"
             style={{
               background: '#161616',
               color: '#8A8A8A',
@@ -134,6 +136,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
         {address && (
           <button
             onClick={() => router.push('/app/notifications')}
+            aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
             style={{
               position: 'relative',
               width: '36px',
@@ -150,8 +153,8 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
             }}
             title="Open notifications"
           >
-            <Bell size={18} />
-            <span style={{
+            <Bell size={18} aria-hidden="true" />
+            <span aria-hidden="true" style={{
               position: 'absolute',
               top: '-4px',
               right: '-6px',
@@ -239,6 +242,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               if (window.confirm('Disconnect wallet?')) disconnect();
             }}
             title="Disconnect wallet"
+            aria-label="Disconnect wallet"
             style={{
               background: 'transparent',
               border: '1px solid #2C2C2C',

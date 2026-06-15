@@ -20,6 +20,11 @@ interface GroupCardProps {
   };
 }
 
+/**
+ * Group list tile linking to the group page. Shows the icon, name, member
+ * count, an offline "Local" badge for `local-` groups, and the viewer's net
+ * balance in that group (hidden while balances load).
+ */
 export const GroupCard = ({ group }: GroupCardProps) => {
   const { address } = useWallet();
   const { balances, loading } = useBalances(group.id);

@@ -7,6 +7,11 @@ interface WalletAvatarProps {
   className?: string;
 }
 
+/**
+ * Deterministic identicon for a wallet address: a colored circle (hue derived
+ * from the address) showing the address's first character. Renders a pulsing
+ * placeholder while the address is missing. Exposed as a labelled `img`.
+ */
 export const WalletAvatar = ({ address, size = 36, className }: WalletAvatarProps) => {
   if (!address) return <div style={{ width: size, height: size }} className="rounded-full bg-surface-2 animate-pulse" />;
 
@@ -16,6 +21,8 @@ export const WalletAvatar = ({ address, size = 36, className }: WalletAvatarProp
 
   return (
     <div
+      role="img"
+      aria-label={`Avatar for ${address.slice(0, 6)}…${address.slice(-4)}`}
       className={cn("flex items-center justify-center rounded-full text-white font-bold clash-display shrink-0", className)}
       style={{
         width: size,

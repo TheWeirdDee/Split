@@ -7,11 +7,16 @@ interface LogoProps {
   showText?: boolean;
 }
 
+/**
+ * App wordmark linking home. The SVG is decorative (`aria-hidden`); the link
+ * carries an accessible name so it remains identifiable even when `showText`
+ * is false and only the icon is shown.
+ */
 export const Logo = ({ className, showText = true }: LogoProps) => {
   return (
-    <Link href="/" className={cn("flex items-center gap-2 group transition-all active:scale-95", className)}>
+    <Link href="/" aria-label="Split home" className={cn("flex items-center gap-2 group transition-all active:scale-95", className)}>
       <div className="relative w-8 h-8 flex items-center justify-center">
-        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <svg aria-hidden="true" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           {/* Left arrow: chevron pointing LEFT */}
           <path 
             d="M18 8L10 16L18 24" 

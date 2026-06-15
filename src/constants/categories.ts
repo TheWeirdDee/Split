@@ -1,3 +1,5 @@
+// Canonical expense categories used across the app (pickers, badges, charts).
+// `iconName` maps to a lucide-react icon; `color` drives the category accent.
 export const CATEGORIES = [
   { id: 'food',          iconName: 'Pizza',          label: 'Food',          color: '#FF9500' },
   { id: 'transport',     iconName: 'Car',            label: 'Transport',     color: '#5AC8FA' },

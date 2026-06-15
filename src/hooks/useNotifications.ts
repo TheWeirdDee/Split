@@ -15,6 +15,11 @@ export interface NotificationItem {
   created_at: string;
 }
 
+/**
+ * Loads the connected wallet's notifications and subscribes to a Supabase
+ * realtime channel so new INSERTs stream in live. Provides `markAsRead`,
+ * `markAllRead`, and a derived `unreadCount`.
+ */
 export const useNotifications = () => {
   const { address } = useWallet();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);

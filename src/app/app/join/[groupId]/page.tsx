@@ -13,6 +13,7 @@ import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 import { GroupIcon } from '@/components/common/GroupIcon';
 
+/** Invite-acceptance page (route `/app/join/[groupId]`) for joining a group. */
 export default function JoinGroupPage() {
   const router = useRouter();
   const { groupId } = useParams();

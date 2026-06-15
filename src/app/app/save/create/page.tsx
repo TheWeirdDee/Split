@@ -10,6 +10,7 @@ import { useSavingsCircle } from '@/hooks/useSavingsCircle';
 import { parseEther } from 'viem';
 import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Settings, Info } from 'lucide-react';
 
+/** Create savings-circle flow (route `/app/save/create`): mode and config. */
 export default function CreateCirclePage() {
   const router = useRouter();
 

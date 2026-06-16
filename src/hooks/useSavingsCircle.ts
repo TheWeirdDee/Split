@@ -120,8 +120,6 @@ export const useSavingsCircle = (circleId?: string) => {
       setLoading(false);
       return;
     }
-
-    if (!publicClient || !circleId || !SAVINGS_CIRCLE_ADDRESS) return;
     setLoading(true);
 
     try {

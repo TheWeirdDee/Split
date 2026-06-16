@@ -23,12 +23,13 @@ export default function SavePage() {
             <p className="text-sm text-text-secondary">Save securely with friends onchain</p>
           </div>
           
-          <button 
+          <button
             type="button"
             onClick={refreshCircles}
+            aria-label="Refresh circles"
             className="p-2 border border-border rounded-xl text-text-secondary hover:text-text-primary transition-all hover:bg-surface"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 

@@ -143,7 +143,7 @@ export default function CreateGroupPage() {
             break;
           }
         } catch (e) {
-          // not our event or fail to decode
+      
         }
       }
 

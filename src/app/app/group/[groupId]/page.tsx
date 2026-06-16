@@ -980,8 +980,7 @@ export default function GroupDetailPage() {
                 )}
               </>
             )}
-
-            {/* Ledger Audit section */}
+            
             <div style={{ marginTop: '16px' }}>
               <button
                 onClick={() => setShowAudit(!showAudit)}

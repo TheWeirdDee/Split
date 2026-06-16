@@ -38,6 +38,11 @@ export default function SettlePage() {
   const displayStep = groupId?.startsWith('local-') ? (localStep || 'pending') : step;
   const displayLoading = groupId?.startsWith('local-') ? localLoading : settleLoading;
 
+  // A settlement needs a positive amount; guard the action so an absent or
+  // malformed `amount` query param can't trigger a no-op/failed payment.
+  const parsedAmount = amount ? parseFloat(amount) : NaN;
+  const hasValidAmount = Number.isFinite(parsedAmount) && parsedAmount > 0;
+
   const handleSettle = async () => {
     if (groupId?.startsWith('local-')) {
       if (!groupId || !creditorAddress || !amount) return;
@@ -94,7 +99,7 @@ export default function SettlePage() {
   }
 
   const debtorAddr = groupId?.startsWith('local-') ? 'local-user' : (address || '');
-  const displayCreditor = groupId?.startsWith('local-') ? (creditorAddress as string) : (creditorAddress as string);
+  const displayCreditor = creditorAddress as string;
 
   return (
     <>
@@ -149,6 +154,7 @@ export default function SettlePage() {
             className="w-full h-16 text-lg font-bold rounded-2xl"
             onClick={() => groupId?.startsWith('local-') ? handleSettle() : requireConnection(handleSettle)}
             loading={displayLoading}
+            disabled={displayLoading || !hasValidAmount}
           >
             {groupId?.startsWith('local-') 
               ? 'Confirm & Settle Offline' 

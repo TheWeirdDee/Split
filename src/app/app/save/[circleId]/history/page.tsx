@@ -21,7 +21,11 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchOnchainLogs = useCallback(async () => {
-    if (!publicClient || !circleId || !SAVINGS_CIRCLE_ADDRESS) return;
+    if (!publicClient || !circleId || !SAVINGS_CIRCLE_ADDRESS) {
+      // Missing client/config: don't leave the page stuck on its spinner.
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -169,9 +173,10 @@ export default function HistoryPage() {
           <Link href={`/app/save/${circleId}`}>
             <button
               type="button"
+              aria-label="Back to circle"
               className="p-2 border border-border rounded-xl text-text-secondary hover:text-text-primary transition-all hover:bg-surface cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             </button>
           </Link>
           <div className="space-y-0.5">
@@ -212,13 +217,14 @@ export default function HistoryPage() {
                         <h4 className="font-bold text-sm text-text-primary">{meta.title}</h4>
                       </div>
                       
-                      <a 
+                      <a
                         href={`https://celoscan.io/tx/${log.txHash}`}
-                        target="_blank" 
+                        target="_blank"
                         rel="noopener noreferrer"
+                        aria-label="View transaction on Celoscan"
                         className="text-text-secondary hover:text-brand transition-colors p-1"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                       </a>
                     </div>
 

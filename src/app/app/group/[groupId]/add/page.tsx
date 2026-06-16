@@ -413,17 +413,25 @@ export default function AddExpensePage() {
 
       if (isRecurring && !runId) {
         setLoadingText('Saving Recurring Rule...');
+        // Match the recurring_expense_rules schema used by the recurring page /
+        // useRecurringCheck (created_by, cadence, day_of_week/day_of_month,
+        // start_date). The previous columns (creator_address/frequency/
+        // next_run_date) don't exist, so the insert failed silently.
+        const today = new Date();
+        const cadence = recurringFrequency === 'weekly' ? 'weekly' : 'monthly';
         const { error: ruleError } = await supabase.from('recurring_expense_rules').insert({
-          group_id: Number(groupId),
-          creator_address: address?.toLowerCase(),
-          amount: parseFloat(amount),
-          description: description,
+          group_id: groupId,
+          created_by: address?.toLowerCase(),
+          amount: totalAmountNum,
+          description: description.trim(),
           category: category,
           payer_address: payer,
           participant_addresses: splitWith,
-          frequency: recurringFrequency,
-          next_run_date: new Date(Date.now() + (recurringFrequency === 'monthly' ? 30 : recurringFrequency === 'weekly' ? 7 : 365) * 24 * 60 * 60 * 1000).toISOString(),
-          is_active: true
+          cadence,
+          day_of_week: cadence === 'weekly' ? today.getDay() : null,
+          day_of_month: cadence === 'monthly' ? today.getDate() : null,
+          start_date: today.toISOString().split('T')[0],
+          is_active: true,
         });
         if (ruleError) console.error('Error saving recurring rule:', ruleError);
       }

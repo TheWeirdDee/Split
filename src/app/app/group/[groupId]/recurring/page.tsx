@@ -114,14 +114,22 @@ export default function GroupRecurringPage() {
   };
 
   const handleCreateRule = async () => {
-    if (!address || !description || !amount || !payer || participants.length === 0) return;
+    const amt = Number(amount);
+    if (
+      !address ||
+      !description.trim() ||
+      !Number.isFinite(amt) ||
+      amt <= 0 ||
+      !payer ||
+      participants.length === 0
+    ) return;
     setSavingRule(true);
     const payload = {
       group_id: groupId,
       created_by: address.toLowerCase(),
       description: description.trim(),
       category,
-      amount: Number(amount),
+      amount: amt,
       payer_address: payer.toLowerCase(),
       participant_addresses: participants.map((p) => p.toLowerCase()),
       cadence,

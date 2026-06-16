@@ -3,9 +3,10 @@ import { formatAmount } from '@/lib/utils';
 import { deserializeQuickSplit, QuickSplitPayload } from '@/lib/quicksplit';
 
 interface SplitPageProps {
-  params: {
+  // Next 16: route params are async and must be awaited.
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const renderDebt = (debt: { from: string; to: string; amount: number }) => (
@@ -19,8 +20,9 @@ const renderDebt = (debt: { from: string; to: string; amount: number }) => (
 );
 
 /** Public shared quick-split result (route `/split/[id]`) decoded from the link. */
-export default function SplitResultPage({ params }: SplitPageProps) {
-  const data = deserializeQuickSplit(params.id);
+export default async function SplitResultPage({ params }: SplitPageProps) {
+  const { id } = await params;
+  const data = deserializeQuickSplit(id);
 
   if (!data) {
     return (

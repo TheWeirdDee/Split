@@ -38,7 +38,7 @@ import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSettle } from '@/hooks/useSettle';
 import { CATEGORIES } from '@/constants/categories';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
-import { decodeEventLog } from 'viem';
+import { decodeEventLog, isAddress } from 'viem';
 import { celo } from 'viem/chains';
 
 const toCsv = (rows: string[][]) => rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
@@ -329,7 +329,7 @@ export default function GroupDetailPage() {
 
     const { address } = walletRef.current;
     if (!address) return;
-    if (!manualAddress || !manualAddress.startsWith('0x')) {
+    if (!isAddress(manualAddress)) {
       showToast('Please enter a valid wallet address (0x...)', 'error');
       return;
     }

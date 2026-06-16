@@ -106,10 +106,14 @@ export default function CreateCirclePage() {
   };
 
   const isStep1Valid = name.trim().length > 0;
+  // A custom cadence must be at least 1 day, otherwise frequency resolves to 0
+  // seconds (empty input → Number('') === 0) and the circle deploys broken.
+  const isCadenceValid = frequencyType !== 'custom' || Number(customDays) > 0;
   const isStep2Valid =
-    mode === 0
+    isCadenceValid &&
+    (mode === 0
       ? Number(contribution) > 0 && Number(maxMembers) > 1
-      : Number(contribution) > 0 && Number(goalAmount) > 0 && Number(goalDeadlineDays) > 0;
+      : Number(contribution) > 0 && Number(goalAmount) > 0 && Number(goalDeadlineDays) > 0);
 
   return (
     <>

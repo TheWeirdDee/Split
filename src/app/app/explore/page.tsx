@@ -185,7 +185,7 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="px-4 py-6 flex flex-col gap-6 bg-[#0D0D0D] min-height-screen">
+    <div className="px-4 py-6 flex flex-col gap-6 bg-[#0D0D0D] min-h-screen">
       
       {/* --- Page Header --- */}
       <div className="space-y-2">

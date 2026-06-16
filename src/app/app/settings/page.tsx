@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Check, Edit3, Trash2 } from 'lucide-react';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useAddressBook } from '@/hooks/useAddressBook';
+import { isAddress } from 'viem';
 
 /** Settings page (route `/app/settings`): profile, address book, disconnect. */
 export default function SettingsPage() {
@@ -66,7 +67,7 @@ export default function SettingsPage() {
   };
 
   const handleAddContact = async () => {
-    if (!contactAddress.startsWith('0x') || !contactNickname.trim()) {
+    if (!isAddress(contactAddress) || !contactNickname.trim()) {
       showToast('Enter a valid wallet and nickname.', 'error');
       return;
     }

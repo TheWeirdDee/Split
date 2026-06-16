@@ -26,7 +26,13 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      // No wallet: clear and end loading so consumers don't spin forever
+      // (loading starts true).
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     const { data, error } = await supabase

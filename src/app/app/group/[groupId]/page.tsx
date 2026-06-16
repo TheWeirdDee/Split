@@ -8,36 +8,26 @@ import { useBalances } from '@/hooks/useBalances';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useGroupChat } from '@/hooks/useGroupChat';
 import { useWallet } from '@/context/WalletContext';
-import { BalanceRow } from '@/components/app/BalanceRow';
-import { ExpenseCard } from '@/components/app/ExpenseCard';
 import { Button } from '@/components/common/Button';
-import { Card } from '@/components/common/Card';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useToast } from '@/components/common/Toast';
 import { GroupIcon } from '@/components/common/GroupIcon';
-import { AmountDisplay } from '@/components/common/AmountDisplay';
 import {
   Plus,
   Share2,
-  CheckCircle2,
   Trash2,
-  MessageCircle,
-  Send,
-  Search,
-  Download,
   Repeat2,
-  Edit3,
-  RotateCcw,
   Zap,
-  User,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { generateInviteLink, copyToClipboard } from '@/lib/inviteLinks';
 import { createNotificationSafe } from '@/lib/notifications';
 import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSettle } from '@/hooks/useSettle';
-import { CATEGORIES } from '@/constants/categories';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { BalancesTab } from './BalancesTab';
+import { ExpensesTab } from './ExpensesTab';
+import { ChatTab } from './ChatTab';
 import { decodeEventLog, isAddress } from 'viem';
 import { celo } from 'viem/chains';
 
@@ -854,430 +844,65 @@ export default function GroupDetailPage() {
         </div>
 
         {activeTab === 'balances' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {isReadOnly ? (
-              <>
-                {balances.length > 0 ? (
-                  <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
-                    {balances.map((balance, i) => (
-                      <div key={i} className="px-4">
-                        <BalanceRow
-                          address={balance.from}
-                          displayName={`${getMemberDisplayName(balance.from)} → ${getMemberDisplayName(balance.to)}`}
-                          amount={balance.amount}
-                          type="owe"
-                          groupId={groupId as string}
-                        />
-                      </div>
-                    ))}
-                  </Card>
-                ) : (
-                  <div style={{
-                    textAlign: 'center', padding: '48px 24px',
-                    border: '2px dashed #2C2C2C', borderRadius: '20px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                  }}>
-                    <CheckCircle2 style={{ width: '32px', height: '32px', color: '#4A4A4A' }} />
-                    <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', margin: 0 }}>Everyone is settled!</p>
-                  </div>
-                )}
-                <button
-                  onClick={() => requireConnection(() => {})}
-                  style={{
-                    width: '100%', padding: '14px',
-                    background: 'rgba(0,200,150,0.05)', border: '1px solid rgba(0,200,150,0.2)',
-                    borderRadius: '16px', color: '#00C896',
-                    fontFamily: 'DM Sans, sans-serif', fontSize: '14px', fontWeight: '600',
-                    cursor: 'pointer', touchAction: 'manipulation',
-                  }}
-                >
-                  Connect wallet to see your balance &amp; settle
-                </button>
-              </>
-            ) : (
-              <>
-                {oweBalances.length > 0 && (
-                  <Button
-                    className="w-full"
-                    loading={settleAllLoading}
-                    onClick={() => requireConnection(handleSettleAll)}
-                  >
-                    Settle all debts
-                  </Button>
-                )}
-
-                {personalBalances.length > 0 ? (
-                  <Card className="divide-y divide-[#2C2C2C] p-0 overflow-hidden bg-[#161616] border-[#2C2C2C]">
-                    {personalBalances.map((balance, i) => {
-                      const isUserFrom = balance.from.toLowerCase() === address?.toLowerCase();
-                      return (
-                        <div key={i} className="px-4">
-                          <BalanceRow
-                            address={isUserFrom ? balance.to : balance.from}
-                            displayName={getMemberDisplayName(isUserFrom ? balance.to : balance.from)}
-                            amount={balance.amount}
-                            type={isUserFrom ? 'owe' : 'owed'}
-                            groupId={groupId as string}
-                            onRemind={!isUserFrom ? () => requireConnection(() => handleRemind(balance.from, balance.amount)) : undefined}
-                          />
-                        </div>
-                      );
-                    })}
-                  </Card>
-                ) : (
-                  <div style={{
-                    textAlign: 'center', padding: '48px 24px',
-                    border: '2px dashed #2C2C2C', borderRadius: '20px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                  }}>
-                    <CheckCircle2 style={{ width: '32px', height: '32px', color: '#4A4A4A' }} />
-                    <p style={{ color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', margin: 0 }}>Everyone is settled!</p>
-                  </div>
-                )}
-
-                {!isAdding ? (
-                  <button
-                    onClick={() => setIsAdding(true)}
-                    style={{
-                      width: '100%', padding: '14px',
-                      background: 'transparent', border: '1px dashed #2C2C2C',
-                      borderRadius: '16px', color: '#8A8A8A',
-                      fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
-                      cursor: 'pointer', touchAction: 'manipulation',
-                    }}
-                  >
-                    + Add Member by Address
-                  </button>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <input
-                      value={manualAddress}
-                      onChange={(e) => setManualAddress(e.target.value)}
-                      placeholder="0x... wallet address"
-                      style={{
-                        width: '100%', height: '46px', background: '#161616',
-                        border: '1px solid #2C2C2C', borderRadius: '12px',
-                        padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
-                        fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
-                      }}
-                    />
-                    <input
-                      value={newMemberName}
-                      onChange={(e) => setNewMemberName(e.target.value)}
-                      placeholder="Display name (optional)"
-                      style={{
-                        width: '100%', height: '46px', background: '#161616',
-                        border: '1px solid #2C2C2C', borderRadius: '12px',
-                        padding: '0 14px', color: '#F7F3EC', fontSize: '14px', outline: 'none',
-                        fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
-                      }}
-                    />
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <Button size="sm" onClick={() => groupId && (groupId as string).startsWith('local-') ? handleAddManual() : requireConnection(handleAddManual)} disabled={isAdding}>Add</Button>
-                      <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Ledger Audit section */}
-            <div style={{ marginTop: '16px' }}>
-              <button
-                onClick={() => setShowAudit(!showAudit)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: 'rgba(0, 200, 150, 0.05)',
-                  border: '1px solid rgba(0, 200, 150, 0.2)',
-                  borderRadius: '16px',
-                  color: '#00C896',
-                  fontFamily: 'DM Sans, sans-serif',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                }}
-              >
-                <span>{showAudit ? 'Hide' : 'Show'} Ledger Audit Breakdown</span>
-              </button>
-
-              {showAudit && (
-                <Card className="mt-4 bg-[#161616] border-[#2C2C2C] p-4 text-[#F7F3EC]">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="clash-display text-base font-semibold text-[#F7F3EC]">Ledger Audit Breakdown</h3>
-                    {!isReadOnly && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setAuditFilter('all')}
-                          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                            auditFilter === 'all'
-                              ? 'bg-[#00C896] text-[#000] border-[#00C896]'
-                              : 'bg-transparent border-[#2C2C2C] text-[#8A8A8A]'
-                          }`}
-                        >
-                          All Debts
-                        </button>
-                        <button
-                          onClick={() => setAuditFilter('my')}
-                          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                            auditFilter === 'my'
-                              ? 'bg-[#00C896] text-[#000] border-[#00C896]'
-                              : 'bg-transparent border-[#2C2C2C] text-[#8A8A8A]'
-                          }`}
-                        >
-                          My Debts
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {filteredAuditDebts.length === 0 ? (
-                    <p style={{ color: '#8A8A8A', fontSize: '13px', textAlign: 'center', margin: '20px 0' }}>
-                      No items to audit in this category.
-                    </p>
-                  ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', fontFamily: 'DM Sans, sans-serif' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '1px solid #2C2C2C', textAlign: 'left', color: '#8A8A8A' }}>
-                            <th style={{ padding: '8px 4px' }}>Item</th>
-                            <th style={{ padding: '8px 4px' }}>From</th>
-                            <th style={{ padding: '8px 4px' }}>To</th>
-                            <th style={{ padding: '8px 4px', textAlign: 'right' }}>Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredAuditDebts.map((debt, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid rgba(44, 44, 44, 0.5)' }}>
-                              <td style={{ padding: '8px 4px' }}>
-                                <div style={{ fontWeight: '500', color: '#F7F3EC' }}>{debt.description}</div>
-                                <div style={{ fontSize: '10px', color: '#8A8A8A' }}>
-                                  {new Date(debt.date).toLocaleDateString()}
-                                </div>
-                              </td>
-                              <td style={{ padding: '8px 4px', color: '#8A8A8A' }}>
-                                {getMemberDisplayName(debt.from)}
-                              </td>
-                              <td style={{ padding: '8px 4px', color: '#8A8A8A' }}>
-                                {getMemberDisplayName(debt.to)}
-                              </td>
-                              <td style={{ padding: '8px 4px', textAlign: 'right' }}>
-                                <AmountDisplay amount={debt.amount} variant={debt.from === address?.toLowerCase() ? 'negative' : debt.to === address?.toLowerCase() ? 'positive' : 'neutral'} />
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </Card>
-              )}
-            </div>
-          </div>
+          <BalancesTab
+            isReadOnly={isReadOnly}
+            balances={balances}
+            personalBalances={personalBalances}
+            oweBalances={oweBalances}
+            getMemberDisplayName={getMemberDisplayName}
+            groupId={groupId as string}
+            address={address}
+            requireConnection={requireConnection}
+            handleSettleAll={handleSettleAll}
+            settleAllLoading={settleAllLoading}
+            handleRemind={handleRemind}
+            isAdding={isAdding}
+            setIsAdding={setIsAdding}
+            manualAddress={manualAddress}
+            setManualAddress={setManualAddress}
+            newMemberName={newMemberName}
+            setNewMemberName={setNewMemberName}
+            handleAddManual={handleAddManual}
+            showAudit={showAudit}
+            setShowAudit={setShowAudit}
+            auditFilter={auditFilter}
+            setAuditFilter={setAuditFilter}
+            filteredAuditDebts={filteredAuditDebts}
+          />
         )}
 
         {activeTab === 'expenses' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div className="rounded-2xl border border-[#2C2C2C] bg-[#121212] p-3 space-y-3">
-              <div className="flex items-center gap-2">
-                <Search size={14} className="text-[#8A8A8A]" />
-                <input
-                  value={expenseSearch}
-                  onChange={(e) => setExpenseSearch(e.target.value)}
-                  placeholder="Search expenses"
-                  className="w-full bg-transparent text-sm text-[#F7F3EC] outline-none"
-                />
-              </div>
-              <div className="flex gap-2">
-                <select
-                  value={expenseCategory}
-                  onChange={(e) => setExpenseCategory(e.target.value)}
-                  className="flex-1 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl px-3 py-2 text-xs text-[#F7F3EC]"
-                >
-                  <option value="all">All categories</option>
-                  {CATEGORIES.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-                <Button size="sm" variant="outline" onClick={handleExportExpenses}>
-                  <Download size={14} />
-                  Export
-                </Button>
-              </div>
-            </div>
-
-            {expensesLoading ? (
-              [1, 2, 3].map((i) => (
-                <div key={i} style={{ height: '72px', background: '#161616', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
-              ))
-            ) : filteredExpenses.length > 0 ? (
-              filteredExpenses.map((expense) => {
-                const userSplit = splits.find(
-                  (s) => s.expense_id === expense.id && s.wallet_address.toLowerCase() === address?.toLowerCase()
-                );
-                return (
-                  <div key={expense.id} className="space-y-2">
-                    <ExpenseCard
-                      expense={expense}
-                      userShare={userSplit ? parseFloat(userSplit.amount) : 0}
-                    />
-                    {!isReadOnly && (
-                      <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => requireConnection(() => handleEditExpense(expense))}>
-                          <Edit3 size={12} />
-                          Edit
-                        </Button>
-                        {(expense.status || 'active') !== 'reversed' && (
-                          <Button size="sm" variant="danger" onClick={() => requireConnection(() => handleReverseExpense(expense))}>
-                            <RotateCcw size={12} />
-                            Reverse
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{
-                textAlign: 'center', padding: '48px 24px', color: '#8A8A8A',
-                fontFamily: 'DM Sans, sans-serif',
-              }}>
-                No expenses found.
-              </div>
-            )}
-          </div>
+          <ExpensesTab
+            expenseSearch={expenseSearch}
+            setExpenseSearch={setExpenseSearch}
+            expenseCategory={expenseCategory}
+            setExpenseCategory={setExpenseCategory}
+            handleExportExpenses={handleExportExpenses}
+            expensesLoading={expensesLoading}
+            filteredExpenses={filteredExpenses}
+            splits={splits}
+            address={address}
+            isReadOnly={isReadOnly}
+            requireConnection={requireConnection}
+            handleEditExpense={handleEditExpense}
+            handleReverseExpense={handleReverseExpense}
+          />
         )}
 
         {activeTab === 'chat' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <MessageCircle style={{ width: '16px', height: '16px', color: '#00C896' }} />
-              <p style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: '600', fontSize: '14px', color: '#F7F3EC', margin: 0 }}>
-                Group Chat
-              </p>
-              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: '#8A8A8A', margin: 0 }}>
-                · {messages.length} messages
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {messagesLoading ? (
-                [1, 2, 3].map((i) => (
-                  <div key={i} style={{ height: '64px', background: '#161616', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
-                ))
-              ) : messages.length > 0 ? (
-                messages.map((msg: any) => {
-                  const senderName = getMemberDisplayName(msg.sender);
-                  const isOwn = msg.sender.toLowerCase() === address?.toLowerCase();
-                  return (
-                    <div
-                      key={msg.id}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: isOwn ? 'flex-end' : 'flex-start',
-                      }}
-                    >
-                      {!isOwn && (
-                        <span style={{
-                          fontSize: '11px', color: '#00C896', marginBottom: '4px',
-                          fontFamily: 'DM Sans, sans-serif', fontWeight: '600', paddingLeft: '4px',
-                        }}>
-                          {senderName}
-                        </span>
-                      )}
-                      <div style={{
-                        maxWidth: '80%',
-                        background: isOwn ? 'rgba(0,200,150,0.12)' : '#1A1A1A',
-                        border: `1px solid ${isOwn ? 'rgba(0,200,150,0.25)' : '#2C2C2C'}`,
-                        borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                        padding: '10px 14px',
-                        overflow: 'hidden',
-                      }}>
-                        <p style={{
-                          fontSize: '14px', color: '#F7F3EC', margin: 0,
-                          fontFamily: 'DM Sans, sans-serif', lineHeight: '1.5',
-                        }}>
-                          {msg.text}
-                        </p>
-                      </div>
-                      <span style={{
-                        fontSize: '10px', color: '#4A4A4A', marginTop: '3px',
-                        fontFamily: 'DM Mono, monospace', paddingLeft: isOwn ? 0 : '4px',
-                        paddingRight: isOwn ? '4px' : 0,
-                      }}>
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <div style={{
-                  textAlign: 'center', padding: '40px 24px',
-                  border: '1px dashed #2C2C2C', borderRadius: '20px',
-                  color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
-                }}>
-                  No messages yet. Say hello.
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {isReadOnly ? (
-              <button
-                onClick={() => requireConnection(() => {})}
-                style={{
-                  width: '100%', padding: '14px',
-                  background: 'rgba(0,200,150,0.05)', border: '1px solid rgba(0,200,150,0.2)',
-                  borderRadius: '16px', color: '#00C896',
-                  fontFamily: 'DM Sans, sans-serif', fontSize: '14px', fontWeight: '600',
-                  cursor: 'pointer', touchAction: 'manipulation',
-                }}
-              >
-                Connect wallet to join the conversation
-              </button>
-            ) : (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      requireConnection(handleSendMessage);
-                    }
-                  }}
-                  rows={2}
-                  placeholder="Write a message..."
-                  style={{
-                    width: '100%', background: '#161616', border: '1px solid #2C2C2C',
-                    borderRadius: '16px', padding: '12px 14px', color: '#F7F3EC',
-                    fontSize: '14px', outline: 'none', resize: 'none',
-                    fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box', lineHeight: '1.5',
-                  }}
-                />
-                <button
-                  onClick={() => requireConnection(handleSendMessage)}
-                  disabled={isSendingMessage || !newMessage.trim()}
-                  style={{
-                    width: '48px', height: '48px', flexShrink: 0,
-                    background: '#00C896', border: 'none', borderRadius: '14px',
-                    color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    opacity: !newMessage.trim() ? 0.4 : 1,
-                  }}
-                >
-                  <Send style={{ width: '18px', height: '18px' }} />
-                </button>
-              </div>
-            )}
-          </div>
+          <ChatTab
+            messages={messages}
+            messagesLoading={messagesLoading}
+            getMemberDisplayName={getMemberDisplayName}
+            address={address}
+            isReadOnly={isReadOnly}
+            requireConnection={requireConnection}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleSendMessage={handleSendMessage}
+            isSendingMessage={isSendingMessage}
+            chatEndRef={chatEndRef}
+          />
         )}
       </div>
 

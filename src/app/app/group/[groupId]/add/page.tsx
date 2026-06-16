@@ -94,7 +94,6 @@ function getSplitAmountsWei(
     });
   }
 
-  // default 'equal'
   const memberCount = BigInt(splitWith.length);
   const baseShare = totalAmountWei / memberCount;
   const remainder = totalAmountWei % memberCount;

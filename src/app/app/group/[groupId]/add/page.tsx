@@ -235,6 +235,14 @@ export default function AddExpensePage() {
     setValidationError('');
     if (!amount || splitWith.length === 0) return;
 
+    // Reject non-numeric, zero, or negative totals before they reach parseEther
+    // (which would otherwise throw and fail the submit silently).
+    const amountNum = parseFloat(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      setValidationError('Enter a valid amount greater than 0');
+      return;
+    }
+
     if (splitType === 'percentage') {
       const percentages = splitWith.map(addr => parseFloat(splitValues[addr] || '0'));
       const totalPercent = percentages.reduce((a, b) => a + b, 0);

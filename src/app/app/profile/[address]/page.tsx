@@ -126,7 +126,7 @@ export default function ProfilePage() {
     <>
       <AppHeader title="Member Profile" showBack />
 
-      <div className="px-4 pt-20 pb-24 flex flex-col gap-6 bg-[#0D0D0D] min-height-screen">
+      <div className="px-4 pt-20 pb-24 flex flex-col gap-6 bg-[#0D0D0D] min-h-screen">
         
         {/* --- Header back button --- */}
         <button 

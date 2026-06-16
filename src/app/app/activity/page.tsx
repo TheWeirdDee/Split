@@ -39,7 +39,13 @@ export default function ActivityPage() {
 
   useEffect(() => {
     const fetchActivity = async () => {
-      if (!address) return;
+      if (!address) {
+        // No wallet connected: clear the feed and stop loading so we don't get
+        // stuck on the spinner (loading starts true).
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
 
       const normalized = address.toLowerCase();

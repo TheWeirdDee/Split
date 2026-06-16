@@ -69,13 +69,16 @@ export default function CreateGroupPage() {
   const [loadingText, setLoadingText] = useState('Creating Onchain (cUSD)...');
 
   const handleCreate = async () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) return; // require a non-empty group name in both modes
+
     if (groupMode === 'local') {
       setLoading(true);
       try {
         const localId = 'local-' + Date.now();
         const newGroup = {
           id: localId,
-          name,
+          name: trimmedName,
           emoji,
           description,
           created_by: address ? address.toLowerCase() : 'local-user',
@@ -101,7 +104,7 @@ export default function CreateGroupPage() {
     }
 
     const { address: walletAddr, walletClient, publicClient, isMiniPay } = walletRef.current;
-    if (!walletAddr || !name) return;
+    if (!walletAddr) return;
     setLoading(true);
 
     try {
@@ -118,7 +121,7 @@ export default function CreateGroupPage() {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
         functionName: 'createGroup',
-        args: [name, []],
+        args: [trimmedName, []],
         chain: celo,
         account: walletAddr as `0x${string}`,
         ...gasParams,
@@ -156,7 +159,7 @@ export default function CreateGroupPage() {
 
       const { error: groupError } = await supabase.from('groups').insert({
         id: onchainGroupId,
-        name,
+        name: trimmedName,
         emoji,
         description,
         created_by: walletAddr.toLowerCase(),
@@ -261,8 +264,7 @@ export default function CreateGroupPage() {
               />
             </div>
 
-            {/* Forced recompile comment */}
-            <Button 
+            <Button
               size="lg" 
               style={{
                 width: '100%',
@@ -277,7 +279,7 @@ export default function CreateGroupPage() {
                 cursor: name ? 'pointer' : 'not-allowed',
                 opacity: name ? 1 : 0.5
               }}
-              disabled={!name || loading}
+              disabled={!name.trim() || loading}
               onClick={() => groupMode === 'local' ? handleCreate() : requireConnection(handleCreate)}
               loading={loading}
             >

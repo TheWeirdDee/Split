@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Button } from '@/components/common/Button';
 import { formatEther } from 'viem';
-import { 
-  PiggyBank, 
-  Target, 
-  Users, 
-  ShieldCheck, 
+import {
+  PiggyBank,
+  Target,
+  Users,
+  ShieldCheck,
   Sparkles,
   Calculator,
   Plus,
   Trash2,
   Copy,
   Check,
-  HelpCircle,
-  TrendingUp,
   Rocket,
   Heart,
   Pizza,
@@ -72,11 +71,11 @@ const ROTATING_CIRCLE_TEMPLATES: Record<string, { title: string; description: st
 };
 
 export default function ExplorePage() {
+  const router = useRouter();
   const { isConnected, connect, address } = useWallet();
-  const { circles, loading, joinCircle } = useSavingsCircle();
+  const { circles, loading } = useSavingsCircle();
   const { formatAmount } = useCurrency();
   const [filterMode, setFilterMode] = useState<'all' | 'goals' | 'rotating' | 'calculator'>('all');
-  const [joiningId, setJoiningId] = useState<number | null>(null);
 
   // --- Calculator State ---
   const [calcTotal, setCalcTotal] = useState('');
@@ -88,49 +87,65 @@ export default function ExplorePage() {
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [copiedCalc, setCopiedCalc] = useState(false);
 
-  // Group circles into Community Goals (Goal = 1) and Rotating Circles (Rotating = 0)
-  const activeCircles = circles.filter((c: any) => c.status === 0); // Active circles only
+  // Group circles into Community Goals (Goal = 1) and Rotating Circles (Rotating = 0).
+  // Many on-chain circles fall back to the same overlay template, which used to
+  // render dozens of identical-looking cards — so we keep only the first circle
+  // per resolved title (one of each).
+  const activeCircles = useMemo(() => circles.filter((c: any) => c.status === 0), [circles]);
 
-  const communityGoals = activeCircles.filter((c: any) => c.mode === 1).map((c: any) => {
-    const templateKey = Object.keys(COMMUNITY_GOAL_TEMPLATES).find(k => c.name.toLowerCase().includes(k)) || 'save-hack';
-    const template = COMMUNITY_GOAL_TEMPLATES[templateKey];
-    return {
-      ...c,
-      title: template.title,
-      description: template.description,
-      icon: template.icon,
-      coverColor: template.coverColor
-    };
-  });
+  const communityGoals = useMemo(() => {
+    const seen = new Set<string>();
+    return activeCircles
+      .filter((c: any) => c.mode === 1)
+      .map((c: any) => {
+        const templateKey = Object.keys(COMMUNITY_GOAL_TEMPLATES).find(k => c.name.toLowerCase().includes(k)) || 'save-hack';
+        const template = COMMUNITY_GOAL_TEMPLATES[templateKey];
+        return {
+          ...c,
+          title: template.title,
+          description: template.description,
+          icon: template.icon,
+          coverColor: template.coverColor
+        };
+      })
+      .filter((c: any) => {
+        if (seen.has(c.title)) return false;
+        seen.add(c.title);
+        return true;
+      });
+  }, [activeCircles]);
 
-  const rotatingCircles = activeCircles.filter((c: any) => c.mode === 0).map((c: any) => {
-    const templateKey = Object.keys(ROTATING_CIRCLE_TEMPLATES).find(k => c.name.toLowerCase().includes(k)) || 'save-founder';
-    const template = ROTATING_CIRCLE_TEMPLATES[templateKey];
-    const addressHash = c.creator ? c.creator.slice(-4) : '0';
-    const calculatedTrust = 85 + (parseInt(addressHash, 16) % 15);
-    
-    return {
-      ...c,
-      title: template.title,
-      description: template.description,
-      icon: template.icon,
-      trustScore: calculatedTrust || template.trustScore
-    };
-  });
+  const rotatingCircles = useMemo(() => {
+    const seen = new Set<string>();
+    return activeCircles
+      .filter((c: any) => c.mode === 0)
+      .map((c: any) => {
+        const templateKey = Object.keys(ROTATING_CIRCLE_TEMPLATES).find(k => c.name.toLowerCase().includes(k)) || 'save-founder';
+        const template = ROTATING_CIRCLE_TEMPLATES[templateKey];
+        const addressHash = c.creator ? c.creator.slice(-4) : '0';
+        const calculatedTrust = 85 + (parseInt(addressHash, 16) % 15);
 
-  const handleJoin = async (id: number) => {
+        return {
+          ...c,
+          title: template.title,
+          description: template.description,
+          icon: template.icon,
+          trustScore: calculatedTrust || template.trustScore
+        };
+      })
+      .filter((c: any) => {
+        if (seen.has(c.title)) return false;
+        seen.add(c.title);
+        return true;
+      });
+  }, [activeCircles]);
+
+  const handleJoin = (id: number) => {
     if (!isConnected) {
       connect();
       return;
     }
-    setJoiningId(id);
-    try {
-      window.location.href = `/app/save/${id}?join=true`;
-    } catch (err) {
-      console.error('Join error:', err);
-    } finally {
-      setJoiningId(null);
-    }
+    router.push(`/app/save/${id}?join=true`);
   };
 
   // --- Calculator Logic ---
@@ -188,7 +203,7 @@ export default function ExplorePage() {
     <div className="px-4 py-6 flex flex-col gap-6 bg-[#0D0D0D] min-h-screen">
       
       {/* --- Page Header --- */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-[#00C896] animate-pulse" />
           <span className="dm-mono text-[10px] text-[#00C896] tracking-[0.2em] font-bold uppercase">Explore Celo</span>
@@ -197,6 +212,14 @@ export default function ExplorePage() {
         <p className="text-xs text-[#8A8A8A] leading-relaxed">
           Discover crowdfunding goals,Rotating Savings, or compute splits instantly offline using our wallet-free Split Calculator.
         </p>
+        {isConnected && (
+          <Link href="/app/save/create" className="block">
+            <Button size="sm" className="bg-[#00C896] text-black font-bold text-[11px] h-9">
+              <Plus className="w-4 h-4" />
+              Create Your Circle
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* --- Filter Tabs --- */}

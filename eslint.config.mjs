@@ -24,9 +24,9 @@ const eslintConfig = defineConfig([
     "private/**",
     "scratch/**",
     "scripts/**",
-    "contracts/typechain-types/**",
-    "contracts/artifacts/**",
-    "contracts/cache/**",
+    // The Hardhat contracts project is a standalone Node sub-project with its
+    // own tooling/tests (CommonJS `require`); it isn't part of the Next app.
+    "contracts/**",
   ]),
 ]);
 

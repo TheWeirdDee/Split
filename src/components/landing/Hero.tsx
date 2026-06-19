@@ -37,7 +37,7 @@ export const Hero = () => {
   }, []);
 
   return (
-    <section ref={heroRef} className="relative flex flex-col justify-start pt-[72px] lg:pt-[96px] pb-10 px-12 max-w-[1280px] mx-auto overflow-hidden">
+    <section ref={heroRef} className="relative flex flex-col justify-start pt-[52px] lg:pt-[56px] pb-10 px-12 max-w-[1280px] mx-auto overflow-hidden">
       {/* Premium Abstract Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Animated Glass Blobs */}

@@ -34,7 +34,7 @@ function SplitLogo({ size = 28 }: { size?: number }) {
 }
 
 export function AppHeader({ title, showBack }: AppHeaderProps) {
-  const { address, cUSDBalance, disconnect, connect } = useWallet();
+  const { address, cUSDBalance, disconnect, connect, isInitialLoading } = useWallet();
   const { unreadCount } = useNotifications();
   const router = useRouter();
   const unreadLabel = unreadCount > 99 ? '99+' : unreadCount.toString();
@@ -107,18 +107,19 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
       </div>
 
       {/* Right: Wallet badge + disconnect */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexShrink: 1 }}>
         {address && (
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
             aria-label="Display currency"
+            className="header-currency"
             style={{
               background: '#161616',
               color: '#8A8A8A',
               border: '1px solid #2C2C2C',
               borderRadius: '10px',
-              padding: '0 8px',
+              padding: '0 6px',
               fontSize: '11px',
               fontFamily: 'DM Sans, sans-serif',
               cursor: 'pointer',
@@ -216,8 +217,22 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
           </div>
         )}
 
-        {/* Connect or Disconnect/logout button */}
-        {!address ? (
+        {/* While the session is being restored on refresh, show a neutral
+            placeholder instead of "Connect" so a connected wallet doesn't flash
+            as disconnected. */}
+        {isInitialLoading ? (
+          <div
+            aria-hidden="true"
+            style={{
+              width: '88px',
+              height: '32px',
+              borderRadius: '20px',
+              background: '#161616',
+              border: '1px solid #2C2C2C',
+              flexShrink: 0,
+            }}
+          />
+        ) : !address ? (
           <button
             onClick={connect}
             style={{

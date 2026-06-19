@@ -76,14 +76,24 @@ input.time-input {
   animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* Header wallet responsive behavior */
-@media (max-width: 395px) {
+/* Header wallet responsive behavior. The app shell is capped at 430px, so the
+   right-side cluster (currency + bell + wallet badge + logout) gets cramped on
+   phones. Below 430px we drop the address (still on the profile page) and keep
+   just the green dot + balance so nothing overflows / gets clipped. */
+@media (max-width: 430px) {
   .header-wallet-address {
     display: none !important;
   }
   .header-wallet-balance {
     border-left: none !important;
     padding-left: 0 !important;
+  }
+}
+
+/* On very narrow phones, also hide the currency code label to guarantee fit. */
+@media (max-width: 360px) {
+  .header-currency {
+    display: none !important;
   }
 }
 

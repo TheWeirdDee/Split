@@ -12,6 +12,17 @@ import { useSettle } from '@/hooks/useSettle';
 import { truncateAddress } from '@/lib/utils';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
+// Built outside the component so the impure `Date.now()` call isn't evaluated
+// during render (React purity rule); this only runs from the settle handler.
+const createLocalSettlement = (groupId: string, creditor: string, amount: string) => ({
+  id: 'local-set-' + Date.now(),
+  group_id: groupId,
+  debtor: 'local-user', // debtor is always You offline
+  creditor: creditor.toLowerCase(),
+  amount: parseFloat(amount),
+  created_at: new Date().toISOString(),
+});
+
 /** Settle-up flow (route `/app/settle/[debtId]`) for paying a specific debt. */
 export default function SettlePage() {
   const { debtId: creditorAddress } = useParams();
@@ -48,14 +59,7 @@ export default function SettlePage() {
       if (!groupId || !creditorAddress || !amount) return;
       setLocalLoading(true);
       try {
-        const newSettlement = {
-          id: 'local-set-' + Date.now(),
-          group_id: groupId,
-          debtor: 'local-user', // debtor is always You offline
-          creditor: (creditorAddress as string).toLowerCase(),
-          amount: parseFloat(amount),
-          created_at: new Date().toISOString()
-        };
+        const newSettlement = createLocalSettlement(groupId, creditorAddress as string, amount);
         const allSettlements = JSON.parse(localStorage.getItem('split_local_settlements') || '[]');
         localStorage.setItem('split_local_settlements', JSON.stringify([...allSettlements, newSettlement]));
         setLocalStep('confirmed');

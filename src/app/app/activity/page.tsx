@@ -1,14 +1,19 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/common/Card';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useSavingsCircle } from '@/hooks/useSavingsCircle';
+import { useCurrency } from '@/context/CurrencyContext';
 import { truncateAddress } from '@/lib/utils';
-import { CheckCircle2, PlusCircle, UserPlus, ExternalLink, Trash2, Users, Download, Search } from 'lucide-react';
+import { formatEther } from 'viem';
+import { CheckCircle2, PlusCircle, UserPlus, ExternalLink, Trash2, Users, Download, Search, Bell, PiggyBank } from 'lucide-react';
 
 type ActivityItem = {
-  type: 'settlement' | 'expense' | 'group_created' | 'group_joined';
+  type: 'settlement' | 'expense' | 'group_created' | 'group_joined' | 'notification' | 'savings';
   date: Date;
   localId: string;
   [key: string]: any;
@@ -30,6 +35,9 @@ const downloadFile = (filename: string, content: string, type = 'text/csv;charse
 
 export default function ActivityPage() {
   const { address } = useWallet();
+  const { notifications } = useNotifications();
+  const { circles } = useSavingsCircle();
+  const { formatAmount } = useCurrency();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -106,8 +114,32 @@ export default function ActivityPage() {
     fetchActivity();
   }, [address]);
 
+  // Merge the Supabase-backed activities with realtime notifications and the
+  // user's on-chain savings circles into one unified, date-sorted feed.
+  const allActivities = useMemo(() => {
+    const notificationItems: ActivityItem[] = notifications.map((n) => ({
+      ...n,
+      type: 'notification' as const,
+      date: new Date(n.created_at),
+      localId: `notification-${n.id}`,
+    }));
+
+    const savingsItems: ActivityItem[] = circles.map((c: any) => ({
+      ...c,
+      type: 'savings' as const,
+      // Circles expose no creation timestamp on-chain; use the active cycle's
+      // deadline so live circles surface near the top of the feed.
+      date: c.nextDeadline && Number(c.nextDeadline) > 0 ? new Date(Number(c.nextDeadline) * 1000) : new Date(),
+      localId: `savings-${c.id}`,
+    }));
+
+    return [...activities, ...notificationItems, ...savingsItems].sort(
+      (a, b) => b.date.getTime() - a.date.getTime()
+    );
+  }, [activities, notifications, circles]);
+
   const filteredActivities = useMemo(() => {
-    return activities.filter((activity) => {
+    return allActivities.filter((activity) => {
       const typeMatches = filterType === 'all' || activity.type === filterType;
       const dateIso = activity.date.toISOString().split('T')[0];
       const fromMatches = !dateFrom || dateIso >= dateFrom;
@@ -120,12 +152,14 @@ export default function ActivityPage() {
         }
         if (activity.type === 'expense') return `${activity.expenses?.description || ''} ${activity.amount}`;
         if (activity.type === 'group_created') return `created ${activity.name || ''}`;
+        if (activity.type === 'notification') return `${activity.title || ''} ${activity.body || ''}`;
+        if (activity.type === 'savings') return `savings ${activity.name || ''}`;
         return `joined ${activity.groups?.name || ''}`;
       })();
       const searchMatches = !search || summary.toLowerCase().includes(search.toLowerCase());
       return typeMatches && fromMatches && toMatches && searchMatches;
     });
-  }, [activities, filterType, dateFrom, dateTo, search, address]);
+  }, [allActivities, filterType, dateFrom, dateTo, search, address]);
 
   const handleDeleteActivity = async (activity: ActivityItem) => {
     try {
@@ -229,6 +263,8 @@ export default function ActivityPage() {
             <option value="expense">Expenses</option>
             <option value="group_created">Groups created</option>
             <option value="group_joined">Groups joined</option>
+            <option value="savings">Savings circles</option>
+            <option value="notification">Notifications</option>
           </select>
           <input
             type="date"
@@ -253,12 +289,15 @@ export default function ActivityPage() {
             const isSettlement = activity.type === 'settlement';
             const isExpense = activity.type === 'expense';
             const isGroupCreated = activity.type === 'group_created';
+            const isNotification = activity.type === 'notification';
+            const isSavings = activity.type === 'savings';
             const isPayer = activity.debtor === address?.toLowerCase();
 
             let icon;
             let titleText;
             let subText;
             let borderColor;
+            let href: string | null = null;
 
             if (isSettlement) {
               icon = <CheckCircle2 className="w-5 h-5 text-brand" />;
@@ -277,6 +316,20 @@ export default function ActivityPage() {
               titleText = `Created group: ${activity.name}`;
               subText = `${activity.date.toLocaleDateString()}`;
               borderColor = "border-l-4 border-l-purple-500";
+            } else if (isSavings) {
+              const isGoal = activity.mode === 1;
+              const value = Number(formatEther(isGoal ? activity.totalSaved : activity.currentPot));
+              icon = <PiggyBank className="w-5 h-5 text-brand" />;
+              titleText = `Savings circle: ${activity.name}`;
+              subText = `${isGoal ? 'Goal-Based' : 'Rotating'} • ${activity.memberAddrs?.length || 0} members • ${formatAmount(value)}`;
+              borderColor = "border-l-4 border-l-brand";
+              href = `/app/save/${activity.id}`;
+            } else if (isNotification) {
+              icon = <Bell className="w-5 h-5 text-yellow-500" />;
+              titleText = activity.title || 'Notification';
+              subText = `${activity.date.toLocaleDateString()}${activity.body ? ` • ${activity.body}` : ''}`;
+              borderColor = activity.is_read ? "border-l-4 border-l-border" : "border-l-4 border-l-yellow-500";
+              href = activity.action_url || null;
             } else {
               icon = <UserPlus className="w-5 h-5 text-green-500" />;
               titleText = `Joined group: ${activity.groups?.name || 'Unknown'}`;
@@ -284,24 +337,25 @@ export default function ActivityPage() {
               borderColor = "border-l-4 border-l-green-500";
             }
 
-            return (
-              <Card key={activity.localId} className={`flex items-center justify-between p-4 ${borderColor}`}>
-                <div className="flex items-center gap-3 flex-1">
+            const cardBody = (
+              <>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center flex-shrink-0">
                     {icon}
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold">{titleText}</h4>
-                    <p className="text-[10px] text-text-muted">{subText}</p>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-semibold truncate">{titleText}</h4>
+                    <p className="text-[10px] text-text-muted truncate">{subText}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {activity.onchain_tx && (
                     <a
                       href={`https://celoscan.io/tx/${activity.onchain_tx}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="p-2 hover:bg-surface-2 rounded-lg transition-colors flex-shrink-0"
                     >
                       <ExternalLink className="w-4 h-4 text-text-muted" />
@@ -309,14 +363,24 @@ export default function ActivityPage() {
                   )}
                   {(isSettlement || isExpense) && (
                     <button
-                      onClick={() => handleDeleteActivity(activity)}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteActivity(activity); }}
                       className="p-2 hover:bg-red-500/10 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   )}
                 </div>
-              </Card>
+              </>
+            );
+
+            const cardClass = `flex items-center justify-between p-4 ${borderColor}`;
+
+            return href ? (
+              <Link key={activity.localId} href={href} className="block">
+                <Card className={`${cardClass} hover:border-brand-dark transition-all`}>{cardBody}</Card>
+              </Link>
+            ) : (
+              <Card key={activity.localId} className={cardClass}>{cardBody}</Card>
             );
           })
         ) : (

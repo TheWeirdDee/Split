@@ -1,8 +1,6 @@
 'use client';
 import { useWallet } from '@/context/WalletContext';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React from 'react';
 import Link from 'next/link';
 import { useGroups } from '@/hooks/useGroups';
 import { useUserBalance } from '@/hooks/useUserBalance';
@@ -19,22 +17,16 @@ import { useRecurringCheck } from '@/hooks/useRecurringCheck';
 /** Authenticated home dashboard (route `/app`): net balance, groups, check-in. */
 export default function AppHome() {
   const { isInitialLoading, hasNoCelo } = useWallet();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (isInitialLoading) {
     return <div style={{ minHeight: '100vh', background: '#0D0D0D' }} />;
   }
 
-   
   return <DashboardContent hasNoCelo={hasNoCelo} />;
 }
 
 function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, isMiniPay } = useWallet();
   const { groups, loading: groupsLoading } = useGroups();
   const { circles, loading: circlesLoading } = useSavingsCircle();
   const { totalOwed, totalOwing } = useUserBalance();
@@ -84,12 +76,13 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
       )}
 
 
-      {/* CELO native gas warning banner */}
-      {isConnected && hasNoCelo && (
+      {/* CELO native gas warning banner — only for regular wallets. MiniPay pays
+          gas in cUSD (feeCurrency) and holds no CELO, so the warning is wrong there. */}
+      {isConnected && hasNoCelo && !isMiniPay && (
         <div className="p-4 border border-yellow-500/20 rounded-2xl bg-yellow-500/5 text-xs text-yellow-500 flex items-start gap-2 animate-fade-in mt-4">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <div>
-            <strong>CELO Balance Warning:</strong> You have 0 CELO for gas. You need a tiny amount of native CELO to submit onchain expense groups or savings circle contributions. Get CELO inside MiniPay or fund this address.
+            <strong>CELO Balance Warning:</strong> You have 0 CELO for gas. You need a tiny amount of native CELO to submit onchain expense groups or savings circle contributions, or fund this address.
           </div>
         </div>
       )}
@@ -150,6 +143,11 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
           }}>
             Your Savings Circles
           </h2>
+          {circles.length > 3 && (
+            <Link href="/app/save" className="text-[11px] font-semibold text-[#00C896]">
+              View all ({circles.length})
+            </Link>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -158,7 +156,7 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
               <div key={i} className="h-20 bg-[#161616] rounded-2xl animate-pulse border border-[#2C2C2C]" />
             ))
           ) : circles.length > 0 ? (
-            circles.map((circle) => (
+            circles.slice(0, 3).map((circle) => (
               <Link key={circle.id} href={`/app/save/${circle.id}`} className="block">
                 <div className="p-4 bg-[#161616] border border-[#2C2C2C] rounded-2xl hover:border-brand-dark transition-all flex items-center justify-between">
                   <div className="flex items-center gap-3">

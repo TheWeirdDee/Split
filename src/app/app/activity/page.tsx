@@ -34,7 +34,7 @@ const downloadFile = (filename: string, content: string, type = 'text/csv;charse
 };
 
 export default function ActivityPage() {
-  const { address } = useWallet();
+  const { address, connect } = useWallet();
   const { notifications } = useNotifications();
   const { circles } = useSavingsCircle();
   const { formatAmount } = useCurrency();
@@ -44,6 +44,11 @@ export default function ActivityPage() {
   const [filterType, setFilterType] = useState<'all' | ActivityItem['type']>('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -226,6 +231,77 @@ export default function ActivityPage() {
     ];
     downloadFile(`split-activity-${new Date().toISOString().split('T')[0]}.csv`, toCsv(rows));
   };
+
+  if (!mounted) {
+    return <div style={{ minHeight: '60vh' }} />;
+  }
+
+  if (!address) {
+    return (
+      <div style={{
+        padding: '48px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '24px',
+        textAlign: 'center',
+        minHeight: '60vh',
+      }}>
+        <div style={{
+          width: '64px', height: '64px',
+          borderRadius: '50%',
+          background: 'rgba(0, 200, 150, 0.1)',
+          border: '1px solid rgba(0, 200, 150, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#00C896',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '320px' }}>
+          <h2 style={{
+            fontFamily: 'Clash Display, sans-serif',
+            fontSize: '22px', fontWeight: 'bold',
+            color: '#f5f0e8', margin: 0
+          }}>
+            Connect Your Wallet
+          </h2>
+          <p style={{
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px', color: '#8a8a8a',
+            lineHeight: 1.5, margin: 0
+          }}>
+            To view your activity feed, expense updates, settlements, and savings circle updates, please connect your Celo wallet.
+          </p>
+        </div>
+        <button
+          onClick={connect}
+          style={{
+            background: '#00C896',
+            border: 'none',
+            borderRadius: '24px',
+            padding: '12px 32px',
+            color: '#000',
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(0,200,150,0.3)',
+            transition: 'transform 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          Connect Wallet
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-6 pb-12 space-y-6">

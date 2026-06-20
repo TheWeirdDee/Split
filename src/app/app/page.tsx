@@ -141,9 +141,9 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
             color: '#4A4A4A', letterSpacing: '0.08em',
             textTransform: 'uppercase', margin: 0
           }}>
-            Your Savings Circles
+            {isConnected ? 'Your Savings Circles' : 'Savings Circles'}
           </h2>
-          {circles.length > 3 && (
+          {isConnected && circles.length > 3 && (
             <Link href="/app/save" className="text-[11px] font-semibold text-[#00C896]">
               View all ({circles.length})
             </Link>

@@ -109,32 +109,6 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
       {/* Right: Wallet badge + disconnect */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexShrink: 1 }}>
         {address && (
-          <select
-            value={selectedCurrency}
-            onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
-            aria-label="Display currency"
-            className="header-currency"
-            style={{
-              background: '#161616',
-              color: '#8A8A8A',
-              border: '1px solid #2C2C2C',
-              borderRadius: '10px',
-              padding: '0 6px',
-              fontSize: '11px',
-              fontFamily: 'DM Sans, sans-serif',
-              cursor: 'pointer',
-              outline: 'none',
-              flexShrink: 0,
-              height: '36px',
-            }}
-          >
-            {CURRENCIES.map(c => (
-              <option key={c.code} value={c.code}>{c.code}</option>
-            ))}
-          </select>
-        )}
-
-        {address && (
           <button
             onClick={() => router.push('/app/notifications')}
             aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}

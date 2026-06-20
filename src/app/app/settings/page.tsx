@@ -1,5 +1,7 @@
 'use client';
 import { useWallet } from '@/context/WalletContext';
+import { useCurrency } from '@/context/CurrencyContext';
+import { CURRENCIES, CurrencyCode } from '@/lib/fiat';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useState, useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
@@ -12,7 +14,8 @@ import { isAddress } from 'viem';
 
 /** Settings page (route `/app/settings`): profile, address book, disconnect. */
 export default function SettingsPage() {
-  const { address, cUSDBalance, disconnect } = useWallet();
+  const { address, cUSDBalance, disconnect, connect } = useWallet();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { profile, updateDisplayName } = useProfile();
   const { preferences, updatePreferences } = useNotificationPreferences();
   const { entries, upsertEntry, deleteEntry } = useAddressBook();
@@ -83,6 +86,77 @@ export default function SettingsPage() {
       setAddingContact(false);
     }
   };
+
+  if (!mounted) {
+    return <div style={{ minHeight: '60vh' }} />;
+  }
+
+  if (!address) {
+    return (
+      <div style={{
+        padding: '48px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '24px',
+        textAlign: 'center',
+        minHeight: '60vh',
+      }}>
+        <div style={{
+          width: '64px', height: '64px',
+          borderRadius: '50%',
+          background: 'rgba(0, 200, 150, 0.1)',
+          border: '1px solid rgba(0, 200, 150, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#00C896',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '320px' }}>
+          <h2 style={{
+            fontFamily: 'Clash Display, sans-serif',
+            fontSize: '22px', fontWeight: 'bold',
+            color: '#f5f0e8', margin: 0
+          }}>
+            Connect Your Wallet
+          </h2>
+          <p style={{
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px', color: '#8a8a8a',
+            lineHeight: 1.5, margin: 0
+          }}>
+            To view or edit settings, notifications preferences, and your address book, please connect your Celo wallet.
+          </p>
+        </div>
+        <button
+          onClick={connect}
+          style={{
+            background: '#00C896',
+            border: 'none',
+            borderRadius: '24px',
+            padding: '12px 32px',
+            color: '#000',
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(0,200,150,0.3)',
+            transition: 'transform 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          Connect Wallet
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '100px' }}>
@@ -169,6 +243,42 @@ export default function SettingsPage() {
               </span>
             </div>
           )}
+        </div>
+      </section>
+
+      <section>
+        <h2 style={{
+          fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '600',
+          color: '#4A4A4A', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 12px',
+        }}>
+          Display Currency
+        </h2>
+        <div style={{ background: '#161616', border: '1px solid #2C2C2C', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <p style={{ margin: 0, fontSize: '12px', color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif' }}>
+            Choose your preferred display currency for splitting and savings values:
+          </p>
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
+            aria-label="Display currency"
+            style={{
+              width: '100%',
+              background: '#0D0D0D',
+              color: '#F7F3EC',
+              border: '1px solid #2C2C2C',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              fontSize: '14px',
+              fontFamily: 'DM Sans, sans-serif',
+              cursor: 'pointer',
+              outline: 'none',
+              height: '44px',
+            }}
+          >
+            {CURRENCIES.map(c => (
+              <option key={c.code} value={c.code}>{c.name} ({c.code} {c.symbol})</option>
+            ))}
+          </select>
         </div>
       </section>
 

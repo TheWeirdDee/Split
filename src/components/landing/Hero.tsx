@@ -59,7 +59,7 @@ export const Hero = () => {
         <div className="flex flex-col items-start">
           <div className="hero-overline inline-flex items-center gap-2 bg-[rgba(0,200,150,0.06)] border border-[rgba(0,200,150,0.15)] px-4 py-1 rounded-full mb-6">
             <span className="dm-mono text-[9px] text-[#00c896] tracking-[0.3em] font-semibold uppercase">
-              ✦ Split · Settle · Repeat
+              ✦ Split · Save · Repeat
             </span>
           </div>
 

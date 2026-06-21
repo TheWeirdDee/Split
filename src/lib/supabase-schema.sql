@@ -239,8 +239,11 @@ CREATE POLICY "notifications_update" ON notifications FOR UPDATE USING (true);
 CREATE POLICY "notifications_delete" ON notifications FOR DELETE USING (true);
 -- (no INSERT policy => anon INSERT is denied; the service role bypasses RLS)
 
+-- Messages: server-only. All reads/writes go through /api/messages (service
+-- role, session-authenticated), so the anon key gets no access at all.
+-- Apply only after AUTH_SECRET + SUPABASE_SERVICE_ROLE_KEY are configured.
 DROP POLICY IF EXISTS "Allow all" ON messages;
-CREATE POLICY "Allow all" ON messages FOR ALL USING (true);
+-- (no anon policies => anon denied; the service role bypasses RLS)
 
 DROP POLICY IF EXISTS "Allow all" ON recurring_expense_rules;
 CREATE POLICY "Allow all" ON recurring_expense_rules FOR ALL USING (true);
@@ -260,8 +263,11 @@ CREATE POLICY "Allow all" ON settlement_batch_items FOR ALL USING (true);
 DROP POLICY IF EXISTS "Allow all" ON notification_preferences;
 CREATE POLICY "Allow all" ON notification_preferences FOR ALL USING (true);
 
+-- Address book: server-only, strictly owner-scoped via /api/address-book
+-- (service role, session-authenticated). Anon key gets no access.
+-- Apply only after AUTH_SECRET + SUPABASE_SERVICE_ROLE_KEY are configured.
 DROP POLICY IF EXISTS "Allow all" ON address_book;
-CREATE POLICY "Allow all" ON address_book FOR ALL USING (true);
+-- (no anon policies => anon denied; the service role bypasses RLS)
 
 -- Off-chain visibility for savings circles (the SavingsCircle contract has no
 -- privacy concept). is_public = true means the circle shows in the public

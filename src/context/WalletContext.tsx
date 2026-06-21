@@ -41,6 +41,8 @@ interface WalletContextType {
   /** Prompt a wallet signature and establish an httpOnly server session. */
   signIn: () => Promise<boolean>;
   signOut: () => Promise<void>;
+  /** Reuse an existing session cookie or sign in if none; returns success. */
+  ensureSession: () => Promise<boolean>;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -227,6 +229,25 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
   }, []);
 
+  // Ensure a session exists, reusing the 7-day cookie when present so we only
+  // prompt for a signature when there isn't already a valid session.
+  const ensureSession = useCallback(async (): Promise<boolean> => {
+    try {
+      const me = await fetch('/api/auth/me').then((r) => r.json());
+      if (me?.address) return true;
+    } catch {}
+    return signIn();
+  }, [signIn]);
+
+  const sessionTriedRef = useRef(false);
+  useEffect(() => {
+    if (address && walletClient && !sessionTriedRef.current) {
+      sessionTriedRef.current = true;
+      ensureSession();
+    }
+    if (!address) sessionTriedRef.current = false;
+  }, [address, walletClient, ensureSession]);
+
   const requireConnection = useCallback((onConfirm: () => void) => {
     if (address) {
       onConfirm();
@@ -313,7 +334,8 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       refreshBalance,
       requireConnection,
       signIn,
-      signOut
+      signOut,
+      ensureSession
     }}>
       {children}
       {isConnectModalOpen && (

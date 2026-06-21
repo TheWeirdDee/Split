@@ -121,7 +121,9 @@ export default function ExplorePage() {
         const template = COMMUNITY_GOAL_TEMPLATES[templateKey];
         return {
           ...c,
-          title: template.title,
+          // Show the real on-chain circle name; the template only provides
+          // fallback flavor text + styling.
+          title: (c.name && c.name.trim()) ? c.name : template.title,
           description: template.description,
           icon: template.icon,
           coverColor: template.coverColor
@@ -146,7 +148,7 @@ export default function ExplorePage() {
 
         return {
           ...c,
-          title: template.title,
+          title: (c.name && c.name.trim()) ? c.name : template.title,
           description: template.description,
           icon: template.icon,
           trustScore: calculatedTrust || template.trustScore

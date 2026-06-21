@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { buildGasParams } from '@/lib/gas';
 import { cn } from '@/lib/utils';
 import { decodeEventLog } from 'viem';
 import { celo } from 'viem/chains';
@@ -108,13 +109,8 @@ export default function CreateGroupPage() {
     setLoading(true);
 
     try {
-      const gasPrice = await publicClient.getGasPrice();
-      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
       // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
-      const gasParams = {
-        gasPrice,
-        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
-      };
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       setLoadingText('Creating Group...');
       const tx = await walletClient.writeContract({

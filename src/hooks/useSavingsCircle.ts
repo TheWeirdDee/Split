@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/contract';
+import { buildGasParams } from '@/lib/gas';
 import { celo } from 'viem/chains';
 import { erc20Abi } from 'viem';
 
@@ -203,14 +204,6 @@ export const useSavingsCircle = (circleId?: string) => {
     }
   }, [circleId, publicClient]);
 
-  // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
-  const buildGasParams = async (publicClient: any, isMiniPay: boolean) => {
-    const gasPrice = await publicClient.getGasPrice();
-    return {
-      gasPrice,
-      feeCurrency: isMiniPay ? (CUSD_ADDRESS as `0x${string}`) : undefined,
-    };
-  };
 
   // CREATE CIRCLE
   const createCircle = async (

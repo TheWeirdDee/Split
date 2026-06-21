@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { useGroup } from '@/hooks/useGroups';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { buildGasParams } from '@/lib/gas';
 import { cn, truncateAddress } from '@/lib/utils';
 import { parseEther } from 'viem';
 import { celo } from 'viem/chains';
@@ -365,11 +366,7 @@ export default function AddExpensePage() {
       const splitMembers = splitWith.map(addr => addr as `0x${string}`);
       const descriptionWithMeta = `${description} |cat:${category}${attachmentUrl ? ` |img:${attachmentUrl}` : ''}`;
 
-      const gasPrice = await publicClient.getGasPrice();
-      const gasParams = {
-        gasPrice,
-        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
-      };
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       setLoadingText('Logging Expense...');
       const tx = await walletClient.writeContract({

@@ -251,3 +251,18 @@ CREATE POLICY "Allow all" ON notification_preferences FOR ALL USING (true);
 
 DROP POLICY IF EXISTS "Allow all" ON address_book;
 CREATE POLICY "Allow all" ON address_book FOR ALL USING (true);
+
+-- Off-chain visibility for savings circles (the SavingsCircle contract has no
+-- privacy concept). is_public = true means the circle shows in the public
+-- Explore directory to everyone, including disconnected guests. Private circles
+-- are hidden from the directory and reached only via direct link / membership.
+CREATE TABLE IF NOT EXISTS circle_settings (
+  circle_id TEXT PRIMARY KEY,
+  is_public BOOLEAN DEFAULT TRUE,
+  creator TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE circle_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all" ON circle_settings;
+CREATE POLICY "Allow all" ON circle_settings FOR ALL USING (true);

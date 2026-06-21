@@ -7,8 +7,10 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
+import { supabase } from '@/lib/supabase';
+import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI } from '@/lib/contract';
 import { parseEther } from 'viem';
-import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Settings, Info } from 'lucide-react';
+import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Settings, Info, Globe, Lock } from 'lucide-react';
 
 /** Create savings-circle flow (route `/app/save/create`): mode and config. */
 export default function CreateCirclePage() {
@@ -27,6 +29,7 @@ export default function CreateCirclePage() {
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
+  const [isPublic, setIsPublic] = useState(true); // public = visible in Explore to everyone (incl. guests)
   const [mode, setMode] = useState<number>(0); // 0 = Rotating, 1 = Goal
   const [contribution, setContribution] = useState('');
   const [frequencyType, setFrequencyType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('weekly');
@@ -82,7 +85,7 @@ export default function CreateCirclePage() {
       const maxCyclesVal = BigInt(0);
       const reminderLeadSecs = BigInt(3600);
 
-      const result = await createCircle(
+      await createCircle(
         name,
         mode,
         parsedContribution,
@@ -95,6 +98,23 @@ export default function CreateCirclePage() {
         goalDeadlineTimestamp,
         reminderLeadSecs
       );
+
+      // Record the circle's public/private visibility off-chain (the contract
+      // has no privacy concept). The just-created circle is the latest id.
+      try {
+        const { publicClient } = walletRef.current;
+        const count = await publicClient.readContract({
+          address: SAVINGS_CIRCLE_ADDRESS,
+          abi: SAVINGS_CIRCLE_ABI,
+          functionName: 'circleCount',
+        });
+        await supabase.from('circle_settings').upsert(
+          { circle_id: count.toString(), is_public: isPublic, creator: address.toLowerCase() },
+          { onConflict: 'circle_id' }
+        );
+      } catch (metaErr) {
+        console.error('Failed to save circle visibility:', metaErr);
+      }
 
       // On successful creation, go back to the save dashboard
       router.push('/app/save');
@@ -169,6 +189,36 @@ export default function CreateCirclePage() {
                   <div className="text-xs text-text-secondary">
                     Everyone contributes toward a target pot. Creator distributes once goal is reached.
                   </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Visibility</label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(true)}
+                  className={`p-4 rounded-3xl border-2 text-left space-y-1.5 transition-all ${
+                    isPublic ? 'bg-brand/5 border-brand shadow-lg shadow-brand/5' : 'bg-surface border-border hover:border-text-muted'
+                  }`}
+                >
+                  <div className={`flex items-center gap-2 font-bold ${isPublic ? 'text-brand' : 'text-text-primary'}`}>
+                    <Globe className="w-4 h-4" /> Public
+                  </div>
+                  <div className="text-xs text-text-secondary">Listed in Explore. Anyone — even without a wallet — can discover and join it.</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(false)}
+                  className={`p-4 rounded-3xl border-2 text-left space-y-1.5 transition-all ${
+                    !isPublic ? 'bg-brand/5 border-brand shadow-lg shadow-brand/5' : 'bg-surface border-border hover:border-text-muted'
+                  }`}
+                >
+                  <div className={`flex items-center gap-2 font-bold ${!isPublic ? 'text-brand' : 'text-text-primary'}`}>
+                    <Lock className="w-4 h-4" /> Private
+                  </div>
+                  <div className="text-xs text-text-secondary">Hidden from Explore. Only reachable by direct invite link.</div>
                 </button>
               </div>
             </div>

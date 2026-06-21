@@ -228,6 +228,13 @@ export const useSavingsCircle = (circleId?: string) => {
   ) => {
     const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient) throw new Error('Wallet not connected');
+    // Both contract addresses come from NEXT_PUBLIC_* env. If the savings address
+    // is missing in this build (e.g. the env var isn't set in the Vercel/prod
+    // environment) the write would silently target `undefined` and fail — which
+    // looks like "groups work, savings doesn't". Fail with a clear message instead.
+    if (!SAVINGS_CIRCLE_ADDRESS) {
+      throw new Error('Savings circle contract address is not configured (NEXT_PUBLIC_SAVINGS_CIRCLE_ADDRESS missing for this deployment).');
+    }
     setTxLoading(true);
     setTxError(null);
 

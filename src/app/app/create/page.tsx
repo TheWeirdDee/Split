@@ -168,6 +168,15 @@ export default function CreateGroupPage() {
 
       if (groupError) throw groupError;
 
+      // Register the creator as a member so the group's member list (used by the
+      // add-expense / split UI) isn't empty. Ignore conflicts on re-runs.
+      const { error: memberError } = await supabase.from('group_members').insert({
+        group_id: onchainGroupId,
+        wallet_address: walletAddr.toLowerCase(),
+        display_name: null,
+      });
+      if (memberError) console.error('Failed to add creator as member:', memberError);
+
       router.push(`/app/group/${onchainGroupId}`);
     } catch (err) {
       console.error('Group creation failed:', err);

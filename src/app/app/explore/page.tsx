@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -76,6 +77,19 @@ export default function ExplorePage() {
   const { circles, loading } = useSavingsCircle();
   const { formatAmount } = useCurrency();
   const [filterMode, setFilterMode] = useState<'all' | 'goals' | 'rotating' | 'calculator'>('all');
+  const [privateIds, setPrivateIds] = useState<Set<string>>(new Set());
+
+  // Private circles are hidden from disconnected guests in the public directory.
+  // Connected users still see everything they're allowed to onchain.
+  useEffect(() => {
+    if (isConnected) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase.from('circle_settings').select('circle_id').eq('is_public', false);
+      if (active && data) setPrivateIds(new Set(data.map((r: any) => String(r.circle_id))));
+    })();
+    return () => { active = false; };
+  }, [isConnected]);
 
   // --- Calculator State ---
   const [calcTotal, setCalcTotal] = useState('');
@@ -91,7 +105,12 @@ export default function ExplorePage() {
   // Many on-chain circles fall back to the same overlay template, which used to
   // render dozens of identical-looking cards — so we keep only the first circle
   // per resolved title (one of each).
-  const activeCircles = useMemo(() => circles.filter((c: any) => c.status === 0), [circles]);
+  const activeCircles = useMemo(() => {
+    const base = circles.filter((c: any) => c.status === 0);
+    // Guests don't see circles explicitly marked private.
+    if (isConnected) return base;
+    return base.filter((c: any) => !privateIds.has(String(c.id)));
+  }, [circles, isConnected, privateIds]);
 
   const communityGoals = useMemo(() => {
     const seen = new Set<string>();

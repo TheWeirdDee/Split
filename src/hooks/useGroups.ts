@@ -122,12 +122,20 @@ export const useGroup = (groupId: string) => {
         setGroup(groupData);
         
         if (groupData) {
-          const { data: memberData, error: memberError } = await supabase
+          const { data: memberData } = await supabase
             .from('group_members')
             .select('*')
             .eq('group_id', groupId);
-          
-          setMembers(memberData || []);
+
+          // Onchain groups historically didn't write the creator into
+          // group_members, leaving the member list empty (so expenses couldn't
+          // be split). Self-heal by ensuring the creator is always present.
+          let memberList = memberData || [];
+          const creator = groupData.created_by?.toLowerCase();
+          if (creator && !memberList.some((m: any) => m.wallet_address?.toLowerCase() === creator)) {
+            memberList = [{ group_id: groupId, wallet_address: creator, display_name: null }, ...memberList];
+          }
+          setMembers(memberList);
         } else {
           setMembers([]);
         }

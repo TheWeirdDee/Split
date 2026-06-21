@@ -225,8 +225,19 @@ CREATE POLICY "Allow all" ON expense_splits FOR ALL USING (true);
 DROP POLICY IF EXISTS "Allow all" ON settlements;
 CREATE POLICY "Allow all" ON settlements FOR ALL USING (true);
 
+-- Notifications: anon may read / mark-read / delete, but NOT insert. Inserts go
+-- through the /api/notifications server route (service-role key) so the public
+-- anon key can no longer forge notifications for arbitrary users.
+-- NOTE: apply this only after SUPABASE_SERVICE_ROLE_KEY is set in the deployment,
+-- otherwise notification creation will start failing.
 DROP POLICY IF EXISTS "Allow all" ON notifications;
-CREATE POLICY "Allow all" ON notifications FOR ALL USING (true);
+DROP POLICY IF EXISTS "notifications_select" ON notifications;
+DROP POLICY IF EXISTS "notifications_update" ON notifications;
+DROP POLICY IF EXISTS "notifications_delete" ON notifications;
+CREATE POLICY "notifications_select" ON notifications FOR SELECT USING (true);
+CREATE POLICY "notifications_update" ON notifications FOR UPDATE USING (true);
+CREATE POLICY "notifications_delete" ON notifications FOR DELETE USING (true);
+-- (no INSERT policy => anon INSERT is denied; the service role bypasses RLS)
 
 DROP POLICY IF EXISTS "Allow all" ON messages;
 CREATE POLICY "Allow all" ON messages FOR ALL USING (true);

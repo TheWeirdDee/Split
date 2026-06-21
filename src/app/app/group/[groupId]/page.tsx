@@ -25,6 +25,7 @@ import { createNotificationSafe } from '@/lib/notifications';
 import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSettle } from '@/hooks/useSettle';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { buildGasParams } from '@/lib/gas';
 import { BalancesTab } from './BalancesTab';
 import { ExpensesTab } from './ExpensesTab';
 import { ChatTab } from './ChatTab';
@@ -58,9 +59,9 @@ export default function GroupDetailPage() {
   }, [wallet]);
 
   const { showToast } = useToast();
-  const { group, members, loading: groupLoading } = useGroup(groupId as string);
-  const { balances } = useBalances(groupId as string);
-  const { expenses, splits, loading: expensesLoading } = useExpenses(groupId as string);
+  const { group, members, loading: groupLoading, refreshGroup } = useGroup(groupId as string);
+  const { balances, refreshBalances } = useBalances(groupId as string);
+  const { expenses, splits, loading: expensesLoading, refreshExpenses } = useExpenses(groupId as string);
   const { messages, loading: messagesLoading, sendMessage } = useGroupChat(groupId as string);
   const { getNickname } = useAddressBook();
   const { settle } = useSettle();
@@ -74,6 +75,13 @@ export default function GroupDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [settleAllLoading, setSettleAllLoading] = useState(false);
+  // Expense edit/reverse modals (replace window.prompt)
+  const [reverseTarget, setReverseTarget] = useState<any | null>(null);
+  const [reverseReason, setReverseReason] = useState('');
+  const [editTarget, setEditTarget] = useState<any | null>(null);
+  const [editDescription, setEditDescription] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('all');
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -201,11 +209,7 @@ export default function GroupDetailPage() {
     if (!walletAddr) return;
     setSyncingGroup(true);
     try {
-      const gasPrice = await publicClient.getGasPrice();
-      const gasParams = {
-        gasPrice,
-        feeCurrency: isMiniPay ? ('0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`) : undefined,
-      };
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       // 1. Create group onchain
       const tx = await walletClient.writeContract({
@@ -306,7 +310,7 @@ export default function GroupDetailPage() {
           localStorage.setItem('split_local_groups', JSON.stringify(localGroups));
           showToast('Member added!', 'success');
           setNewMemberName('');
-          window.location.reload();
+          refreshGroup();
         }
       } catch (err) {
         console.error(err);
@@ -362,7 +366,8 @@ export default function GroupDetailPage() {
       showToast('Member added!', 'success');
       setManualAddress('');
       setNewMemberName('');
-      window.location.reload();
+      setIsAdding(false);
+      refreshGroup();
     } catch {
       showToast('Failed to add member. They may already be in the group.', 'error');
     } finally {
@@ -521,7 +526,7 @@ export default function GroupDetailPage() {
       if (failures === 0) {
         showToast('All debts settled successfully.', 'success');
       }
-      window.location.reload();
+      await Promise.all([refreshBalances(), refreshExpenses()]);
     } catch (error) {
       console.error(error);
       showToast('Failed to run settle all.', 'error');
@@ -530,11 +535,28 @@ export default function GroupDetailPage() {
     }
   };
 
-  const handleReverseExpense = async (expense: any) => {
+  // Open the reverse/edit modals (the actual writes happen in submit* below).
+  const handleReverseExpense = (expense: any) => {
+    setReverseReason('');
+    setReverseTarget(expense);
+  };
+
+  const handleEditExpense = (expense: any) => {
+    setEditDescription(expense.description || '');
+    setEditAmount(String(expense.total_amount ?? ''));
+    setEditTarget(expense);
+  };
+
+  const submitReverse = async () => {
     const { address } = walletRef.current;
-    if (!address) return;
-    const reason = window.prompt('Reason for reversing this expense?');
-    if (!reason) return;
+    if (!address || !reverseTarget) return;
+    const expense = reverseTarget;
+    const reason = reverseReason.trim();
+    if (!reason) {
+      showToast('Please enter a reason.', 'error');
+      return;
+    }
+    setActionLoading(true);
     try {
       const beforeSnapshot = {
         description: expense.description,
@@ -542,10 +564,7 @@ export default function GroupDetailPage() {
         category: expense.category,
         status: expense.status || 'active',
       };
-      const afterSnapshot = {
-        ...beforeSnapshot,
-        status: 'reversed',
-      };
+      const afterSnapshot = { ...beforeSnapshot, status: 'reversed' };
 
       const { error: updateError } = await supabase
         .from('expenses')
@@ -569,26 +588,27 @@ export default function GroupDetailPage() {
       });
 
       showToast('Expense reversed.', 'success');
-      window.location.reload();
+      setReverseTarget(null);
+      await Promise.all([refreshExpenses(), refreshBalances()]);
     } catch (error) {
       console.error(error);
       showToast('Failed to reverse expense.', 'error');
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleEditExpense = async (expense: any) => {
+  const submitEdit = async () => {
     const { address } = walletRef.current;
-    if (!address) return;
-    const nextDescription = window.prompt('Update description', expense.description || '');
-    if (nextDescription === null) return;
-    const nextAmountRaw = window.prompt('Update amount (cUSD)', String(expense.total_amount));
-    if (nextAmountRaw === null) return;
-    const nextAmount = Number(nextAmountRaw);
-    if (!nextDescription.trim() || !Number.isFinite(nextAmount) || nextAmount <= 0) {
-      showToast('Invalid description or amount.', 'error');
+    if (!address || !editTarget) return;
+    const expense = editTarget;
+    const nextDescription = editDescription.trim();
+    const nextAmount = Number(editAmount);
+    if (!nextDescription || !Number.isFinite(nextAmount) || nextAmount <= 0) {
+      showToast('Enter a valid description and amount.', 'error');
       return;
     }
-
+    setActionLoading(true);
     try {
       const relatedSplits = splits.filter((split) => split.expense_id === expense.id);
       const beforeSnapshot = {
@@ -597,29 +617,24 @@ export default function GroupDetailPage() {
         category: expense.category,
       };
       const afterSnapshot = {
-        description: nextDescription.trim(),
+        description: nextDescription,
         total_amount: nextAmount,
         category: expense.category,
       };
 
       const { error: updateExpenseError } = await supabase
         .from('expenses')
-        .update({
-          description: nextDescription.trim(),
-          total_amount: nextAmount,
-        })
+        .update({ description: nextDescription, total_amount: nextAmount })
         .eq('id', expense.id);
       if (updateExpenseError) throw updateExpenseError;
 
       if (relatedSplits.length > 0) {
         const share = nextAmount / relatedSplits.length;
-        const updates = relatedSplits.map((split) =>
-          supabase
-            .from('expense_splits')
-            .update({ amount: share })
-            .eq('id', split.id)
+        await Promise.all(
+          relatedSplits.map((split) =>
+            supabase.from('expense_splits').update({ amount: share }).eq('id', split.id)
+          )
         );
-        await Promise.all(updates);
       }
 
       await supabase.from('expense_revisions').insert({
@@ -632,10 +647,13 @@ export default function GroupDetailPage() {
       });
 
       showToast('Expense updated.', 'success');
-      window.location.reload();
+      setEditTarget(null);
+      await Promise.all([refreshExpenses(), refreshBalances()]);
     } catch (error) {
       console.error(error);
       showToast('Failed to edit expense.', 'error');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -677,6 +695,57 @@ export default function GroupDetailPage() {
         onConfirm={() => groupId && (groupId as string).startsWith('local-') ? handleDeleteGroup() : requireConnection(handleDeleteGroup)}
         onCancel={() => setShowDeleteConfirm(false)}
       />
+
+      {/* Edit expense modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm" onClick={() => !actionLoading && setEditTarget(null)}>
+          <div className="w-full max-w-[360px] bg-[#161616] border border-[#2C2C2C] rounded-3xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="clash-display text-lg font-bold text-[#F7F3EC]">Edit expense</h3>
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">Description</label>
+              <input
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="w-full h-11 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl px-3 text-sm text-[#F7F3EC] outline-none focus:border-[#00C896]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">Amount (cUSD)</label>
+              <input
+                type="number"
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+                className="w-full h-11 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl px-3 text-sm dm-mono text-[#00C896] outline-none focus:border-[#00C896]"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditTarget(null)} disabled={actionLoading}>Cancel</Button>
+              <Button size="sm" className="flex-1" onClick={() => requireConnection(submitEdit)} loading={actionLoading}>Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reverse expense modal */}
+      {reverseTarget && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm" onClick={() => !actionLoading && setReverseTarget(null)}>
+          <div className="w-full max-w-[360px] bg-[#161616] border border-[#2C2C2C] rounded-3xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="clash-display text-lg font-bold text-[#F7F3EC]">Reverse expense</h3>
+            <p className="text-xs text-[#8A8A8A]">This marks &quot;{reverseTarget.description}&quot; as reversed. Add a reason for the audit log.</p>
+            <textarea
+              value={reverseReason}
+              onChange={(e) => setReverseReason(e.target.value)}
+              rows={3}
+              placeholder="Reason for reversing"
+              className="w-full bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl p-3 text-sm text-[#F7F3EC] outline-none resize-none focus:border-[#00C896]"
+            />
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" className="flex-1" onClick={() => setReverseTarget(null)} disabled={actionLoading}>Cancel</Button>
+              <Button size="sm" variant="danger" className="flex-1" onClick={() => requireConnection(submitReverse)} loading={actionLoading}>Reverse</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isReadOnly && (
         <div style={{

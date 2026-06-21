@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { supabase } from '@/lib/supabase';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { buildGasParams } from '@/lib/gas';
 import { parseEther, erc20Abi } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
@@ -30,11 +31,7 @@ export const useSettle = () => {
     setLoading(true);
     try {
       const amountRaw = parseEther(amount.toFixed(18));
-      // gasPrice always set (CELO). feeCurrency only for MiniPay, which holds no CELO.
-      const gasParams = {
-        gasPrice: await publicClient.getGasPrice(),
-        feeCurrency: isMiniPay ? (CUSD_ADDRESS as `0x${string}`) : undefined,
-      };
+      const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
       // We await the approve receipt before settling, so the wallet sequences both correctly.

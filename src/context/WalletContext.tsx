@@ -38,6 +38,9 @@ interface WalletContextType {
   disconnect: () => void;
   refreshBalance: () => Promise<void>;
   requireConnection: (onConfirm: () => void) => void;
+  /** Prompt a wallet signature and establish an httpOnly server session. */
+  signIn: () => Promise<boolean>;
+  signOut: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -191,12 +194,37 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     setCUSDBalance('0');
     setWalletClient(null);
     setIsMiniPay(false);
-    try { 
+    try { fetch('/api/auth/logout', { method: 'POST' }); } catch {}
+    try {
       localStorage.clear(); 
       localStorage.setItem('manualDisconnect', 'true');
     } catch {}
     try { sessionStorage.clear(); } catch {}
     window.location.replace('/app');
+  }, []);
+
+  // Establish an authenticated server session by signing a fresh message.
+  // Called on-demand before protected reads/writes (not auto-run, so MiniPay's
+  // silent reconnect on each load doesn't spam signature prompts).
+  const signIn = useCallback(async (): Promise<boolean> => {
+    if (!address || !walletClient) return false;
+    try {
+      const message = `Sign in to Split\n\nAddress: ${address}\nIssued At: ${new Date().toISOString()}\nNonce: ${Math.random().toString(36).slice(2)}`;
+      const signature = await walletClient.signMessage({ account: address as `0x${string}`, message });
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, message, signature }),
+      });
+      return res.ok;
+    } catch (e) {
+      console.error('Sign-in failed:', e);
+      return false;
+    }
+  }, [address, walletClient]);
+
+  const signOut = useCallback(async () => {
+    try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
   }, []);
 
   const requireConnection = useCallback((onConfirm: () => void) => {
@@ -283,7 +311,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       connect,
       disconnect,
       refreshBalance,
-      requireConnection
+      requireConnection,
+      signIn,
+      signOut
     }}>
       {children}
       {isConnectModalOpen && (

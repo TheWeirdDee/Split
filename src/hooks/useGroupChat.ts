@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useWallet } from '@/context/WalletContext';
 
 export interface GroupMessage {
   id: string;
@@ -17,49 +17,43 @@ export interface GroupMessage {
  * @param groupId the group whose message thread to load.
  */
 export const useGroupChat = (groupId: string) => {
+  const { address, ensureSession } = useWallet();
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMessages = useCallback(async () => {
     if (!groupId) return;
     setLoading(true);
-
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('group_id', groupId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
+    try {
+      const qs = address ? `&address=${address.toLowerCase()}` : '';
+      const res = await fetch(`/api/messages?groupId=${encodeURIComponent(groupId)}${qs}`);
+      const json = await res.json();
+      setMessages(json.messages || []);
+    } catch (error) {
       console.error('Error fetching group messages:', error);
       setMessages([]);
-    } else {
-      setMessages(data || []);
     }
     setLoading(false);
-  }, [groupId]);
+  }, [groupId, address]);
 
   useEffect(() => {
     fetchMessages();
   }, [fetchMessages]);
 
   const sendMessage = async (groupId: string, sender: string, text: string | null, attachmentUrl: string | null) => {
-    const { data, error } = await supabase.from('messages').insert([
-      {
-        group_id: groupId,
-        sender: sender.toLowerCase(),
-        text,
-        attachment_url: attachmentUrl,
-      },
-    ]).select();
-
-    if (error) {
-      console.error('Error sending message:', error);
-      throw error;
+    await ensureSession();
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ groupId, sender: sender.toLowerCase(), text, attachmentUrl }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      console.error('Error sending message:', json);
+      throw new Error('Failed to send message');
     }
-    if (data && data[0]) {
-      setMessages((prev) => [...prev, data[0]]);
-    }
+    const json = await res.json();
+    if (json.message) setMessages((prev) => [...prev, json.message]);
   };
 
   return { messages, loading, fetchMessages, sendMessage };

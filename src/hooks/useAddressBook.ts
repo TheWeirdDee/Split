@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 
 export interface AddressBookEntry {
@@ -20,7 +19,7 @@ export interface AddressBookEntry {
  *          and resolve a wallet address to its saved nickname.
  */
 export const useAddressBook = () => {
-  const { address } = useWallet();
+  const { address, ensureSession } = useWallet();
   const [entries, setEntries] = useState<AddressBookEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,17 +31,13 @@ export const useAddressBook = () => {
     }
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('address_book')
-      .select('*')
-      .eq('owner_address', address.toLowerCase())
-      .order('updated_at', { ascending: false });
-
-    if (error) {
+    try {
+      const res = await fetch(`/api/address-book?address=${address.toLowerCase()}`);
+      const json = await res.json();
+      setEntries(json.entries || []);
+    } catch (error) {
       console.error('Error fetching address book:', error);
       setEntries([]);
-    } else {
-      setEntries(data || []);
     }
     setLoading(false);
   }, [address]);
@@ -53,24 +48,21 @@ export const useAddressBook = () => {
 
   const upsertEntry = async (contactAddress: string, nickname: string, notes: string | null = null) => {
     if (!address) return;
-    const normalizedContact = contactAddress.toLowerCase();
-    const { error } = await supabase.from('address_book').upsert(
-      {
-        owner_address: address.toLowerCase(),
-        contact_address: normalizedContact,
-        nickname: nickname.trim(),
-        notes,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'owner_address,contact_address' }
-    );
-    if (error) throw error;
+    await ensureSession();
+    const res = await fetch('/api/address-book', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: address.toLowerCase(), contactAddress, nickname, notes }),
+    });
+    if (!res.ok) throw new Error('Failed to save contact');
     await fetchEntries();
   };
 
   const deleteEntry = async (id: string) => {
-    const { error } = await supabase.from('address_book').delete().eq('id', id);
-    if (error) throw error;
+    if (!address) return;
+    await ensureSession();
+    const res = await fetch(`/api/address-book?id=${id}&address=${address.toLowerCase()}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete contact');
     await fetchEntries();
   };
 

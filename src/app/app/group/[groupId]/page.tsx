@@ -339,15 +339,12 @@ export default function GroupDetailPage() {
       if (error) throw error;
 
       if (address && newMemberName) {
-        await supabase.from('address_book').upsert(
-          {
-            owner_address: address.toLowerCase(),
-            contact_address: normalized,
-            nickname: newMemberName,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'owner_address,contact_address' }
-        );
+        await wallet.ensureSession();
+        await fetch('/api/address-book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: address.toLowerCase(), contactAddress: normalized, nickname: newMemberName }),
+        }).catch((error) => console.error('Failed to save contact:', error));
       }
 
       if (group?.created_by && group.created_by.toLowerCase() !== address?.toLowerCase()) {

@@ -1,5 +1,6 @@
 'use client';
 import { useWallet } from '@/context/WalletContext';
+import { useMiniPay } from '@/hooks/useMiniPay';
 import React from 'react';
 import Link from 'next/link';
 import { useGroups } from '@/hooks/useGroups';
@@ -26,7 +27,8 @@ export default function AppHome() {
 }
 
 function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
-  const { isConnected, connect, isMiniPay } = useWallet();
+  const { isConnected, connect } = useWallet();
+  const isMiniPay = useMiniPay();
   const { groups, loading: groupsLoading } = useGroups();
   const { circles, loading: circlesLoading } = useSavingsCircle();
   const { totalOwed, totalOwing } = useUserBalance();

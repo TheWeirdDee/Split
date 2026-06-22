@@ -11,6 +11,7 @@ import {
   parseAbi
 } from 'viem';
 import { celo } from 'viem/chains';
+import { detectMiniPay } from '@/lib/minipay';
 
 declare global {
   interface Window {
@@ -135,7 +136,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // Detect MiniPay FIRST before any other wallet checks
-    const isMP = !!(provider as any).isMiniPay;
+    const isMP = detectMiniPay(provider);
 
     try {
       if (!isMP) {
@@ -284,7 +285,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkConnection = async () => {
       if (typeof window !== 'undefined' && window.ethereum) {
-        const isMP = !!(window.ethereum as any).isMiniPay;
+        const isMP = detectMiniPay(window.ethereum);
         setIsMiniPay(isMP);
 
         const wasManualDisconnect = localStorage.getItem('manualDisconnect') === 'true';

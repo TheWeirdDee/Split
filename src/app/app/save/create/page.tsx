@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/common/Toast';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI } from '@/lib/contract';
 import { parseEther } from 'viem';
 import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Settings, Info, Globe, Lock } from 'lucide-react';
@@ -18,6 +19,7 @@ export default function CreateCirclePage() {
 
   const wallet = useWallet();
   const { requireConnection } = wallet;
+  const { showToast } = useToast();
   const walletRef = React.useRef(wallet);
   
   React.useEffect(() => {
@@ -49,11 +51,11 @@ export default function CreateCirclePage() {
 
     try {
       if (Number(contribution) <= 0) {
-        alert('Contribution amount must be greater than 0.');
+        showToast('Contribution amount must be greater than 0.', 'error');
         return;
       }
       if (mode === 1 && Number(goalAmount) <= 0) {
-        alert('Goal amount must be greater than 0.');
+        showToast('Goal amount must be greater than 0.', 'error');
         return;
       }
       const parsedContribution = parseEther(contribution);
@@ -121,7 +123,7 @@ export default function CreateCirclePage() {
     } catch (err: any) {
       console.error('Failed to deploy savings circle onchain:', err);
       const reason = err?.shortMessage || err?.message || 'Unknown error';
-      alert(`Transaction failed: ${reason}`);
+      showToast(`Transaction failed: ${reason}`, 'error');
     }
   };
 

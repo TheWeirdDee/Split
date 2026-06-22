@@ -62,18 +62,24 @@ export const Navbar = () => {
       // Navbar scroll behavior
       ScrollTrigger.create({
         start: "top -60px",
-        onEnter: () => gsap.to(navRef.current, { 
-          backgroundColor: "rgba(10,10,10,0.85)", 
-          backdropFilter: "blur(20px) saturate(180%)",
-          borderBottom: "1px solid #242424",
-          duration: 0.3 
-        }),
-        onLeaveBack: () => gsap.to(navRef.current, { 
-          backgroundColor: "transparent",
-          backdropFilter: "blur(0px)",
-          borderBottom: "1px solid transparent",
-          duration: 0.3 
-        }),
+        onEnter: () => {
+          if (!navRef.current) return; // ref can be null before mount / after unmount
+          gsap.to(navRef.current, {
+            backgroundColor: "rgba(10,10,10,0.85)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            borderBottom: "1px solid #242424",
+            duration: 0.3
+          });
+        },
+        onLeaveBack: () => {
+          if (!navRef.current) return;
+          gsap.to(navRef.current, {
+            backgroundColor: "transparent",
+            backdropFilter: "blur(0px)",
+            borderBottom: "1px solid transparent",
+            duration: 0.3
+          });
+        },
       });
     });
 

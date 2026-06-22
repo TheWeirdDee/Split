@@ -1,11 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { 
-  createPublicClient, 
-  createWalletClient, 
-  custom, 
-  http, 
+import {
+  createPublicClient,
+  http,
   fallback,
   formatEther,
   parseAbi

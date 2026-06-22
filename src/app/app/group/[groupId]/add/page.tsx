@@ -18,7 +18,7 @@ import { parseEther } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 import { ReceiptScanner } from '@/components/groups/ReceiptScanner';
-import { Camera, Loader2, ScanLine } from 'lucide-react';
+import { Camera, ScanLine } from 'lucide-react';
 
 function parseCSV(text: string) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -258,7 +258,7 @@ export default function AddExpensePage() {
           // Attempt to ensure bucket exists
           try {
             await supabase.storage.createBucket('receipts', { public: true });
-          } catch (_) {}
+          } catch {}
 
           const fileExt = attachmentFile.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
@@ -290,7 +290,7 @@ export default function AddExpensePage() {
             } else {
               attachmentUrl = URL.createObjectURL(attachmentFile);
             }
-          } catch (_) {
+          } catch {
             attachmentUrl = '';
           }
         }

@@ -206,7 +206,7 @@ export default function GroupDetailPage() {
 
   const handleSyncLocalGroupToCloud = async () => {
     const { address: walletAddr, walletClient, publicClient, isMiniPay } = walletRef.current;
-    if (!walletAddr) return;
+    if (!walletAddr || !group) return;
     setSyncingGroup(true);
     try {
       const gasParams = await buildGasParams(publicClient, isMiniPay);
@@ -660,7 +660,7 @@ export default function GroupDetailPage() {
       ...filteredExpenses.map((expense) => [
         new Date(expense.created_at).toISOString(),
         expense.description,
-        expense.category,
+        expense.category || 'other',
         Number(expense.total_amount).toFixed(2),
         getMemberDisplayName(expense.paid_by),
         expense.status || 'active',

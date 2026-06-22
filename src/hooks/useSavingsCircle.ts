@@ -3,6 +3,7 @@ import { useWallet } from '@/context/WalletContext';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
 import { getCached, setCached, clearCached } from '@/lib/onchainCache';
+import type { SavingsCircle, SavingsMember } from '@/types/models';
 import { celo } from 'viem/chains';
 import { erc20Abi } from 'viem';
 
@@ -23,9 +24,9 @@ export const useSavingsCircle = (circleId?: string) => {
   }, [wallet]);
 
   const { address, walletClient, publicClient } = wallet;
-  const [circles, setCircles] = useState<any[]>([]);
-  const [circle, setCircle] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
+  const [circles, setCircles] = useState<SavingsCircle[]>([]);
+  const [circle, setCircle] = useState<SavingsCircle | null>(null);
+  const [members, setMembers] = useState<SavingsMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [txLoading, setTxLoading] = useState(false);
   const [txError, setTxError] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export const useSavingsCircle = (circleId?: string) => {
     }
 
     const cacheKey = `circles:${address?.toLowerCase() || 'all'}`;
-    const { data: cached, fresh } = getCached<any[]>(cacheKey, 30_000);
+    const { data: cached, fresh } = getCached<SavingsCircle[]>(cacheKey, 30_000);
     if (cached) {
       setCircles(cached);
       setLoading(false);
@@ -110,11 +111,13 @@ export const useSavingsCircle = (circleId?: string) => {
         });
       });
 
-      const allCircles = (await Promise.all(circlePromises)).filter(Boolean);
+      const allCircles = (await Promise.all(circlePromises)).filter(
+        (c): c is SavingsCircle => c !== null
+      );
 
       // 3. Filter circles by user membership if wallet is connected
       const result = address
-        ? allCircles.filter((c: any) =>
+        ? allCircles.filter((c) =>
             c.memberAddrs.some((m: string) => m.toLowerCase() === address.toLowerCase())
           )
         : allCircles;
@@ -127,13 +130,24 @@ export const useSavingsCircle = (circleId?: string) => {
     }
   }, [address, publicClient]);
 
-  // Helper to fetch a single circle details + member details
-  const fetchCircleDetails = useCallback(async () => {
+  // Helper to fetch a single circle's details + member details (cached; `force`
+  // bypasses the cache after a mutation / manual refresh).
+  const fetchCircleDetails = useCallback(async (opts?: { force?: boolean }) => {
     if (!publicClient || !circleId || !SAVINGS_CIRCLE_ADDRESS) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+
+    const cacheKey = `circle:${circleId}`;
+    const { data: cachedDetail, fresh } = getCached<{ circle: SavingsCircle; members: SavingsMember[] }>(cacheKey, 20_000);
+    if (cachedDetail) {
+      setCircle(cachedDetail.circle);
+      setMembers(cachedDetail.members);
+      setLoading(false);
+      if (fresh && !opts?.force) return;
+    } else {
+      setLoading(true);
+    }
 
     try {
       const id = BigInt(circleId);
@@ -207,6 +221,7 @@ export const useSavingsCircle = (circleId?: string) => {
       });
 
       const memberDetails = await Promise.all(memberPromises);
+      setCached(cacheKey, { circle: circleData, members: memberDetails });
       setMembers(memberDetails);
     } catch (err) {
       console.error(`Failed to fetch circle ${circleId} details:`, err);
@@ -291,7 +306,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to join circle:', err);
@@ -338,7 +354,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: contributeTx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx: contributeTx, receipt };
     } catch (err: any) {
       console.error('Failed to contribute to circle:', err);
@@ -371,7 +388,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to distribute pot:', err);
@@ -404,7 +422,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to distribute goal pot:', err);
@@ -437,7 +456,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to mark member missed:', err);
@@ -470,7 +490,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to exit circle:', err);
@@ -503,7 +524,8 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-      await fetchCircleDetails();
+      clearCached('circles');
+      await fetchCircleDetails({ force: true });
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to dissolve circle:', err);
@@ -530,7 +552,7 @@ export const useSavingsCircle = (circleId?: string) => {
     txLoading,
     txError,
     refreshCircles: () => fetchCircles({ force: true }),
-    refreshCircle: fetchCircleDetails,
+    refreshCircle: () => fetchCircleDetails({ force: true }),
     createCircle,
     joinCircle,
     contribute,

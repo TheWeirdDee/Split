@@ -11,6 +11,7 @@ import { useWallet } from '@/context/WalletContext';
 import { useGroup } from '@/hooks/useGroups';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
+import { useToast } from '@/components/common/Toast';
 import { cn, truncateAddress } from '@/lib/utils';
 import { parseEther } from 'viem';
 import { celo } from 'viem/chains';
@@ -115,6 +116,7 @@ export default function AddExpensePage() {
   }, [wallet]);
 
   const { address } = wallet;
+  const { showToast } = useToast();
   const { members } = useGroup(groupId as string);
 
   const [description, setDescription] = useState('');
@@ -153,7 +155,7 @@ export default function AddExpensePage() {
 
       const parsed = parseCSV(text);
       if (!parsed) {
-        alert('Invalid or empty CSV file.');
+        showToast('Invalid or empty CSV file.', 'error');
         return;
       }
 
@@ -181,7 +183,7 @@ export default function AddExpensePage() {
         setSplitType(sType.toLowerCase() as any);
       }
 
-      alert('CSV successfully parsed and populated the expense form!');
+      showToast('CSV parsed — the expense form is filled in.', 'success');
     };
     reader.readAsText(file);
   };
@@ -446,7 +448,7 @@ export default function AddExpensePage() {
       router.push(`/app/group/${groupId}`);
     } catch (err) {
       console.error('Adding expense failed:', err);
-      alert('Failed to add expense onchain.');
+      showToast('Failed to add expense onchain.', 'error');
     } finally {
       setLoading(false);
       setLoadingText('Logging Expense...');

@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
+import { useToast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
 import { decodeEventLog } from 'viem';
 import { celo } from 'viem/chains';
@@ -56,6 +57,7 @@ export default function CreateGroupPage() {
   const router = useRouter();
   const wallet = useWallet();
   const { requireConnection, address } = wallet;
+  const { showToast } = useToast();
   const walletRef = React.useRef(wallet);
   
   React.useEffect(() => {
@@ -97,7 +99,7 @@ export default function CreateGroupPage() {
         router.push(`/app/group/${localId}`);
       } catch (err) {
         console.error(err);
-        alert('Failed to create local group.');
+        showToast('Failed to create local group.', 'error');
       } finally {
         setLoading(false);
       }
@@ -176,7 +178,7 @@ export default function CreateGroupPage() {
       router.push(`/app/group/${onchainGroupId}`);
     } catch (err) {
       console.error('Group creation failed:', err);
-      alert('Failed to create group onchain. Please check your balance and try again.');
+      showToast('Failed to create group onchain. Please check your balance and try again.', 'error');
     } finally {
       setLoading(false);
       setLoadingText('Creating Onchain (cUSD)...');

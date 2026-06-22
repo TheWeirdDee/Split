@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/common/Toast';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI } from '@/lib/contract';
 import { parseEther } from 'viem';
-import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Settings, Info, Globe, Lock } from 'lucide-react';
+import { PiggyBank, ShieldCheck, ArrowRight, ArrowLeft, Info, Globe, Lock } from 'lucide-react';
 
 /** Create savings-circle flow (route `/app/save/create`): mode and config. */
 export default function CreateCirclePage() {
@@ -26,7 +26,6 @@ export default function CreateCirclePage() {
     walletRef.current = wallet;
   }, [wallet]);
 
-  const { address } = wallet;
   const { createCircle, txLoading } = useSavingsCircle();
 
   const [step, setStep] = useState(1);

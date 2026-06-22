@@ -5,6 +5,7 @@ import Tesseract from 'tesseract.js';
 import { Camera, Loader2, Check, X, User } from 'lucide-react';
 import { cn, truncateAddress } from '@/lib/utils';
 import { Button } from '@/components/common/Button';
+import { useToast } from '@/components/common/Toast';
 
 interface LineItem {
   id: string;
@@ -26,6 +27,7 @@ interface ReceiptScannerProps {
  * item to members and emit the computed per-member split via `onScanComplete`.
  */
 export function ReceiptScanner({ members, currentUserAddress, onScanComplete, onClose }: ReceiptScannerProps) {
+  const { showToast } = useToast();
   const [scanning, setScanning] = useState(false);
   const [items, setItems] = useState<LineItem[]>([]);
   const [merchant, setMerchant] = useState('');
@@ -49,7 +51,7 @@ export function ReceiptScanner({ members, currentUserAddress, onScanComplete, on
       setStep('assign');
     } catch (err) {
       console.error('OCR failed', err);
-      alert('Failed to scan receipt. Please try a clearer photo.');
+      showToast('Failed to scan receipt. Please try a clearer photo.', 'error');
     } finally {
       setScanning(false);
     }
@@ -130,7 +132,7 @@ export function ReceiptScanner({ members, currentUserAddress, onScanComplete, on
     });
 
     if (total === 0) {
-      alert('Please assign at least one item to continue.');
+      showToast('Please assign at least one item to continue.', 'error');
       return;
     }
 

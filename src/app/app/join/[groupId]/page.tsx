@@ -13,6 +13,7 @@ import { truncateAddress } from '@/lib/utils';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 import { GroupIcon } from '@/components/common/GroupIcon';
+import { useToast } from '@/components/common/Toast';
 
 /** Invite-acceptance page (route `/app/join/[groupId]`) for joining a group. */
 export default function JoinGroupPage() {
@@ -20,6 +21,7 @@ export default function JoinGroupPage() {
   const { groupId } = useParams();
   const wallet = useWallet();
   const { requireConnection } = wallet;
+  const { showToast } = useToast();
   const walletRef = React.useRef(wallet);
   
   React.useEffect(() => {
@@ -94,7 +96,7 @@ export default function JoinGroupPage() {
       router.push(`/app/group/${groupId}`);
     } catch (err) {
       console.error('Joining failed:', err);
-      alert('Failed to join group onchain.');
+      showToast('Failed to join group onchain.', 'error');
     } finally {
       setJoining(false);
       setLoadingText('Joining Group...');

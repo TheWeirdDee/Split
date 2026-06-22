@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
+import { useToast } from '@/components/common/Toast';
 import { useGroup } from '@/hooks/useGroups';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -48,6 +49,7 @@ export default function GroupRecurringPage() {
   const { groupId } = useParams();
   const router = useRouter();
   const { address } = useWallet();
+  const { showToast } = useToast();
   const { members } = useGroup(groupId as string);
 
   const [rules, setRules] = useState<RecurringRule[]>([]);
@@ -143,7 +145,7 @@ export default function GroupRecurringPage() {
     const { error } = await supabase.from('recurring_expense_rules').insert(payload);
     if (error) {
       console.error('Error creating recurring rule:', error);
-      alert('Failed to create recurring rule.');
+      showToast('Failed to create recurring rule.', 'error');
       setSavingRule(false);
       return;
     }

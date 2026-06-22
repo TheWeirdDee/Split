@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { formatEther } from 'viem';
-import { calculateGroupBalancesFromOnchain, calculateGroupBalances } from '@/lib/balanceEngine';
+import { calculateGroupBalancesFromOnchain, calculateGroupBalances, type GroupBalance } from '@/lib/balanceEngine';
 
 /**
  * Returns the simplified (minimized) set of who-owes-whom balances for a group.
@@ -13,7 +13,7 @@ import { calculateGroupBalancesFromOnchain, calculateGroupBalances } from '@/lib
  */
 export const useBalances = (groupId: string) => {
   const { publicClient } = useWallet();
-  const [balances, setBalances] = useState<any[]>([]);
+  const [balances, setBalances] = useState<GroupBalance[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchBalances = useCallback(async () => {

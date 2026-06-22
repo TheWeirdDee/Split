@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, ArrowRight, Share2, UserCheck } from 'lucide-react';
+import { Plus, Share2, UserCheck } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { serializeQuickSplit } from '@/lib/quicksplit';
 

@@ -234,8 +234,11 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const ensureSession = useCallback(async (): Promise<boolean> => {
     try {
       const me = await fetch('/api/auth/me').then((r) => r.json());
-      if (me?.address) return true;
-    } catch {}
+      if (me?.address) return true;        // valid session cookie already present
+      if (!me?.enabled) return false;      // auth not configured server-side → never prompt
+    } catch {
+      return false;
+    }
     return signIn();
   }, [signIn]);
 

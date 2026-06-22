@@ -7,7 +7,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
-import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
 import { useToast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
@@ -63,7 +63,7 @@ export default function CreateGroupPage() {
   React.useEffect(() => {
     walletRef.current = wallet;
   }, [wallet]);
-  const [step, setStep] = useState(1);
+  const [step] = useState(1);
   const [groupMode, setGroupMode] = useState<'local' | 'onchain'>('local');
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('Users');
@@ -140,8 +140,8 @@ export default function CreateGroupPage() {
             onchainGroupId = (decoded.args as any).groupId.toString();
             break;
           }
-        } catch (e) {
-      
+        } catch {
+
         }
       }
 

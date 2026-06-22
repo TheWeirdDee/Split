@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
-import { Flame, Star, Trophy, Sprout, Zap, Gem } from "lucide-react";
+import { Flame, Trophy, Sprout, Zap, Gem } from "lucide-react";
 
 const STREAK_BADGES = [
   { days: 1, label: "First Step", icon: Sprout, color: "#00C896" },

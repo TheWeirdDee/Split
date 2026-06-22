@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { useWallet } from '@/context/WalletContext';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI } from '@/lib/contract';
-import { decodeEventLog, parseEther, formatEther } from 'viem';
+import { decodeEventLog, formatEther } from 'viem';
 import { 
   History, Calendar, ArrowLeft, ExternalLink, 
   PiggyBank, CheckCircle2, UserPlus, Gift, 

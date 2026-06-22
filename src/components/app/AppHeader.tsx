@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Bell, ChevronLeft } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrency } from '@/context/CurrencyContext';
-import { CURRENCIES, CurrencyCode } from '@/lib/fiat';
 
 interface AppHeaderProps {
   title?: string;
@@ -38,7 +37,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
   const { unreadCount } = useNotifications();
   const router = useRouter();
   const unreadLabel = unreadCount > 99 ? '99+' : unreadCount.toString();
-  const { selectedCurrency, setSelectedCurrency, formatAmount } = useCurrency();
+  const { formatAmount } = useCurrency();
 
   return (
     <header style={{

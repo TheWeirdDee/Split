@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
+import { getCached, setCached, clearCached } from '@/lib/onchainCache';
 import { celo } from 'viem/chains';
 import { erc20Abi } from 'viem';
 
@@ -29,13 +30,25 @@ export const useSavingsCircle = (circleId?: string) => {
   const [txLoading, setTxLoading] = useState(false);
   const [txError, setTxError] = useState<string | null>(null);
 
-  // Helper to fetch the list of all circles the user is a member of
-  const fetchCircles = useCallback(async () => {
+  // Helper to fetch the list of all circles the user is a member of.
+  // Uses a short-lived module cache so navigating between Home/Explore/Save
+  // doesn't re-read every circle from the RPC each time. `force` (manual
+  // refresh / post-mutation) bypasses the cache.
+  const fetchCircles = useCallback(async (opts?: { force?: boolean }) => {
     if (!publicClient || !SAVINGS_CIRCLE_ADDRESS) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+
+    const cacheKey = `circles:${address?.toLowerCase() || 'all'}`;
+    const { data: cached, fresh } = getCached<any[]>(cacheKey, 30_000);
+    if (cached) {
+      setCircles(cached);
+      setLoading(false);
+      if (fresh && !opts?.force) return; // fresh enough — skip the RPC round-trip
+    } else {
+      setLoading(true);
+    }
 
     try {
       // 1. Get circleCount
@@ -47,6 +60,7 @@ export const useSavingsCircle = (circleId?: string) => {
 
       const totalCircles = Number(count);
       if (totalCircles === 0) {
+        setCached(cacheKey, []);
         setCircles([]);
         setLoading(false);
         return;
@@ -99,15 +113,13 @@ export const useSavingsCircle = (circleId?: string) => {
       const allCircles = (await Promise.all(circlePromises)).filter(Boolean);
 
       // 3. Filter circles by user membership if wallet is connected
-      if (address) {
-        const userAddress = address.toLowerCase();
-        const userCircles = allCircles.filter((c: any) => 
-          c.memberAddrs.some((m: string) => m.toLowerCase() === userAddress)
-        );
-        setCircles(userCircles);
-      } else {
-        setCircles(allCircles);
-      }
+      const result = address
+        ? allCircles.filter((c: any) =>
+            c.memberAddrs.some((m: string) => m.toLowerCase() === address.toLowerCase())
+          )
+        : allCircles;
+      setCached(cacheKey, result);
+      setCircles(result);
     } catch (err) {
       console.error('Failed to fetch savings circles:', err);
     } finally {
@@ -246,6 +258,7 @@ export const useSavingsCircle = (circleId?: string) => {
       } as any);
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+      clearCached('circles'); // new circle must show up on the next list view
       return { tx, receipt };
     } catch (err: any) {
       console.error('Failed to create circle:', err);
@@ -516,7 +529,7 @@ export const useSavingsCircle = (circleId?: string) => {
     loading,
     txLoading,
     txError,
-    refreshCircles: fetchCircles,
+    refreshCircles: () => fetchCircles({ force: true }),
     refreshCircle: fetchCircleDetails,
     createCircle,
     joinCircle,

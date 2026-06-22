@@ -15,7 +15,7 @@ interface LineItem {
 }
 
 interface ReceiptScannerProps {
-  members: { wallet_address: string; display_name?: string }[];
+  members: { wallet_address: string; display_name?: string | null }[];
   currentUserAddress?: string;
   onScanComplete: (totalAmount: string, merchant: string, splitValues: Record<string, string>, attachmentFile: File) => void;
   onClose: () => void;

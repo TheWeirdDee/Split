@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { formatEther } from 'viem';
+import type { Expense, ExpenseSplit } from '@/types/models';
 
 /**
  * Loads a group's expenses and their per-member splits. For on-chain groups it
@@ -13,8 +14,8 @@ import { formatEther } from 'viem';
  */
 export const useExpenses = (groupId: string) => {
   const { publicClient } = useWallet();
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [splits, setSplits] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [splits, setSplits] = useState<ExpenseSplit[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchExpenses = useCallback(async () => {

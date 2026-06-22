@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
+import type { Group, GroupMember } from '@/types/models';
 
 /**
  * Lists every group the connected wallet belongs to or created, merging
@@ -86,8 +87,8 @@ export const useGroups = () => {
  * @param groupId on-chain/Supabase group id, or a `local-` offline id.
  */
 export const useGroup = (groupId: string) => {
-  const [group, setGroup] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
+  const [group, setGroup] = useState<Group | null>(null);
+  const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchGroupData = useCallback(async () => {

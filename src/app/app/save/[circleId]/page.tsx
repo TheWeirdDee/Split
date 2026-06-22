@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
 import { useMoolaYield } from '@/hooks/useMoolaYield';
 import { Button } from '@/components/common/Button';
 import { WalletAvatar } from '@/components/common/WalletAvatar';
-import { 
-  PiggyBank, Users, Calendar, Target, Clock, 
-  UserPlus, CheckCircle2, AlertCircle, Sparkles, 
+import {
+  Target, Clock,
+  UserPlus, CheckCircle2, AlertCircle, Sparkles,
   Trash2, LogOut, ArrowUpRight, Copy, Check, TrendingUp
 } from 'lucide-react';
 import { formatEther } from 'viem';
@@ -19,14 +19,13 @@ import { formatEther } from 'viem';
 export default function CircleDetailPage() {
   const { circleId } = useParams() as { circleId: string };
   const searchParams = useSearchParams();
-  const router = useRouter();
   const wallet = useWallet();
   const { requireConnection } = wallet;
   const { address, isConnected, connect } = wallet;
   const { 
     circle, members, loading, txLoading, txError,
     joinCircle, contribute, distribute, distributeGoal, 
-    markMissed, exitCircle, dissolveCircle, refreshCircle 
+    markMissed, exitCircle, dissolveCircle
   } = useSavingsCircle(circleId);
   const { apy, loading: apyLoading } = useMoolaYield();
 

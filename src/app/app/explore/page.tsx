@@ -18,58 +18,12 @@ import {
   Plus,
   Trash2,
   Copy,
-  Check,
-  Rocket,
-  Heart,
-  Pizza,
-  Briefcase,
-  Laptop,
-  Shield
+  Check
 } from 'lucide-react';
 import Link from 'next/link';
 
-// Predefined public story templates to overlay on onchain circles to make them look premium
-const COMMUNITY_GOAL_TEMPLATES: Record<string, { title: string; description: string; icon: React.ComponentType<any>; coverColor: string }> = {
-  'save-hack': {
-    title: 'Celo Builder Hackathon Fund',
-    description: 'Funding developer awards and hosting fees for the upcoming Celo mini-hackathon.',
-    icon: Rocket,
-    coverColor: 'linear-gradient(135deg, #FF5E62 0%, #FF9966 100%)',
-  },
-  'save-relief': {
-    title: 'Community Relief Fund',
-    description: 'Mutual aid pool for emergency medical assistance and resources in Celo dev communities.',
-    icon: Heart,
-    coverColor: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-  },
-  'save-meetup': {
-    title: 'Monthly Tech Meetup July',
-    description: 'Pooling funds together to secure a venue and pizzas for local blockchain developers.',
-    icon: Pizza,
-    coverColor: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
-  }
-};
-
-const ROTATING_CIRCLE_TEMPLATES: Record<string, { title: string; description: string; icon: React.ComponentType<any>; trustScore: number }> = {
-  'save-founder': {
-    title: 'Web3 Founders Mastermind',
-    description: 'Rotating trust pool among active builders to finance growth sprints.',
-    icon: Briefcase,
-    trustScore: 98,
-  },
-  'save-weekly': {
-    title: 'Weekly Devs Ajo Circle',
-    description: 'A small, fast-rotating group of remote developers saving weekly.',
-    icon: Laptop,
-    trustScore: 95,
-  },
-  'save-savings': {
-    title: 'Peer Savings Alliance',
-    description: 'Standard rotating saving group building mutual trust on Celo.',
-    icon: Shield,
-    trustScore: 92,
-  }
-};
+// Consistent cover styling for goal cards (real circles carry no cover art on-chain).
+const GOAL_COVER = 'linear-gradient(135deg, #00C896 0%, #0072ff 100%)';
 
 export default function ExplorePage() {
   const router = useRouter();
@@ -116,19 +70,10 @@ export default function ExplorePage() {
     const seen = new Set<string>();
     return activeCircles
       .filter((c: any) => c.mode === 1)
-      .map((c: any) => {
-        const templateKey = Object.keys(COMMUNITY_GOAL_TEMPLATES).find(k => c.name.toLowerCase().includes(k)) || 'save-hack';
-        const template = COMMUNITY_GOAL_TEMPLATES[templateKey];
-        return {
-          ...c,
-          // Show the real on-chain circle name; the template only provides
-          // fallback flavor text + styling.
-          title: (c.name && c.name.trim()) ? c.name : template.title,
-          description: template.description,
-          icon: template.icon,
-          coverColor: template.coverColor
-        };
-      })
+      .map((c: any) => ({
+        ...c,
+        title: (c.name && c.name.trim()) ? c.name : `Savings Goal #${c.id}`,
+      }))
       .filter((c: any) => {
         if (seen.has(c.title)) return false;
         seen.add(c.title);
@@ -140,20 +85,10 @@ export default function ExplorePage() {
     const seen = new Set<string>();
     return activeCircles
       .filter((c: any) => c.mode === 0)
-      .map((c: any) => {
-        const templateKey = Object.keys(ROTATING_CIRCLE_TEMPLATES).find(k => c.name.toLowerCase().includes(k)) || 'save-founder';
-        const template = ROTATING_CIRCLE_TEMPLATES[templateKey];
-        const addressHash = c.creator ? c.creator.slice(-4) : '0';
-        const calculatedTrust = 85 + (parseInt(addressHash, 16) % 15);
-
-        return {
-          ...c,
-          title: (c.name && c.name.trim()) ? c.name : template.title,
-          description: template.description,
-          icon: template.icon,
-          trustScore: calculatedTrust || template.trustScore
-        };
-      })
+      .map((c: any) => ({
+        ...c,
+        title: (c.name && c.name.trim()) ? c.name : `Rotating Circle #${c.id}`,
+      }))
       .filter((c: any) => {
         if (seen.has(c.title)) return false;
         seen.add(c.title);
@@ -478,14 +413,14 @@ export default function ExplorePage() {
                           key={c.id} 
                           className="bg-[#161616] border border-[#2C2C2C] rounded-2xl overflow-hidden hover:border-[#00C896]/40 transition-all flex flex-col group"
                         >
-                          <div 
-                            style={{ background: c.coverColor }}
+                          <div
+                            style={{ background: GOAL_COVER }}
                             className="h-24 p-4 flex items-end relative"
                           >
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="relative z-10 flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
-                                <c.icon className="w-5 h-5 text-white" />
+                                <Target className="w-5 h-5 text-white" />
                               </div>
                               <h3 className="font-bold text-base text-[#f5f0e8] drop-shadow-md">{c.title}</h3>
                             </div>
@@ -493,7 +428,7 @@ export default function ExplorePage() {
 
                           <div className="p-4 space-y-4">
                             <p className="text-xs text-[#8A8A8A] leading-relaxed">
-                              {c.description}
+                              Goal-based savings circle — members contribute toward a shared target on Celo.
                             </p>
 
                             <div className="space-y-1">
@@ -564,7 +499,7 @@ export default function ExplorePage() {
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-[#00C896]/10 border border-[#00C896]/20 flex items-center justify-center">
-                                <c.icon className="w-5 h-5 text-[#00C896]" />
+                                <PiggyBank className="w-5 h-5 text-[#00C896]" />
                               </div>
                               <div>
                                 <h3 className="font-bold text-sm text-[#f5f0e8] group-hover:text-[#00C896] transition-colors">{c.title}</h3>
@@ -573,12 +508,12 @@ export default function ExplorePage() {
                             </div>
                             <div className="flex items-center gap-1 bg-green-500/10 border border-green-500/20 px-2.5 py-0.5 rounded-full">
                               <ShieldCheck className="w-3.5 h-3.5 text-[#00C896]" />
-                              <span className="text-[10px] font-bold text-[#00C896]">{c.trustScore}% trust</span>
+                              <span className="text-[10px] font-bold text-[#00C896]">Onchain</span>
                             </div>
                           </div>
 
                           <p className="text-xs text-[#8A8A8A] leading-relaxed">
-                            {c.description}
+                            Rotating savings (Ajo) — each cycle the full pot pays out to one member, on Celo.
                           </p>
 
                           <div className="grid grid-cols-2 gap-4 bg-[#0D0D0D] border border-[#2C2C2C]/60 p-3 rounded-xl">

@@ -237,7 +237,7 @@ export default function GroupDetailPage() {
             onchainGroupId = (decoded.args as any).groupId.toString();
             break;
           }
-        } catch (e) {}
+        } catch {}
       }
 
       if (!onchainGroupId) {

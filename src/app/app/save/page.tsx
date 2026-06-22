@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { AppHeader } from '@/components/app/AppHeader';
 import { useWallet } from '@/context/WalletContext';
 import { useSavingsCircle } from '@/hooks/useSavingsCircle';
-import { PiggyBank, Plus, TrendingUp, Calendar, Users, Target, RefreshCw } from 'lucide-react';
+import { PiggyBank, Plus, Calendar, Users, RefreshCw } from 'lucide-react';
 import { formatEther } from 'viem';
 
 export default function SavePage() {

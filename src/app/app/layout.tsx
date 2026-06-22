@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import { useWallet } from '@/context/WalletContext';
 import { AppHeader } from '@/components/app/AppHeader';
 import { BottomNav } from '@/components/app/BottomNav';
 import { ToastProvider } from '@/components/common/Toast';

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Bell, Check, CheckCheck, ChevronRight, Trash2, BellOff, Coins, CheckCircle2, UserPlus, Receipt } from 'lucide-react';
+import { Bell, CheckCheck, ChevronRight, Trash2, BellOff, Coins, CheckCircle2, UserPlus, Receipt } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/context/WalletContext';
 

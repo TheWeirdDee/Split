@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { useWallet } from '@/context/WalletContext';
 import { AppHeader } from '@/components/app/AppHeader';
-import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { QRCodeSVG } from 'qrcode.react';
 import { truncateAddress } from '@/lib/utils';
@@ -13,9 +11,8 @@ import {
   ArrowLeft, 
   Copy, 
   Check, 
-  QrCode, 
-  Wallet, 
-  Sparkles, 
+  QrCode,
+  Wallet,
   Flame,
   Calendar,
   DollarSign,
@@ -33,7 +30,6 @@ interface ProfileRecord {
 export default function ProfilePage() {
   const { address } = useParams();
   const router = useRouter();
-  const { address: connectedAddress, isConnected } = useWallet();
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileRecord | null>(null);

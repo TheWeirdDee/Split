@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 interface ToastItem {
   id: string;

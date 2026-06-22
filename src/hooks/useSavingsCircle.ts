@@ -23,7 +23,7 @@ export const useSavingsCircle = (circleId?: string) => {
     walletRef.current = wallet;
   }, [wallet]);
 
-  const { address, walletClient, publicClient } = wallet;
+  const { address, publicClient } = wallet;
   const [circles, setCircles] = useState<SavingsCircle[]>([]);
   const [circle, setCircle] = useState<SavingsCircle | null>(null);
   const [members, setMembers] = useState<SavingsMember[]>([]);

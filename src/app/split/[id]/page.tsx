@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { formatAmount } from '@/lib/utils';
-import { deserializeQuickSplit, QuickSplitPayload } from '@/lib/quicksplit';
+import { deserializeQuickSplit } from '@/lib/quicksplit';
 
 interface SplitPageProps {
   // Next 16: route params are async and must be awaited.

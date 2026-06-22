@@ -7,20 +7,17 @@ import { useWallet } from '@/context/WalletContext';
 import { AppHeader } from '@/components/app/AppHeader';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
-import { WalletAvatar } from '@/components/common/WalletAvatar';
 import { QRCodeSVG } from 'qrcode.react';
 import { truncateAddress } from '@/lib/utils';
 import { useCurrency } from '@/context/CurrencyContext';
 import { CATEGORIES } from '@/constants/categories';
-import { 
-  Receipt, 
-  ArrowLeft, 
-  Copy, 
-  Check, 
-  QrCode, 
-  Wallet, 
+import {
+  ArrowLeft,
+  Copy,
+  Check,
+  QrCode,
+  Wallet,
   ExternalLink,
-  ChevronDown,
   Sparkles,
   Info,
   User
@@ -63,7 +60,7 @@ interface GroupRecord {
 export default function InvoicePage() {
   const { id } = useParams();
   const router = useRouter();
-  const { address: connectedAddress, isConnected } = useWallet();
+  const { address: connectedAddress } = useWallet();
   const { formatAmount } = useCurrency();
 
   const [loading, setLoading] = useState(true);

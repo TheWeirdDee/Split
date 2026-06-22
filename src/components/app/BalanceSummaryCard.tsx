@@ -1,8 +1,6 @@
 "use client";
 
 import React from 'react';
-import { Card } from '../common/Card';
-import { AmountDisplay } from '../common/AmountDisplay';
 import { useCurrency } from '@/context/CurrencyContext';
 
 interface BalanceSummaryCardProps {

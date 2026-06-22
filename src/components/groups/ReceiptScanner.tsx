@@ -32,7 +32,7 @@ export function ReceiptScanner({ members, currentUserAddress, onScanComplete, on
   const [items, setItems] = useState<LineItem[]>([]);
   const [merchant, setMerchant] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string>('');
+  const [, setPreview] = useState<string>('');
   const [step, setStep] = useState<'upload' | 'assign'>('upload');
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

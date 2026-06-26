@@ -1,20 +1,20 @@
 // Central registry of on-chain addresses and ABIs used by the app:
 //   - SPLIT_ABI            → the expense-splitting (groups) contract
 //   - SAVINGS_CIRCLE_ABI   → the rotating/goal savings-circle contract
-//   - CUSD_ADDRESS         → Celo's cUSD stablecoin (Mainnet)
+//   - usdm_ADDRESS         → Celo's usdm stablecoin (Mainnet)
 // Addresses come from NEXT_PUBLIC_* env so deployments can be swapped per env.
 import { keccak256, toBytes } from 'viem';
 
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SPLIT_CONTRACT as `0x${string}`;
 export const SAVINGS_CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_SAVINGS_CIRCLE_ADDRESS as `0x${string}`;
-export const CUSD_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
+export const usdm_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
 
 export const SPLIT_ABI = [
   {
     inputs: [
       {
         internalType: "address",
-        name: "_cUSD",
+        name: "_usdm",
         type: "address",
       },
     ],
@@ -245,7 +245,7 @@ export const SPLIT_ABI = [
   },
   {
     inputs: [],
-    name: "cUSD",
+    name: "usdm",
     outputs: [
       {
         internalType: "contract IERC20",
@@ -605,7 +605,7 @@ export const SAVINGS_CIRCLE_ABI = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_cUSD",
+        "name": "_usdm",
         "type": "address"
       }
     ],
@@ -979,7 +979,7 @@ export const SAVINGS_CIRCLE_ABI = [
   },
   {
     "inputs": [],
-    "name": "cUSD",
+    "name": "usdm",
     "outputs": [
       {
         "internalType": "address",

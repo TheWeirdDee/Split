@@ -217,7 +217,7 @@ export default function QuickSplit() {
                     <p className="text-sm text-[#8A8A8A]">{item.from} owes</p>
                     <div className="mt-1 flex items-baseline justify-between gap-4">
                       <span className="font-semibold text-[#f5f0e8]">{item.to}</span>
-                      <span className="dm-mono text-[#00C896]">{formatAmount(item.amount)} cUSD</span>
+                      <span className="dm-mono text-[#00C896]">{formatAmount(item.amount)} usdm</span>
                     </div>
                   </div>
                 ))}

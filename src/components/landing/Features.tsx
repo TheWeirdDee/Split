@@ -58,7 +58,7 @@ export const Features = () => {
           <div className="feature-card relative bg-[#111111] rounded-md p-8 md:row-span-2 overflow-hidden transition-all hover:bg-[#161616] group">
             <div className="relative z-10 h-full flex flex-col">
               <h3 className="clash-display font-bold text-2xl text-[#f5f0e8] mb-3">Instant Settlement</h3>
-              <p className="dm-sans text-[#8A8A8A] text-sm leading-[1.6] max-w-[200px]">Pay with cUSD the moment debts are calculated. No waiting, no banks.</p>
+              <p className="dm-sans text-[#8A8A8A] text-sm leading-[1.6] max-w-[200px]">Pay with usdm the moment debts are calculated. No waiting, no banks.</p>
               
               <div className="flex-1 flex items-center justify-center py-10">
                 <Zap size={160} strokeWidth={1.5} className="relative text-[#00C896] opacity-30 group-hover:opacity-70 transition-all duration-700" />
@@ -121,7 +121,7 @@ export const Features = () => {
               <h3 className="clash-display font-bold text-2xl mb-4">
                 <span className="bg-[#00C896] text-[#0D0D0D] px-2 py-0.5 rounded-sm">MiniPay Native</span>
               </h3>
-              <p className="dm-sans text-[#8A8A8A] text-sm leading-[1.6]">Built specifically for MiniPay. No extra apps, no new wallets. Use your existing cUSD balance directly.</p>
+              <p className="dm-sans text-[#8A8A8A] text-sm leading-[1.6]">Built specifically for MiniPay. No extra apps, no new wallets. Use your existing usdm balance directly.</p>
             </div>
             <div className="absolute right-6 top-1/2 -translate-y-1/2 w-72 h-36">
               <img 

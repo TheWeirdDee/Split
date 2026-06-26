@@ -2,17 +2,17 @@ import hre from "hardhat";
 const { ethers } = hre;
 
 async function main() {
-  const cUSDAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
+  const usdmAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
   
   console.log("Deploying SplitGroup...");
   const SplitGroup = await ethers.getContractFactory("SplitGroup");
-  const splitGroup = await SplitGroup.deploy(cUSDAddress);
+  const splitGroup = await SplitGroup.deploy(usdmAddress);
 
   await splitGroup.waitForDeployment();
 
   const address = await splitGroup.getAddress();
   console.log(`SplitGroup deployed to: ${address}`);
-  console.log(`Verify with: npx hardhat verify --network celo ${address} ${cUSDAddress}`);
+  console.log(`Verify with: npx hardhat verify --network celo ${address} ${usdmAddress}`);
 }
 
 main().catch((error) => {

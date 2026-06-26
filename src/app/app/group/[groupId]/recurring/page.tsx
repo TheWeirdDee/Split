@@ -228,7 +228,7 @@ export default function GroupRecurringPage() {
           <h2 className="clash-display text-lg font-semibold text-[#F7F3EC]">Create recurring rule</h2>
 
           <Input label="Description" placeholder="e.g. House Rent" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <Input label="Amount (cUSD)" placeholder="0.00" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <Input label="Amount (usdm)" placeholder="0.00" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
 
           <div className="space-y-2">
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Category</label>
@@ -351,7 +351,7 @@ export default function GroupRecurringPage() {
                       {run.recurring_expense_rules?.description || 'Recurring draft'}
                     </p>
                     <p className="text-xs text-text-secondary">
-                      Due {run.due_date} • {run.recurring_expense_rules?.amount ?? '0'} cUSD
+                      Due {run.due_date} • {run.recurring_expense_rules?.amount ?? '0'} usdm
                     </p>
                   </div>
                   <Button
@@ -380,7 +380,7 @@ export default function GroupRecurringPage() {
                       {rule.cadence === 'weekly'
                         ? `Weekly on ${dayNames[rule.day_of_week ?? 0]}`
                         : `Monthly on day ${rule.day_of_month ?? 1}`}{' '}
-                      • {Number(rule.amount).toFixed(2)} cUSD
+                      • {Number(rule.amount).toFixed(2)} usdm
                     </p>
                   </div>
                   <button

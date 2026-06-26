@@ -195,7 +195,7 @@ export default function AddExpensePage() {
       const exacts = splitWith.map(addr => parseFloat(splitValues[addr] || '0'));
       const totalExact = exacts.reduce((a, b) => a + b, 0);
       if (Math.abs(totalExact - parseFloat(amount)) > 0.001) {
-        setValidationError(`Total split amount must equal total expense of ${amount} cUSD (currently ${totalExact.toFixed(2)} cUSD)`);
+        setValidationError(`Total split amount must equal total expense of ${amount} usdm (currently ${totalExact.toFixed(2)} usdm)`);
       }
     }
   }, [amount, splitWith, splitType, splitValues]);
@@ -333,7 +333,7 @@ export default function AddExpensePage() {
               groupId: groupId as string,
               type: 'expense',
               title: 'New Expense',
-              body: `${creatorName} added an expense for ${totalAmountNum.toFixed(2)} cUSD`,
+              body: `${creatorName} added an expense for ${totalAmountNum.toFixed(2)} usdm`,
               actor: address?.toLowerCase(),
               actionUrl: `/app/group/${groupId}`,
             }).catch((error) => {
@@ -507,7 +507,7 @@ export default function AddExpensePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Amount (cUSD)</label>
+            <label className="text-xs font-medium text-text-secondary uppercase tracking-wider ml-1">Amount (usdm)</label>
             <div className="relative">
               <input
                 type="number"
@@ -516,7 +516,7 @@ export default function AddExpensePage() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">cUSD</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">usdm</span>
             </div>
           </div>
 
@@ -656,7 +656,7 @@ export default function AddExpensePage() {
                           }}
                         />
                         <span className="absolute right-3 text-[10px] font-bold text-text-muted select-none">
-                          {splitType === 'percentage' ? '%' : splitType === 'share' ? 'sh' : 'cUSD'}
+                          {splitType === 'percentage' ? '%' : splitType === 'share' ? 'sh' : 'usdm'}
                         </span>
                       </div>
                     </div>
@@ -684,7 +684,7 @@ export default function AddExpensePage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-text-secondary">Each pays:</span>
                 <span className="text-xl dm-mono font-bold text-text-primary">
-                  {amount && splitWith.length > 0 ? (parseFloat(amount) / splitWith.length).toFixed(2) : '0.00'} cUSD
+                  {amount && splitWith.length > 0 ? (parseFloat(amount) / splitWith.length).toFixed(2) : '0.00'} usdm
                 </span>
               </div>
             ) : (
@@ -705,7 +705,7 @@ export default function AddExpensePage() {
                   return (
                     <div key={addr} className="flex justify-between items-center text-xs">
                       <span className="text-text-secondary truncate pr-4">{name}</span>
-                      <span className="dm-mono text-text-primary font-semibold">{shareStr} cUSD</span>
+                      <span className="dm-mono text-text-primary font-semibold">{shareStr} usdm</span>
                     </div>
                   );
                 })}

@@ -128,7 +128,7 @@ export default function JoinGroupPage() {
         <div className="bg-surface-2 p-6 rounded-2xl border border-border space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-text-muted">Invitation details</h3>
           <p className="text-sm leading-relaxed text-text-secondary">
-            You have been invited to join this group. Once joined, you can split bills and settle debts with other members using cUSD.
+            You have been invited to join this group. Once joined, you can split bills and settle debts with other members using usdm.
           </p>
           <input
             value={displayName}

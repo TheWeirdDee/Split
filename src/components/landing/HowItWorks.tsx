@@ -17,7 +17,7 @@ export const HowItWorks = () => {
         <div className="hidden md:block absolute top-[110px] left-[15%] w-[70%] border-t border-dashed border-[#242424] z-0" />
         {[
           { num: "01", title: "Create Group or Circle", desc: "Create a split group or a collaborative savings circle in 10 seconds." },
-          { num: "02", title: "Log Costs or Contribute", desc: "Log shared expenses or make regular cUSD contributions to your circle." },
+          { num: "02", title: "Log Costs or Contribute", desc: "Log shared expenses or make regular usdm contributions to your circle." },
           { num: "03", title: "Settle & Cashout", desc: "Settle net balances or withdraw your circular savings payout pot instantly." },
         ].map((s, i) => (
           <div key={i} className="reveal relative z-10 flex flex-col items-center text-center">

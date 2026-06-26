@@ -115,7 +115,7 @@ export default function SavePage() {
                           </span>
                           <div className="font-mono text-base font-bold text-brand flex items-baseline gap-1">
                             {isGoal ? totalSavedFormatted : potFormatted}
-                            <span className="text-xs font-sans font-medium text-text-secondary">cUSD</span>
+                            <span className="text-xs font-sans font-medium text-text-secondary">usdm</span>
                           </div>
                         </div>
                         <div className="space-y-0.5">
@@ -124,7 +124,7 @@ export default function SavePage() {
                           </span>
                           <div className="font-mono text-base font-bold text-text-primary flex items-baseline gap-1">
                             {contributionFormatted}
-                            <span className="text-xs font-sans font-medium text-text-secondary">cUSD</span>
+                            <span className="text-xs font-sans font-medium text-text-secondary">usdm</span>
                           </div>
                         </div>
                       </div>

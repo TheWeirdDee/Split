@@ -1,4 +1,4 @@
-// Exchange rate fetching and caching utility for cUSD to Fiat conversions
+// Exchange rate fetching and caching utility for usdm to Fiat conversions
 
 export interface ExchangeRates {
   USD: number;
@@ -30,7 +30,7 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
       }
     }
 
-    // Fetch fresh rates (cUSD is pegged to USD, so we fetch USD rates)
+    // Fetch fresh rates (usdm is pegged to USD, so we fetch USD rates)
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
     if (!res.ok) throw new Error('Failed to fetch exchange rates');
     
@@ -58,7 +58,7 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
 }
 
 export const CURRENCIES = [
-  { code: 'cUSD', symbol: 'cUSD', name: 'cUSD' },
+  { code: 'usdm', symbol: 'usdm', name: 'usdm' },
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
   { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
@@ -67,12 +67,12 @@ export const CURRENCIES = [
 
 export type CurrencyCode = (typeof CURRENCIES)[number]['code'];
 
-export function formatFiat(amountCusd: number, rate: number, code: string): string {
-  if (code === 'cUSD') {
-    return `${amountCusd.toFixed(2)} cUSD`;
+export function formatFiat(amountusdm: number, rate: number, code: string): string {
+  if (code === 'usdm') {
+    return `${amountusdm.toFixed(2)} usdm`;
   }
   const symbol = CURRENCIES.find(c => c.code === code)?.symbol || '';
-  const converted = amountCusd * rate;
+  const converted = amountusdm * rate;
   
   // Format currency with thousands separators
   const formatted = converted.toLocaleString(undefined, {

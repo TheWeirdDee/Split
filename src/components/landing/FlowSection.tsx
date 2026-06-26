@@ -149,7 +149,7 @@ export const FlowSection = () => {
                 <div className="bg-[#0a0a0a] border border-[#242424] p-4 rounded-2xl flex justify-between items-center group hover:border-[#00c896]/50 transition-colors">
                   <div className="flex items-center gap-3">
                      <div className="w-8 h-8 rounded-lg bg-[#00c896]/10 flex items-center justify-center text-[#00c896]"><Plus className="w-4 h-4" /></div>
-                     <div className="text-left"><p className="text-sm font-bold">You made contribution</p><p className="text-[10px] text-[#3a3a3a]">10 cUSD to Rotating Circle</p></div>
+                     <div className="text-left"><p className="text-sm font-bold">You made contribution</p><p className="text-[10px] text-[#3a3a3a]">10 usdm to Rotating Circle</p></div>
                   </div>
                   <span className="text-[10px] font-mono text-[#00c896]">SAVED</span>
                 </div>
@@ -166,7 +166,7 @@ export const FlowSection = () => {
                 <span className="dm-mono text-[9px] text-[#00c896] tracking-[0.2em] font-bold uppercase block mb-3">Onchain Settlement</span>
                 <div className="flex items-baseline justify-center gap-2 mb-4">
                   <span className="clash-display font-bold text-5xl text-[#f5f0e8]">0.00</span>
-                  <span className="dm-mono text-lg text-[#7a7a7a]">cUSD</span>
+                  <span className="dm-mono text-lg text-[#7a7a7a]">usdm</span>
                 </div>
                 
                 <div className="w-full h-[1px] bg-[#00c8961a] mb-6"></div>
@@ -174,11 +174,11 @@ export const FlowSection = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <span className="dm-mono text-[8px] text-[#7a7a7a] uppercase block mb-1">Total Owed</span>
-                    <span className="dm-sans font-bold text-[#00c896] text-sm">+0.00 <span className="text-[9px] opacity-60">cUSD</span></span>
+                    <span className="dm-sans font-bold text-[#00c896] text-sm">+0.00 <span className="text-[9px] opacity-60">usdm</span></span>
                   </div>
                   <div className="text-center border-l border-[#00c8961a]">
                     <span className="dm-mono text-[8px] text-[#7a7a7a] uppercase block mb-1">Total Saved</span>
-                    <span className="dm-sans font-bold text-[#00C896] text-sm">+100.00 <span className="text-[9px] opacity-60">cUSD</span></span>
+                    <span className="dm-sans font-bold text-[#00C896] text-sm">+100.00 <span className="text-[9px] opacity-60">usdm</span></span>
                   </div>
                 </div>
               </div>

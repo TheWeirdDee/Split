@@ -141,10 +141,10 @@ export default function ExplorePage() {
   const handleCopyCalc = () => {
     if (calculatorExpenses.length === 0) return;
     const desc = calcDescription.trim() ? ` for "${calcDescription}"` : '';
-    let summaryText = `Split Details${desc}:\nTotal: ${calcTotal} cUSD\nPaid by: ${paidBy}\n\n`;
+    let summaryText = `Split Details${desc}:\nTotal: ${calcTotal} usdm\nPaid by: ${paidBy}\n\n`;
     
     calculatorExpenses.forEach(exp => {
-      summaryText += `* ${exp.from} owes ${exp.to}: ${exp.amount.toFixed(2)} cUSD\n`;
+      summaryText += `* ${exp.from} owes ${exp.to}: ${exp.amount.toFixed(2)} usdm\n`;
     });
 
     summaryText += `\nSplit via Split app. Settle onchain at /app`;
@@ -233,7 +233,7 @@ export default function ExplorePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-[#8A8A8A] uppercase tracking-wider block mb-1">Total Amount (cUSD)</label>
+                  <label className="text-[10px] font-bold text-[#8A8A8A] uppercase tracking-wider block mb-1">Total Amount (usdm)</label>
                   <input 
                     type="number" 
                     placeholder="0.00" 
@@ -322,7 +322,7 @@ export default function ExplorePage() {
                         onChange={(e) => setCustomAmounts({ ...customAmounts, [p]: e.target.value })}
                         className="w-full bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl px-2 py-1.5 text-xs text-right pr-9 text-[#00C896] font-mono focus:outline-none"
                       />
-                      <span className="absolute right-2.5 top-1.5 text-[9px] font-bold text-[#4A4A4A]">cUSD</span>
+                      <span className="absolute right-2.5 top-1.5 text-[9px] font-bold text-[#4A4A4A]">usdm</span>
                     </div>
                   </div>
                 ))}

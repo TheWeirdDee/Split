@@ -19,9 +19,9 @@ declare global {
 
 /**
  * Wallet/session provider for the app. Detects MiniPay vs. a regular injected
- * wallet, tracks the connected address and cUSD balance, exposes shared viem
+ * wallet, tracks the connected address and usdm balance, exposes shared viem
  * public/wallet clients, and surfaces `hasNoCelo` so the gas strategy can switch
- * (gasPrice in CELO normally; feeCurrency cUSD for MiniPay). Consume via useWallet.
+ * (gasPrice in CELO normally; feeCurrency usdm for MiniPay). Consume via useWallet.
  */
 
 interface WalletContextType {
@@ -29,7 +29,7 @@ interface WalletContextType {
   isConnected: boolean;
   isMiniPay: boolean;
   isInitialLoading: boolean;
-  cUSDBalance: string;
+  usdmBalance: string;
   hasNoCelo: boolean;
   publicClient: any;
   walletClient: any;
@@ -46,14 +46,14 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | null>(null);
 
-const CUSD_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a';
+const usdm_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a';
 const MINIMAL_ERC20_ABI = parseAbi([
   'function balanceOf(address account) view returns (uint256)',
 ]);
 
 export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
-  const [cUSDBalance, setCUSDBalance] = useState('0.00');
+  const [usdmBalance, setusdmBalance] = useState('0.00');
   const [hasNoCelo, setHasNoCelo] = useState(false);
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -101,12 +101,12 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     isRefreshingRef.current = true;
     try {
       const balance = await publicClient.readContract({
-        address: CUSD_ADDRESS,
+        address: usdm_ADDRESS,
         abi: MINIMAL_ERC20_ABI,
         functionName: 'balanceOf',
         args: [address],
       });
-      setCUSDBalance(formatEther(balance as bigint));
+      setusdmBalance(formatEther(balance as bigint));
 
       // Fetch native CELO balance to check for 0 CELO (gas warning)
       const celoBalance = await publicClient.getBalance({ address });
@@ -192,7 +192,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 
   const disconnect = useCallback(() => {
     setAddress(null);
-    setCUSDBalance('0');
+    setusdmBalance('0');
     setWalletClient(null);
     setIsMiniPay(false);
     try { fetch('/api/auth/logout', { method: 'POST' }); } catch {}
@@ -327,7 +327,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       isConnected: !!address,
       isMiniPay,
       isInitialLoading,
-      cUSDBalance,
+      usdmBalance,
       hasNoCelo,
       publicClient,
       walletClient,

@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  *         2. Goal — everyone saves toward a shared target amount
  *
  * Rules set by creator at circle creation:
- *   - Contribution amount (cUSD)
+ *   - Contribution amount (usdm)
  *   - Frequency (contribution interval in seconds)
  *   - Grace period (seconds after deadline before marked missed)
  *   - Max missed contributions before removal
@@ -21,11 +21,11 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  *   - Reminder lead time (seconds before deadline to send reminder (for frontend))
  *
  * Deployment: Celo Mainnet
- * cUSD address: 0x765DE816845861e75A25fCA122bb6898B8B1282a
+ * usdm address: 0x765DE816845861e75A25fCA122bb6898B8B1282a
  */
 contract SavingsCircle is ReentrancyGuard {
 
-    IERC20 public immutable cUSD;
+    IERC20 public immutable usdm;
 
     // ─── Enums ────────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ contract SavingsCircle is ReentrancyGuard {
     struct CircleConfig {
         string name;
         CircleMode mode;
-        uint256 contributionAmount;  // cUSD wei per contribution
+        uint256 contributionAmount;  // usdm wei per contribution
         uint256 frequency;           // seconds between contributions
         uint256 gracePeriod;         // seconds after deadline before markMissed allowed
         uint8 maxMissed;             // missed contributions before removal
@@ -66,11 +66,11 @@ contract SavingsCircle is ReentrancyGuard {
         CircleStatus status;
         address[] memberAddresses;
         uint256 currentCycle;
-        uint256 currentPot;          // cUSD in contract for this cycle
+        uint256 currentPot;          // usdm in contract for this cycle
         uint256 rotationIndex;       // whose turn is next (rotating mode)
         uint256 cycleStartTime;      // when current cycle started
         uint256 nextDeadline;        // when next contribution is due
-        uint256 totalSaved;          // all-time total cUSD saved in this circle
+        uint256 totalSaved;          // all-time total usdm saved in this circle
         bool exists;
     }
 
@@ -113,8 +113,8 @@ contract SavingsCircle is ReentrancyGuard {
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
-    constructor(address _cUSD) {
-        cUSD = IERC20(_cUSD);
+    constructor(address _usdm) {
+        usdm = IERC20(_usdm);
     }
 
     // ─── Circle Creation ──────────────────────────────────────────────────────
@@ -123,13 +123,13 @@ contract SavingsCircle is ReentrancyGuard {
      * @notice Create a new savings circle.
      * @param name Circle display name
      * @param mode Rotating (0) or Goal (1)
-     * @param contributionAmount cUSD wei per contribution
+     * @param contributionAmount usdm wei per contribution
      * @param frequency Seconds between contribution deadlines
      * @param gracePeriod Seconds after deadline before member can be marked missed
      * @param maxMissed How many misses before removal
      * @param maxMembers Max members (0 = unlimited)
      * @param maxCycles Max cycles to run (0 = natural end)
-     * @param goalAmount Goal target in cUSD wei (goal mode only, 0 for rotating)
+     * @param goalAmount Goal target in usdm wei (goal mode only, 0 for rotating)
      * @param goalDeadline Unix timestamp for goal deadline (0 for rotating)
      * @param reminderLeadTime Seconds before deadline reminder should fire (for frontend)
      */
@@ -213,7 +213,7 @@ contract SavingsCircle is ReentrancyGuard {
     // ─── Contributions ────────────────────────────────────────────────────────
 
     /**
-     * @notice Contribute to the current cycle. Must approve cUSD first.
+     * @notice Contribute to the current cycle. Must approve usdm first.
      */
     function contribute(uint256 circleId) external nonReentrant {
         Circle storage circle = circles[circleId];
@@ -226,7 +226,7 @@ contract SavingsCircle is ReentrancyGuard {
         if (contributedThisCycle[circleId][circle.currentCycle][msg.sender]) revert AlreadyContributed();
 
         uint256 amount = circle.config.contributionAmount;
-        bool ok = cUSD.transferFrom(msg.sender, address(this), amount);
+        bool ok = usdm.transferFrom(msg.sender, address(this), amount);
         if (!ok) revert TransferFailed();
 
         contributedThisCycle[circleId][circle.currentCycle][msg.sender] = true;
@@ -304,7 +304,7 @@ contract SavingsCircle is ReentrancyGuard {
         recipientMember.totalReceived += payout;
         recipientMember.hasReceivedPayout = true;
 
-        bool ok = cUSD.transfer(recipient, payout);
+        bool ok = usdm.transfer(recipient, payout);
         if (!ok) revert TransferFailed();
 
         emit PayoutSent(circleId, recipient, payout, circle.currentCycle);
@@ -331,7 +331,7 @@ contract SavingsCircle is ReentrancyGuard {
         if (circle.config.mode != CircleMode.Goal) revert InvalidConfig();
         if (msg.sender != circle.creator) revert NotCreator(circleId);
 
-        uint256 balance = cUSD.balanceOf(address(this));
+        uint256 balance = usdm.balanceOf(address(this));
         // Distribute equally among all active members
         address[] storage memberAddrs = circle.memberAddresses;
         uint256 activeCount = _countActive(circleId);
@@ -341,7 +341,7 @@ contract SavingsCircle is ReentrancyGuard {
             Member storage m = members[circleId][memberAddrs[i]];
             if (m.status == MemberStatus.Active) {
                 m.totalReceived += share;
-                bool ok = cUSD.transfer(memberAddrs[i], share);
+                bool ok = usdm.transfer(memberAddrs[i], share);
                 if (!ok) revert TransferFailed();
                 emit PayoutSent(circleId, memberAddrs[i], share, circle.currentCycle);
             }
@@ -384,7 +384,7 @@ contract SavingsCircle is ReentrancyGuard {
             member.status = MemberStatus.Removed;
 
             if (refund > 0) {
-                bool ok = cUSD.transfer(memberAddr, refund);
+                bool ok = usdm.transfer(memberAddr, refund);
                 if (!ok) revert TransferFailed();
             }
             emit MemberRemoved(circleId, memberAddr, refund);
@@ -412,7 +412,7 @@ contract SavingsCircle is ReentrancyGuard {
         member.status = MemberStatus.Exited;
 
         if (refund > 0) {
-            bool ok = cUSD.transfer(msg.sender, refund);
+            bool ok = usdm.transfer(msg.sender, refund);
             if (!ok) revert TransferFailed();
         }
 
@@ -431,7 +431,7 @@ contract SavingsCircle is ReentrancyGuard {
         circle.status = CircleStatus.Dissolved;
 
         // Return funds to all active members proportionally
-        uint256 contractBalance = cUSD.balanceOf(address(this));
+        uint256 contractBalance = usdm.balanceOf(address(this));
         if (contractBalance > 0) {
             uint256 activeCount = _countActive(circleId);
             if (activeCount > 0) {
@@ -439,7 +439,7 @@ contract SavingsCircle is ReentrancyGuard {
                 address[] storage memberAddrs = circle.memberAddresses;
                 for (uint256 i = 0; i < memberAddrs.length; i++) {
                     if (members[circleId][memberAddrs[i]].status == MemberStatus.Active) {
-                        bool ok = cUSD.transfer(memberAddrs[i], share);
+                        bool ok = usdm.transfer(memberAddrs[i], share);
                         if (!ok) revert TransferFailed();
                     }
                 }
@@ -541,6 +541,6 @@ contract SavingsCircle is ReentrancyGuard {
     }
 
     function getContractBalance() external view returns (uint256) {
-        return cUSD.balanceOf(address(this));
+        return usdm.balanceOf(address(this));
     }
 }

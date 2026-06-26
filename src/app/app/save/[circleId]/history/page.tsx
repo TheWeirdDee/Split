@@ -108,14 +108,14 @@ export default function HistoryPage() {
       case 'ContributionMade':
         return {
           title: 'Contribution Deposited',
-          body: `${log.args.member.slice(0, 6)}...${log.args.member.slice(-4)} contributed ${Number(formatEther(log.args.amount)).toFixed(2)} cUSD (Cycle #${Number(log.args.cycle) + 1})`,
+          body: `${log.args.member.slice(0, 6)}...${log.args.member.slice(-4)} contributed ${Number(formatEther(log.args.amount)).toFixed(2)} usdm (Cycle #${Number(log.args.cycle) + 1})`,
           color: 'text-green-400 bg-green-500/10',
           icon: CheckCircle2
         };
       case 'PayoutSent':
         return {
           title: 'Payout Distributed',
-          body: `${log.args.recipient.slice(0, 6)}...${log.args.recipient.slice(-4)} received the pot payout of ${Number(formatEther(log.args.amount)).toFixed(2)} cUSD`,
+          body: `${log.args.recipient.slice(0, 6)}...${log.args.recipient.slice(-4)} received the pot payout of ${Number(formatEther(log.args.amount)).toFixed(2)} usdm`,
           color: 'text-yellow-400 bg-yellow-500/10',
           icon: Gift
         };
@@ -129,14 +129,14 @@ export default function HistoryPage() {
       case 'MemberRemoved':
         return {
           title: 'Member Removed',
-          body: `${log.args.member.slice(0, 6)}...${log.args.member.slice(-4)} was removed due to rules violation (Refund: ${Number(formatEther(log.args.refundAmount)).toFixed(2)} cUSD)`,
+          body: `${log.args.member.slice(0, 6)}...${log.args.member.slice(-4)} was removed due to rules violation (Refund: ${Number(formatEther(log.args.refundAmount)).toFixed(2)} usdm)`,
           color: 'text-red-400 bg-red-500/10',
           icon: ShieldAlert
         };
       case 'MemberExited':
         return {
           title: 'Member Exited',
-          body: `${log.args.member.slice(0, 6)}...${log.args.member.slice(-4)} exited the circle (Refund: ${Number(formatEther(log.args.refundAmount)).toFixed(2)} cUSD)`,
+          body: `${log.args.member.slice(0, 6)}...${log.args.member.slice(-4)} exited the circle (Refund: ${Number(formatEther(log.args.refundAmount)).toFixed(2)} usdm)`,
           color: 'text-text-secondary bg-surface',
           icon: Ban
         };

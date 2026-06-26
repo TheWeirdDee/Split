@@ -194,7 +194,7 @@ export default function GroupDetailPage() {
         groupId: groupId as string,
         type: 'reminder',
         title: 'Payment Reminder',
-        body: `${senderName} reminds you to pay ${amount.toFixed(2)} cUSD in "${group?.name}".`,
+        body: `${senderName} reminds you to pay ${amount.toFixed(2)} usdm in "${group?.name}".`,
         actor: address?.toLowerCase(),
         actionUrl: `/app/group/${groupId}`,
       });
@@ -656,7 +656,7 @@ export default function GroupDetailPage() {
 
   const handleExportExpenses = () => {
     const rows = [
-      ['date', 'description', 'category', 'amount_cusd', 'paid_by', 'status'],
+      ['date', 'description', 'category', 'amount_usdm', 'paid_by', 'status'],
       ...filteredExpenses.map((expense) => [
         new Date(expense.created_at).toISOString(),
         expense.description,
@@ -707,7 +707,7 @@ export default function GroupDetailPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">Amount (cUSD)</label>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">Amount (usdm)</label>
               <input
                 type="number"
                 value={editAmount}

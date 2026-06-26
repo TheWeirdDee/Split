@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWallet } from '@/context/WalletContext';
-import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, CUSD_ADDRESS } from '@/lib/contract';
+import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI, usdm_ADDRESS } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
 import { getCached, setCached, clearCached } from '@/lib/onchainCache';
 import type { SavingsCircle, SavingsMember } from '@/types/models';
@@ -11,7 +11,7 @@ import { erc20Abi } from 'viem';
  * On-chain interface to the SavingsCircle contract: lists circles and, when a
  * `circleId` is given, exposes that circle's detail plus member actions
  * (create / join / contribute / distribute). Follows the project gas rule —
- * gasPrice in CELO, `feeCurrency: cUSD` only for MiniPay.
+ * gasPrice in CELO, `feeCurrency: usdm` only for MiniPay.
  *
  * @param circleId optional circle to load detail/actions for.
  */
@@ -318,7 +318,7 @@ export const useSavingsCircle = (circleId?: string) => {
     }
   };
 
-  // CONTRIBUTE TO CIRCLE — approve cUSD first, then contribute
+  // CONTRIBUTE TO CIRCLE — approve usdm first, then contribute
   const contribute = async (amount: bigint) => {
     const { address, walletClient, publicClient, isMiniPay } = walletRef.current;
     if (!address || !walletClient || !publicClient || !circleId) throw new Error('Wallet not connected');
@@ -330,9 +330,9 @@ export const useSavingsCircle = (circleId?: string) => {
 
       // No explicit nonce — let the wallet manage it. We await the approve
       // receipt before contributing, so the wallet sequences both correctly.
-      // Step 1: Approve cUSD spend
+      // Step 1: Approve usdm spend
       const approveTx = await walletClient.writeContract({
-        address: CUSD_ADDRESS,
+        address: usdm_ADDRESS,
         abi: erc20Abi,
         functionName: 'approve',
         args: [SAVINGS_CIRCLE_ADDRESS, amount],

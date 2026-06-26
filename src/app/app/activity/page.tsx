@@ -194,7 +194,7 @@ export default function ActivityPage() {
             activity.type,
             activity.date.toISOString(),
             title,
-            `${activity.amount} cUSD`,
+            `${activity.amount} usdm`,
             String(activity.amount),
             activity.onchain_tx || '',
           ];
@@ -204,7 +204,7 @@ export default function ActivityPage() {
             activity.type,
             activity.date.toISOString(),
             activity.expenses?.description || 'Expense',
-            `${activity.amount} cUSD`,
+            `${activity.amount} usdm`,
             String(activity.amount),
             '',
           ];
@@ -380,12 +380,12 @@ export default function ActivityPage() {
               titleText = isPayer
                 ? `You paid ${truncateAddress(activity.creditor)}`
                 : `${truncateAddress(activity.debtor)} paid you`;
-              subText = `${activity.date.toLocaleDateString()} • ${activity.amount} cUSD`;
+              subText = `${activity.date.toLocaleDateString()} • ${activity.amount} usdm`;
               borderColor = "border-l-4 border-l-brand";
             } else if (isExpense) {
               icon = <PlusCircle className="w-5 h-5 text-blue-500" />;
               titleText = `Added to expense: ${activity.expenses?.description || 'Unknown'}`;
-              subText = `${activity.date.toLocaleDateString()} • ${activity.amount} cUSD`;
+              subText = `${activity.date.toLocaleDateString()} • ${activity.amount} usdm`;
               borderColor = "border-l-4 border-l-blue-500";
             } else if (isGroupCreated) {
               icon = <Users className="w-5 h-5 text-purple-500" />;

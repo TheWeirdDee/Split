@@ -14,7 +14,7 @@ const renderDebt = (debt: { from: string; to: string; amount: number }) => (
     <p className="text-sm text-[#8A8A8A]">{debt.from} owes</p>
     <div className="mt-2 flex items-center justify-between gap-4">
       <span className="font-semibold text-[#f5f0e8]">{debt.to}</span>
-      <span className="dm-mono text-[#00C896]">{formatAmount(debt.amount)} cUSD</span>
+      <span className="dm-mono text-[#00C896]">{formatAmount(debt.amount)} usdm</span>
     </div>
   </div>
 );
@@ -57,7 +57,7 @@ export default async function SplitResultPage({ params }: SplitPageProps) {
             </div>
             <div className="rounded-2xl bg-[#0d0d0d] border border-[#1f1f1f] px-6 py-4 text-right">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[#8A8A8A]">Total amount</p>
-              <p className="clash-display font-bold text-3xl text-[#00C896]">{formatAmount(data.total)} cUSD</p>
+              <p className="clash-display font-bold text-3xl text-[#00C896]">{formatAmount(data.total)} usdm</p>
             </div>
           </div>
 

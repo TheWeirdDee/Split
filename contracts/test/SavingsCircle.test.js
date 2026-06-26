@@ -13,14 +13,14 @@ async function increaseTime(secs) {
 }
 
 describe("SavingsCircle", function () {
-  let circle, cUSD;
+  let circle, usdm;
   let owner, alice, bob, carol;
 
   // Default circle config helpers
   const rotatingConfig = () => ({
     name: "Test Circle",
     mode: 0, // Rotating
-    contributionAmount: ONE * 5n,   // 5 cUSD
+    contributionAmount: ONE * 5n,   // 5 usdm
     frequency: DAY,                 // daily
     gracePeriod: HOUR * 4n,
     maxMissed: 2,
@@ -60,15 +60,15 @@ describe("SavingsCircle", function () {
     [owner, alice, bob, carol] = await ethers.getSigners();
 
     const MockERC20 = await ethers.getContractFactory("MockERC20");
-    cUSD = await MockERC20.deploy("Celo Dollar", "cUSD", 18);
+    usdm = await MockERC20.deploy("Celo Dollar", "usdm", 18);
 
     const SavingsCircle = await ethers.getContractFactory("SavingsCircle");
-    circle = await SavingsCircle.deploy(await cUSD.getAddress());
+    circle = await SavingsCircle.deploy(await usdm.getAddress());
 
     // Fund members
     for (const signer of [alice, bob, carol]) {
-      await cUSD.mint(signer.address, ONE * 10000n);
-      await cUSD.connect(signer).approve(await circle.getAddress(), ONE * 10000n);
+      await usdm.mint(signer.address, ONE * 10000n);
+      await usdm.connect(signer).approve(await circle.getAddress(), ONE * 10000n);
     }
   });
 
@@ -178,10 +178,10 @@ describe("SavingsCircle", function () {
       await circle.connect(bob).joinCircle(circleId);
     });
 
-    it("transfers cUSD to the contract", async function () {
-      const before = await cUSD.balanceOf(await circle.getAddress());
+    it("transfers usdm to the contract", async function () {
+      const before = await usdm.balanceOf(await circle.getAddress());
       await circle.connect(alice).contribute(circleId);
-      const after = await cUSD.balanceOf(await circle.getAddress());
+      const after = await usdm.balanceOf(await circle.getAddress());
       expect(after - before).to.equal(amount);
     });
 
@@ -208,13 +208,13 @@ describe("SavingsCircle", function () {
       const contractAddr = await circle.getAddress();
       await circle.connect(alice).contribute(circleId);
 
-      const bobBefore = await cUSD.balanceOf(bob.address);
-      const aliceBefore = await cUSD.balanceOf(alice.address);
+      const bobBefore = await usdm.balanceOf(bob.address);
+      const aliceBefore = await usdm.balanceOf(alice.address);
 
       await circle.connect(bob).contribute(circleId);
 
-      const bobAfter = await cUSD.balanceOf(bob.address);
-      const aliceAfter = await cUSD.balanceOf(alice.address);
+      const bobAfter = await usdm.balanceOf(bob.address);
+      const aliceAfter = await usdm.balanceOf(alice.address);
 
       // One of them received the payout (alice or bob depending on rotation order)
       const totalPayout = amount * 2n;
@@ -285,9 +285,9 @@ describe("SavingsCircle", function () {
     });
 
     it("allows a member to exit and receive refund", async function () {
-      const bobBefore = await cUSD.balanceOf(bob.address);
+      const bobBefore = await usdm.balanceOf(bob.address);
       await circle.connect(bob).exitCircle(circleId);
-      const bobAfter = await cUSD.balanceOf(bob.address);
+      const bobAfter = await usdm.balanceOf(bob.address);
 
       expect(bobAfter).to.be.gt(bobBefore); // received refund
     });
@@ -321,16 +321,16 @@ describe("SavingsCircle", function () {
       circleId = await createCircle(alice, cfg);
       await circle.connect(bob).joinCircle(circleId);
       await circle.connect(carol).joinCircle(circleId);
-      await cUSD.connect(carol).approve(await circle.getAddress(), ONE * 10000n);
-      await circle.connect(alice).contribute(circleId); // pot = 5 cUSD, waiting for bob & carol
+      await usdm.connect(carol).approve(await circle.getAddress(), ONE * 10000n);
+      await circle.connect(alice).contribute(circleId); // pot = 5 usdm, waiting for bob & carol
     });
 
     it("allows creator to dissolve and distributes remaining funds", async function () {
-      const aliceBefore = await cUSD.balanceOf(alice.address);
+      const aliceBefore = await usdm.balanceOf(alice.address);
 
       await circle.connect(alice).dissolveCircle(circleId);
 
-      const aliceAfter = await cUSD.balanceOf(alice.address);
+      const aliceAfter = await usdm.balanceOf(alice.address);
 
       // Alice contributed 5 and should receive it back (proportional refund)
       expect(aliceAfter).to.be.gt(aliceBefore);
@@ -370,7 +370,7 @@ describe("SavingsCircle", function () {
     it("creator distributes when goal is reached", async function () {
       const cfg = {
         ...goalConfig(),
-        goalAmount: ONE * 20n,       // 20 cUSD goal
+        goalAmount: ONE * 20n,       // 20 usdm goal
         contributionAmount: ONE * 10n,
       };
       const circleId = await createCircle(alice, cfg);
@@ -379,13 +379,13 @@ describe("SavingsCircle", function () {
       await circle.connect(alice).contribute(circleId);
       await circle.connect(bob).contribute(circleId);
 
-      const aliceBefore = await cUSD.balanceOf(alice.address);
-      const bobBefore = await cUSD.balanceOf(bob.address);
+      const aliceBefore = await usdm.balanceOf(alice.address);
+      const bobBefore = await usdm.balanceOf(bob.address);
 
       await circle.connect(alice).distributeGoal(circleId);
 
-      const aliceAfter = await cUSD.balanceOf(alice.address);
-      const bobAfter = await cUSD.balanceOf(bob.address);
+      const aliceAfter = await usdm.balanceOf(alice.address);
+      const bobAfter = await usdm.balanceOf(bob.address);
 
       expect(aliceAfter + bobAfter).to.be.gt(aliceBefore + bobBefore);
 

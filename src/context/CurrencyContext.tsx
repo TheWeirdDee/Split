@@ -8,7 +8,7 @@ interface CurrencyContextType {
   setSelectedCurrency: (code: CurrencyCode) => void;
   rates: ExchangeRates;
   loading: boolean;
-  formatAmount: (amountCusd: number) => string;
+  formatAmount: (amountusdm: number) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -16,10 +16,10 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 /**
  * App-wide display-currency provider. Persists the user's chosen currency to
  * localStorage, loads cached/fresh fiat rates, and exposes `formatAmount` to
- * render cUSD values in the selected currency. Consume via {@link useCurrency}.
+ * render usdm values in the selected currency. Consume via {@link useCurrency}.
  */
 export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
-  const [selectedCurrency, setSelectedCurrencyState] = useState<CurrencyCode>('cUSD');
+  const [selectedCurrency, setSelectedCurrencyState] = useState<CurrencyCode>('usdm');
   const [rates, setRates] = useState<ExchangeRates>({ USD: 1.0, NGN: 1500.0, KES: 130.0, EUR: 0.92 });
   const [loading, setLoading] = useState(true);
 
@@ -48,9 +48,9 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     localStorage.setItem('split_currency_pref', code);
   };
 
-  const formatAmount = (amountCusd: number): string => {
+  const formatAmount = (amountusdm: number): string => {
     const rate = rates[selectedCurrency as keyof ExchangeRates] || 1.0;
-    return formatFiat(amountCusd, rate, selectedCurrency);
+    return formatFiat(amountusdm, rate, selectedCurrency);
   };
 
   return (

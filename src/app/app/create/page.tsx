@@ -69,7 +69,7 @@ export default function CreateGroupPage() {
   const [emoji, setEmoji] = useState('Users');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('Creating Onchain (cUSD)...');
+  const [loadingText, setLoadingText] = useState('Creating Onchain (usdm)...');
 
   const handleCreate = async () => {
     const trimmedName = name.trim();
@@ -181,7 +181,7 @@ export default function CreateGroupPage() {
       showToast('Failed to create group onchain. Please check your balance and try again.', 'error');
     } finally {
       setLoading(false);
-      setLoadingText('Creating Onchain (cUSD)...');
+      setLoadingText('Creating Onchain (usdm)...');
     }
   };
 
@@ -252,7 +252,7 @@ export default function CreateGroupPage() {
                 <p className="text-[10px] text-[#8A8A8A] px-1 leading-normal">
                   {groupMode === 'local' 
                     ? 'Works instantly offline without a wallet. Perfect for quick local splitting.'
-                    : 'Saves transactions to the blockchain. Requires a connected wallet and CELO/cUSD.'
+                    : 'Saves transactions to the blockchain. Requires a connected wallet and CELO/usdm.'
                   }
                 </p>
               </div>

@@ -8,10 +8,10 @@ import { Button } from '../common/Button';
 
 /**
  * Compact wallet indicator for headers: a "Connect" button when disconnected,
- * otherwise the avatar, truncated address, and cUSD balance.
+ * otherwise the avatar, truncated address, and usdm balance.
  */
 export const WalletBadge = () => {
-  const { address, isConnected, cUSDBalance, connect } = useWallet();
+  const { address, isConnected, usdmBalance, connect } = useWallet();
 
   if (!isConnected) {
     return (
@@ -29,7 +29,7 @@ export const WalletBadge = () => {
           {truncateAddress(address || '')}
         </span>
         <span className="text-xs text-brand dm-mono font-medium">
-          {parseFloat(cUSDBalance).toFixed(2)} cUSD
+          {parseFloat(usdmBalance).toFixed(2)} usdm
         </span>
       </div>
     </div>

@@ -33,7 +33,7 @@ function SplitLogo({ size = 28 }: { size?: number }) {
 }
 
 export function AppHeader({ title, showBack }: AppHeaderProps) {
-  const { address, cUSDBalance, disconnect, connect, isInitialLoading } = useWallet();
+  const { address, usdmBalance, disconnect, connect, isInitialLoading } = useWallet();
   const { unreadCount } = useNotifications();
   const router = useRouter();
   const unreadLabel = unreadCount > 99 ? '99+' : unreadCount.toString();
@@ -185,7 +185,7 @@ export function AppHeader({ title, showBack }: AppHeaderProps) {
               paddingLeft: '6px',
               whiteSpace: 'nowrap',
             }}>
-              {formatAmount(parseFloat(cUSDBalance) || 0)}
+              {formatAmount(parseFloat(usdmBalance) || 0)}
             </span>
           </div>
         )}

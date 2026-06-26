@@ -240,7 +240,7 @@ export default function CreateCirclePage() {
         {step === 2 && (
           <div className="space-y-6 animate-slide-up">
             <Input
-              label="Contribution Size (cUSD)"
+              label="Contribution Size (usdm)"
               placeholder="e.g. 10"
               type="number"
               min="0.001"
@@ -289,7 +289,7 @@ export default function CreateCirclePage() {
             ) : (
               <>
                 <Input
-                  label="Target Goal Size (cUSD)"
+                  label="Target Goal Size (usdm)"
                   placeholder="e.g. 100"
                   type="number"
                   min="0.001"
@@ -416,7 +416,7 @@ export default function CreateCirclePage() {
                 </div>
                 <div>
                   <span className="text-xs text-text-secondary uppercase tracking-wider">Contribution size</span>
-                  <div className="font-bold text-brand">{contribution} cUSD</div>
+                  <div className="font-bold text-brand">{contribution} usdm</div>
                 </div>
                 <div>
                   <span className="text-xs text-text-secondary uppercase tracking-wider">Cadence</span>
@@ -431,7 +431,7 @@ export default function CreateCirclePage() {
                   <>
                     <div>
                       <span className="text-xs text-text-secondary uppercase tracking-wider">Target goal</span>
-                      <div className="font-bold text-purple-400">{goalAmount} cUSD</div>
+                      <div className="font-bold text-purple-400">{goalAmount} usdm</div>
                     </div>
                     <div>
                       <span className="text-xs text-text-secondary uppercase tracking-wider">Deadline</span>

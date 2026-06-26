@@ -142,7 +142,7 @@ export default function SettlePage() {
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-secondary">Token</span>
-            <span className="text-brand font-medium">cUSD (Celo)</span>
+            <span className="text-brand font-medium">usdm (Celo)</span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-secondary">Status</span>
@@ -163,7 +163,7 @@ export default function SettlePage() {
             {groupId?.startsWith('local-') 
               ? 'Confirm & Settle Offline' 
               : step === 'approving' 
-                ? 'Approving cUSD...' 
+                ? 'Approving usdm...' 
                 : step === 'sending' 
                   ? 'Sending Payment...' 
                   : 'Confirm & Pay'}

@@ -2,12 +2,12 @@
 
 **Split expenses. Save together. No awkwardness.**
 
-Split is a mobile-first web app for sharing expenses and saving money with friends — settled instantly in **cUSD** on the **Celo** blockchain, and built to feel native inside **MiniPay**. No "who owes who" spreadsheets, no chasing people for money.
+Split is a mobile-first web app for sharing expenses and saving money with friends — settled instantly in **usdm** on the **Celo** blockchain, and built to feel native inside **MiniPay**. No "who owes who" spreadsheets, no chasing people for money.
 
 > Built for the Celo **Proof of Ship** program.
 
 - **Live app:** https://split-five-eta.vercel.app
-- **Best experience:** open inside **MiniPay** (Opera Mini / MiniPay app) — it auto-connects and pays gas in cUSD. Works in any browser wallet (MetaMask, Valora, etc.) too, and even **fully offline with no wallet** for quick splits.
+- **Best experience:** open inside **MiniPay** (Opera Mini / MiniPay app) — it auto-connects and pays gas in usdm. Works in any browser wallet (MetaMask, Valora, etc.) too, and even **fully offline with no wallet** for quick splits.
 
 ---
 
@@ -41,7 +41,7 @@ At a glance, Split lets you:
 - 💸 **Split any bill** with friends — equally, by %, by shares, or exact amounts.
 - 🧾 **Scan a receipt** and auto-extract items, or import a CSV.
 - 🔗 **Create groups** on-chain **or** fully offline (no wallet needed).
-- ⚡ **Settle debts in one tap** with cUSD, or **"Settle all"** in a batch.
+- ⚡ **Settle debts in one tap** with usdm, or **"Settle all"** in a batch.
 - 🐷 **Run Savings Circles** — rotating payout pools (Ajo/ROSCA) or shared-goal funds.
 - 🔍 **Discover public circles** to join, or compute a split offline with the **calculator**.
 - 🔁 **Automate recurring expenses** (rent, subscriptions).
@@ -78,10 +78,10 @@ Adding an expense is flexible and fast:
 ### 3. Settling up
 
 - **Debt-simplification engine:** instead of everyone paying everyone, Split nets all balances down to the **fewest possible transfers**.
-- **One-tap settle:** pay a specific person their cUSD directly.
+- **One-tap settle:** pay a specific person their usdm directly.
 - **Settle all:** clear every debt you owe in a batch, tracked with per-item status.
 - **Reminders:** nudge someone who owes you with a notification.
-- **On-chain proof:** real settlements are cUSD transfers on Celo, viewable on CeloScan.
+- **On-chain proof:** real settlements are usdm transfers on Celo, viewable on CeloScan.
 
 ### 4. Savings Circles (Ajo / ROSCA)
 
@@ -92,7 +92,7 @@ Save toward goals with a group, fully on-chain via the `SavingsCircle` contract.
   - **Shared Goal:** everyone contributes toward a target amount; the creator distributes once the goal is reached.
 - **Creation wizard:** contribution size, cadence (daily/weekly/monthly/custom), max members, goal amount & deadline, grace period, and max-missed tolerance.
 - **Public or Private:** public circles appear in the **Explore** directory for anyone to discover and join; private ones are reachable only by direct link.
-- **Lifecycle actions:** join, contribute (cUSD), distribute / distribute-goal, mark a member missed, exit, or dissolve.
+- **Lifecycle actions:** join, contribute (usdm), distribute / distribute-goal, mark a member missed, exit, or dissolve.
 - **Member tracking:** contributions, payouts received, missed counts, and per-cycle status.
 - **Yield estimate** and a per-circle **history** view.
 - **Deadline reminders** delivered via a scheduled job.
@@ -119,7 +119,7 @@ Save toward goals with a group, fully on-chain via the `SavingsCircle` contract.
 
 ### 8. Wallet & MiniPay
 
-- **MiniPay-native:** auto-detects MiniPay (`window.ethereum.isMiniPay`), **auto-connects with no "Connect" button**, and pays gas in **cUSD** via `feeCurrency` (MiniPay users hold no native CELO).
+- **MiniPay-native:** auto-detects MiniPay (`window.ethereum.isMiniPay`), **auto-connects with no "Connect" button**, and pays gas in **usdm** via `feeCurrency` (MiniPay users hold no native CELO).
 - **Any wallet:** EIP-6963 multi-wallet picker for MetaMask / Valora / etc., with automatic Celo network add & switch.
 - **Fiat display:** balances and amounts shown in your selected local currency.
 - **Optional wallet auth:** a sign-in-with-Ethereum session layer is built in (off by default) that can lock private data (contacts, chat) to its owner when enabled.
@@ -130,10 +130,10 @@ Save toward goals with a group, fully on-chain via the `SavingsCircle` contract.
 
 Split is a **hybrid on-chain + off-chain** app:
 
-- **On-chain (Celo):** the source of truth for money — group membership, expense records, settlements, and savings-circle state live in the `SplitGroup` and `SavingsCircle` contracts. Settlements are real cUSD transfers.
+- **On-chain (Celo):** the source of truth for money — group membership, expense records, settlements, and savings-circle state live in the `SplitGroup` and `SavingsCircle` contracts. Settlements are real usdm transfers.
 - **Off-chain (Supabase):** fast metadata and social features — display names, group/member records, chat messages, notifications, address book, recurring rules, audit revisions, and circle visibility (public/private). Realtime subscriptions keep the UI live.
 - **Client:** Next.js App Router with React hooks per domain (`useGroups`, `useExpenses`, `useBalances`, `useSavingsCircle`, `useGroupChat`, `useNotifications`, …). On-chain reads are cached in-memory (stale-while-revalidate) so navigating between screens doesn't re-hit the RPC.
-- **Gas model:** `gasPrice` always set in CELO; `feeCurrency: cUSD` only for MiniPay — centralized in `src/lib/gas.ts`.
+- **Gas model:** `gasPrice` always set in CELO; `feeCurrency: usdm` only for MiniPay — centralized in `src/lib/gas.ts`.
 
 ---
 
@@ -161,7 +161,7 @@ Deployed on **Celo Mainnet** (`contracts/contracts/`):
 |---|---|---|
 | `SplitGroup.sol` | Groups, expenses, settlements | [`0x86A76e4AA9B69cF5C86bFfae69F5744Cc2AED044`](https://celoscan.io/address/0x86A76e4AA9B69cF5C86bFfae69F5744Cc2AED044) |
 | `SavingsCircle.sol` | Rotating / goal savings circles | [`0x43BF77fEF489B0fe6E715F505f5ce20B3D5525c0`](https://celoscan.io/address/0x43BF77fEF489B0fe6E715F505f5ce20B3D5525c0) |
-| cUSD (token) | Celo stablecoin used for all payments | [`0x765DE816845861e75A25fCA122bb6898B8B1282a`](https://celoscan.io/address/0x765DE816845861e75A25fCA122bb6898B8B1282a) |
+| usdm (token) | Celo stablecoin used for all payments | [`0x765DE816845861e75A25fCA122bb6898B8B1282a`](https://celoscan.io/address/0x765DE816845861e75A25fCA122bb6898B8B1282a) |
 
 ---
 
@@ -210,7 +210,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 NEXT_PUBLIC_SPLIT_CONTRACT=0x86A76e4AA9B69cF5C86bFfae69F5744Cc2AED044
 NEXT_PUBLIC_SAVINGS_CIRCLE_ADDRESS=0x43BF77fEF489B0fe6E715F505f5ce20B3D5525c0
-NEXT_PUBLIC_CUSD_ADDRESS=0x765DE816845861e75A25fCA122bb6898B8B1282a
+NEXT_PUBLIC_usdm_ADDRESS=0x765DE816845861e75A25fCA122bb6898B8B1282a
 NEXT_PUBLIC_CHAIN_ID=42220
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
@@ -267,7 +267,7 @@ contracts/                  # Hardhat project (SplitGroup.sol, SavingsCircle.sol
 
 ## Security & privacy
 
-- **On-chain settlements** are real, verifiable cUSD transfers — immutable proof of payment.
+- **On-chain settlements** are real, verifiable usdm transfers — immutable proof of payment.
 - **Server-mediated writes:** sensitive inserts (e.g. notifications) go through API routes using the Supabase **service-role key**, so the public anon key can't forge them.
 - **Optional wallet auth:** enabling `AUTH_SECRET` turns on sign-in-with-Ethereum sessions and locks private tables (contacts, messages) to their owner via server routes + RLS.
 - **Secrets stay out of git:** `.env*`, keys, and scratch/scripts are git-ignored.

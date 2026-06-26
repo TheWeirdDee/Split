@@ -5,7 +5,7 @@ import { SavingsCircle, MockERC20 } from "../typechain-types";
 
 describe("SavingsCircle Contract", function () {
   let savingsCircle: SavingsCircle;
-  let mockCUSD: MockERC20;
+  let mockusdm: MockERC20;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -16,25 +16,25 @@ describe("SavingsCircle Contract", function () {
   beforeEach(async function () {
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-    // Deploy Mock cUSD
+    // Deploy Mock usdm
     const MockERC20Factory = await ethers.getContractFactory("MockERC20");
-    mockCUSD = (await MockERC20Factory.deploy("Mock cUSD", "cUSD", INITIAL_SUPPLY)) as MockERC20;
-    await mockCUSD.waitForDeployment();
+    mockusdm = (await MockERC20Factory.deploy("Mock usdm", "usdm", INITIAL_SUPPLY)) as MockERC20;
+    await mockusdm.waitForDeployment();
 
     // Deploy SavingsCircle
     const SavingsCircleFactory = await ethers.getContractFactory("SavingsCircle");
-    savingsCircle = (await SavingsCircleFactory.deploy(await mockCUSD.getAddress())) as SavingsCircle;
+    savingsCircle = (await SavingsCircleFactory.deploy(await mockusdm.getAddress())) as SavingsCircle;
     await savingsCircle.waitForDeployment();
 
-    // Distribute some cUSD to other addresses for testing
-    await mockCUSD.transfer(addr1.address, ethers.parseEther("100"));
-    await mockCUSD.transfer(addr2.address, ethers.parseEther("100"));
-    await mockCUSD.transfer(addr3.address, ethers.parseEther("100"));
+    // Distribute some usdm to other addresses for testing
+    await mockusdm.transfer(addr1.address, ethers.parseEther("100"));
+    await mockusdm.transfer(addr2.address, ethers.parseEther("100"));
+    await mockusdm.transfer(addr3.address, ethers.parseEther("100"));
   });
 
   describe("Deployment", function () {
-    it("Should set the correct cUSD token address", async function () {
-      expect(await savingsCircle.cUSD()).to.equal(await mockCUSD.getAddress());
+    it("Should set the correct usdm token address", async function () {
+      expect(await savingsCircle.usdm()).to.equal(await mockusdm.getAddress());
     });
   });
 
@@ -42,7 +42,7 @@ describe("SavingsCircle Contract", function () {
     it("Should create a rotating savings circle", async function () {
       const name = "Vacation Saver";
       const mode = 0; // Rotating
-      const contribution = ethers.parseEther("10"); // 10 cUSD
+      const contribution = ethers.parseEther("10"); // 10 usdm
       const frequency = 604800; // 1 week in seconds
       const grace = 86400; // 1 day in seconds
       const maxMissed = 2;
@@ -82,9 +82,9 @@ describe("SavingsCircle Contract", function () {
       );
       await savingsCircle.connect(addr1).joinCircle(1);
 
-      // Approve cUSD spend for both
-      await mockCUSD.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
-      await mockCUSD.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      // Approve usdm spend for both
+      await mockusdm.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
     });
 
     it("Should execute payout when everyone contributes", async function () {
@@ -97,14 +97,14 @@ describe("SavingsCircle Contract", function () {
       const nextRecipient = await savingsCircle.getNextRecipient(1);
       expect(nextRecipient).to.equal(owner.address);
 
-      const balBefore = await mockCUSD.balanceOf(owner.address);
+      const balBefore = await mockusdm.balanceOf(owner.address);
 
       await expect(savingsCircle.connect(addr1).contribute(1))
         .to.emit(savingsCircle, "PayoutSent")
         .withArgs(1, owner.address, ethers.parseEther("20"), 0);
 
-      const balAfter = await mockCUSD.balanceOf(owner.address);
-      // Owner gets the full 20 cUSD payout (owner spent 10 earlier, so net cycle change is +10)
+      const balAfter = await mockusdm.balanceOf(owner.address);
+      // Owner gets the full 20 usdm payout (owner spent 10 earlier, so net cycle change is +10)
       expect(balAfter - balBefore).to.equal(ethers.parseEther("20"));
 
       // Cycle should advance to 1
@@ -125,8 +125,8 @@ describe("SavingsCircle Contract", function () {
       );
       await savingsCircle.connect(addr1).joinCircle(1);
 
-      await mockCUSD.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
-      await mockCUSD.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
     });
 
     it("Should allow creator to distribute once goal is reached", async function () {
@@ -136,18 +136,18 @@ describe("SavingsCircle Contract", function () {
       const circle = await savingsCircle.getCircle(1);
       expect(circle.totalSaved).to.equal(goalAmount);
 
-      const balBeforeOwner = await mockCUSD.balanceOf(owner.address);
-      const balBeforeAddr1 = await mockCUSD.balanceOf(addr1.address);
+      const balBeforeOwner = await mockusdm.balanceOf(owner.address);
+      const balBeforeAddr1 = await mockusdm.balanceOf(addr1.address);
 
-      // Distribute goal funds -> splits equally (25 cUSD each)
+      // Distribute goal funds -> splits equally (25 usdm each)
       await expect(savingsCircle.connect(owner).distributeGoal(1))
         .to.emit(savingsCircle, "PayoutSent")
         .withArgs(1, owner.address, ethers.parseEther("25"), 0)
         .and.to.emit(savingsCircle, "PayoutSent")
         .withArgs(1, addr1.address, ethers.parseEther("25"), 0);
 
-      expect(await mockCUSD.balanceOf(owner.address)).to.equal(balBeforeOwner + ethers.parseEther("25"));
-      expect(await mockCUSD.balanceOf(addr1.address)).to.equal(balBeforeAddr1 + ethers.parseEther("25"));
+      expect(await mockusdm.balanceOf(owner.address)).to.equal(balBeforeOwner + ethers.parseEther("25"));
+      expect(await mockusdm.balanceOf(addr1.address)).to.equal(balBeforeAddr1 + ethers.parseEther("25"));
     });
   });
 
@@ -157,19 +157,19 @@ describe("SavingsCircle Contract", function () {
         "Weekly Saver", 0, ethers.parseEther("10"), 604800, 86400, 2, 2, 0, 0, 0, 3600
       );
       await savingsCircle.connect(addr1).joinCircle(1);
-      await mockCUSD.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
-      await mockCUSD.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
     });
 
     it("Should allow member to exit and claim refund", async function () {
       await savingsCircle.connect(addr1).contribute(1);
 
-      const balBefore = await mockCUSD.balanceOf(addr1.address);
+      const balBefore = await mockusdm.balanceOf(addr1.address);
       await expect(savingsCircle.connect(addr1).exitCircle(1))
         .to.emit(savingsCircle, "MemberExited")
         .withArgs(1, addr1.address, ethers.parseEther("10"));
 
-      expect(await mockCUSD.balanceOf(addr1.address)).to.equal(balBefore + ethers.parseEther("10"));
+      expect(await mockusdm.balanceOf(addr1.address)).to.equal(balBefore + ethers.parseEther("10"));
     });
 
     it("Should allow creator to dissolve and refund active members", async function () {
@@ -180,22 +180,22 @@ describe("SavingsCircle Contract", function () {
         "Goal Saver Dissolve", 1, ethers.parseEther("10"), 604800, 86400, 2, 2, 0, ethers.parseEther("50"), deadline, 3600
       );
       await savingsCircle.connect(addr1).joinCircle(2);
-      await mockCUSD.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
-      await mockCUSD.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(addr1).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
 
       await savingsCircle.connect(owner).contribute(2);
       await savingsCircle.connect(addr1).contribute(2);
 
-      // We have 20 cUSD inside the contract. Dissolving should return 10 cUSD to each.
-      const balBeforeOwner = await mockCUSD.balanceOf(owner.address);
-      const balBeforeAddr1 = await mockCUSD.balanceOf(addr1.address);
+      // We have 20 usdm inside the contract. Dissolving should return 10 usdm to each.
+      const balBeforeOwner = await mockusdm.balanceOf(owner.address);
+      const balBeforeAddr1 = await mockusdm.balanceOf(addr1.address);
 
       await expect(savingsCircle.connect(owner).dissolveCircle(2))
         .to.emit(savingsCircle, "CircleDissolved")
         .withArgs(2, owner.address);
 
-      expect(await mockCUSD.balanceOf(owner.address)).to.equal(balBeforeOwner + ethers.parseEther("10"));
-      expect(await mockCUSD.balanceOf(addr1.address)).to.equal(balBeforeAddr1 + ethers.parseEther("10"));
+      expect(await mockusdm.balanceOf(owner.address)).to.equal(balBeforeOwner + ethers.parseEther("10"));
+      expect(await mockusdm.balanceOf(addr1.address)).to.equal(balBeforeAddr1 + ethers.parseEther("10"));
     });
   });
 
@@ -208,7 +208,7 @@ describe("SavingsCircle Contract", function () {
         "Rules Saver", 0, ethers.parseEther("10"), frequency, grace, 2, 2, 0, 0, 0, 3600
       );
       await savingsCircle.connect(addr1).joinCircle(1);
-      await mockCUSD.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
+      await mockusdm.connect(owner).approve(await savingsCircle.getAddress(), ethers.parseEther("100"));
     });
 
     it("Should revert markMissed if grace period has not expired", async function () {

@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { supabase } from '@/lib/supabase';
-import { CONTRACT_ADDRESS, CUSD_ADDRESS, SPLIT_ABI } from '@/lib/contract';
+import { CONTRACT_ADDRESS, usdm_ADDRESS, SPLIT_ABI } from '@/lib/contract';
 import { buildGasParams } from '@/lib/gas';
 import { parseEther, erc20Abi } from 'viem';
 import { celo } from 'viem/chains';
 import { createNotificationSafe } from '@/lib/notifications';
 
 /**
- * Settles a debt on-chain: approves cUSD, calls `settleDebt`, then notifies the
+ * Settles a debt on-chain: approves usdm, calls `settleDebt`, then notifies the
  * creditor. Exposes a `step` state ('approving' | 'sending' | 'confirmed') for
  * progress UI. Gas follows the project rule — gasPrice in CELO always, with
- * `feeCurrency: cUSD` only for MiniPay (which holds no CELO).
+ * `feeCurrency: usdm` only for MiniPay (which holds no CELO).
  */
 export const useSettle = () => {
   const wallet = useWallet();
@@ -37,7 +37,7 @@ export const useSettle = () => {
       // We await the approve receipt before settling, so the wallet sequences both correctly.
       setStep('approving');
       const approveTx = await walletClient.writeContract({
-        address: CUSD_ADDRESS,
+        address: usdm_ADDRESS,
         abi: erc20Abi,
         functionName: 'approve',
         args: [CONTRACT_ADDRESS, amountRaw],
@@ -73,7 +73,7 @@ export const useSettle = () => {
         groupId,
         type: 'settlement',
         title: 'Payment Received',
-        body: `${debtorName} paid you ${amount.toFixed(2)} cUSD`,
+        body: `${debtorName} paid you ${amount.toFixed(2)} usdm`,
         actor: address.toLowerCase(),
         actionUrl: `/app/group/${groupId}`,
       });

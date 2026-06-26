@@ -112,7 +112,7 @@ export default function ProfilePage() {
     ? new Date(profile.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
     : 'Recently';
 
-  // Generate dynamic payment link for cUSD transfers on Celo
+  // Generate dynamic payment link for usdm transfers on Celo
   const numericAmount = parseFloat(amount);
   const celoPaymentUri = !isNaN(numericAmount) && numericAmount > 0
     ? `celo:0x765DE816845861e75A25fCA122bb6898B8B1282a/transfer?address=${targetAddress}&amount=${numericAmount}`
@@ -202,7 +202,7 @@ export default function ProfilePage() {
 
           {/* Amount input box */}
           <div className="w-full space-y-1.5">
-            <label className="text-[10px] font-bold text-[#8A8A8A] uppercase tracking-wider ml-1">Send Amount (cUSD)</label>
+            <label className="text-[10px] font-bold text-[#8A8A8A] uppercase tracking-wider ml-1">Send Amount (usdm)</label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
                 <DollarSign className="w-5 h-5 text-[#00C896]" />
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                 onChange={(e) => setAmount(e.target.value)}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8A8A8A] font-mono select-none">
-                cUSD
+                usdm
               </span>
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function ProfilePage() {
                 Scan to Pay {displayName}
               </p>
               <p className="text-[10px] text-[#8A8A8A]">
-                {amount ? `Send exactly ${amount} cUSD` : 'Supports Valora, MetaMask, and Celo mobile wallets'}
+                {amount ? `Send exactly ${amount} usdm` : 'Supports Valora, MetaMask, and Celo mobile wallets'}
               </p>
             </div>
           </div>
@@ -243,7 +243,7 @@ export default function ProfilePage() {
           <div className="w-full space-y-3">
             <div className="flex bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-2.5 items-center justify-between">
               <div className="min-w-0 pr-4">
-                <span className="text-[9px] text-[#4A4A4A] block font-mono uppercase tracking-wider font-semibold">Celo cUSD URI</span>
+                <span className="text-[9px] text-[#4A4A4A] block font-mono uppercase tracking-wider font-semibold">Celo usdm URI</span>
                 <span className="text-xs text-[#8A8A8A] font-mono block truncate select-all">{celoPaymentUri}</span>
               </div>
               <button

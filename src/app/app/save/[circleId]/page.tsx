@@ -197,7 +197,7 @@ export default function CircleDetailPage() {
             </span>
             <div className="font-mono text-2xl font-bold text-brand flex items-baseline gap-1">
               {isGoal ? totalSavedFormatted : potFormatted}
-              <span className="text-xs font-sans font-medium text-text-secondary">cUSD</span>
+              <span className="text-xs font-sans font-medium text-text-secondary">usdm</span>
             </div>
             {!apyLoading && apy > 0 && (
               <div className="flex items-center gap-1 mt-1 text-[10px] text-green-400 font-medium bg-green-500/10 px-2 py-0.5 rounded-full w-fit">
@@ -211,7 +211,7 @@ export default function CircleDetailPage() {
             </span>
             <div className="font-mono text-2xl font-bold text-text-primary flex items-baseline gap-1">
               {contributionFormatted}
-              <span className="text-xs font-sans font-medium text-text-secondary">cUSD</span>
+              <span className="text-xs font-sans font-medium text-text-secondary">usdm</span>
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function CircleDetailPage() {
             </div>
 
             <div className="flex items-center justify-between text-xs text-text-secondary font-mono">
-              <div>Target: {goalAmountFormatted} cUSD</div>
+              <div>Target: {goalAmountFormatted} usdm</div>
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-yellow-500" />
                 Due {new Date(Number(circle.nextDeadline) * 1000).toLocaleDateString()}
@@ -263,7 +263,7 @@ export default function CircleDetailPage() {
                     {nextRecipient.toLowerCase() === userAddress ? 'You (Payout)' : `${nextRecipient.slice(0, 6)}...${nextRecipient.slice(-4)}`}
                   </div>
                   <div className="text-xs text-text-secondary">
-                    Will receive the next payout of {Number(circle.memberAddrs.length * Number(contributionFormatted))} cUSD
+                    Will receive the next payout of {Number(circle.memberAddrs.length * Number(contributionFormatted))} usdm
                   </div>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function CircleDetailPage() {
             </div>
             <h3 className="font-bold clash-display text-lg">You are invited!</h3>
             <p className="text-xs text-text-secondary max-w-[280px] mx-auto">
-              Join this circle to save {contributionFormatted} cUSD on a regular basis with this group.
+              Join this circle to save {contributionFormatted} usdm on a regular basis with this group.
             </p>
             <Button
               className="w-full h-12 bg-brand text-black font-bold rounded-2xl cursor-pointer hover:bg-brand-dark"
@@ -318,7 +318,7 @@ export default function CircleDetailPage() {
                     <AlertCircle className="w-4 h-4 text-brand" /> Contribution Required
                   </h3>
                   <p className="text-xs text-text-secondary">
-                    Your contribution of {contributionFormatted} cUSD is due for this cycle.
+                    Your contribution of {contributionFormatted} usdm is due for this cycle.
                   </p>
                 </div>
 
@@ -327,7 +327,7 @@ export default function CircleDetailPage() {
                   onClick={() => requireConnection(() => contribute(circle.contributionAmount))}
                   loading={txLoading}
                 >
-                  Contribute {contributionFormatted} cUSD
+                  Contribute {contributionFormatted} usdm
                 </Button>
               </div>
             )}
@@ -393,7 +393,7 @@ export default function CircleDetailPage() {
                         {isMemberCreator && <span className="text-[9px] bg-border px-1.5 py-0.5 rounded text-text-secondary font-medium">Creator</span>}
                       </div>
                       <div className="text-xs text-text-secondary font-mono">
-                        Saved: {contributed} cUSD
+                        Saved: {contributed} usdm
                       </div>
                     </div>
                   </div>
@@ -439,7 +439,7 @@ export default function CircleDetailPage() {
                   <div className="p-4 border border-yellow-500/20 rounded-2xl bg-yellow-500/5 space-y-3">
                     <div className="text-xs text-text-secondary">
                       Are you sure? Exiting will return your net contributed amount of{' '}
-                      <span className="font-mono text-brand font-bold">{currentMember ? Number(formatEther(BigInt(currentMember.totalContributed) - BigInt(currentMember.totalReceived))).toFixed(2) : '0'} cUSD</span>.
+                      <span className="font-mono text-brand font-bold">{currentMember ? Number(formatEther(BigInt(currentMember.totalContributed) - BigInt(currentMember.totalReceived))).toFixed(2) : '0'} usdm</span>.
                     </div>
                     <div className="flex gap-2">
                       <Button

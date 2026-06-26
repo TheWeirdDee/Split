@@ -11,11 +11,11 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  *         Supabase handles display names, notifications, and chat only.
  *
  * Deployment: Celo Mainnet
- * cUSD address: 0x765DE816845861e75A25fCA122bb6898B8B1282a
+ * usdm address: 0x765DE816845861e75A25fCA122bb6898B8B1282a
  */
 contract SplitGroup is ReentrancyGuard {
 
-    IERC20 public immutable cUSD;
+    IERC20 public immutable usdm;
 
     // ─── Structs ──────────────────────────────────────────────────────────────
 
@@ -72,8 +72,8 @@ contract SplitGroup is ReentrancyGuard {
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
-    constructor(address _cUSD) {
-        cUSD = IERC20(_cUSD);
+    constructor(address _usdm) {
+        usdm = IERC20(_usdm);
     }
 
     // ─── Group Management ─────────────────────────────────────────────────────
@@ -127,7 +127,7 @@ contract SplitGroup is ReentrancyGuard {
     /**
      * @notice Record an expense onchain. Updates balances immediately.
      * @param groupId The group this expense belongs to
-     * @param amount Total amount spent (in cUSD wei)
+     * @param amount Total amount spent (in usdm wei)
      * @param description What was spent on
      * @param splitMembers Array of member addresses for the split
      * @param splitAmounts Array of amounts each member owes (must sum to amount)
@@ -179,17 +179,17 @@ contract SplitGroup is ReentrancyGuard {
     // ─── Settlement ───────────────────────────────────────────────────────────
 
     /**
-     * @notice Settle a debt. Transfers cUSD directly from caller to recipient.
+     * @notice Settle a debt. Transfers usdm directly from caller to recipient.
      *         Updates onchain balances.
      * @param groupId The group
      * @param to The member being paid
-     * @param amount Amount to settle in cUSD wei
+     * @param amount Amount to settle in usdm wei
      */
     function settleDebt(uint256 groupId, address to, uint256 amount) external nonReentrant {
         if (!groups[groupId].exists) revert GroupNotFound(groupId);
         if (!isMember[groupId][msg.sender]) revert NotMember(groupId, msg.sender);
 
-        bool ok = cUSD.transferFrom(msg.sender, to, amount);
+        bool ok = usdm.transferFrom(msg.sender, to, amount);
         if (!ok) revert TransferFailed();
 
         // Update balances

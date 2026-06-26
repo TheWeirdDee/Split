@@ -11,7 +11,7 @@ const FAQ_SECTIONS = [
       {
         question: "What is Split?",
         answer:
-          "Split is a group expense app that helps friends track shared spending and settle debts instantly with cUSD on Celo.",
+          "Split is a group expense app that helps friends track shared spending and settle debts instantly with usdm on Celo.",
       },
       {
         question: "Do I need to create a username and password?",
@@ -26,7 +26,7 @@ const FAQ_SECTIONS = [
       {
         question: "Does Split hold my money?",
         answer:
-          "No. Split does not custody your funds. Settlements are wallet-to-wallet cUSD transfers.",
+          "No. Split does not custody your funds. Settlements are wallet-to-wallet usdm transfers.",
       },
       {
         question: "Is Split free to use?",
@@ -43,7 +43,7 @@ const FAQ_SECTIONS = [
       {
         question: "Which currency does Split use for settlement?",
         answer:
-          "Split settles in cUSD on Celo Mainnet.",
+          "Split settles in usdm on Celo Mainnet.",
       },
       {
         question: "Why do I see an approval step before settling?",
@@ -179,7 +179,7 @@ const FAQ_SECTIONS = [
           "Switch to Celo Mainnet in your wallet. The app also attempts network switching for supported wallets.",
       },
       {
-        question: "My cUSD balance looks outdated.",
+        question: "My usdm balance looks outdated.",
         answer:
           "Balances refresh periodically and after major actions. Pull-to-refresh or reload the page to force a fresh read.",
       },
@@ -199,7 +199,7 @@ const FAQ_SECTIONS = [
 
 export const metadata: Metadata = {
   title: "Split FAQ",
-  description: "Frequently asked questions about using Split with cUSD on Celo.",
+  description: "Frequently asked questions about using Split with usdm on Celo.",
 };
 
 /** FAQ page (route `/faq`) answering common questions about Split. */

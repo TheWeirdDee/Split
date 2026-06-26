@@ -70,7 +70,7 @@ export const Hero = () => {
           </h1>
 
           <p className="hero-sub dm-sans text-[#7a7a7a] text-[16px] leading-[1.6] max-w-[460px] mb-8">
-            Split shared expenses and save towards collective goals with cUSD on Celo. 
+            Split shared expenses and save towards collective goals with usdm on Celo. 
             Manage split groups and collaborative Savings Circles with zero delays.
           </p>
 
@@ -120,19 +120,19 @@ export const Hero = () => {
                 <div className="space-y-3.5">
                   <div className="flex justify-between items-center">
                     <span className="text-[#8A8A8A] text-[14px] font-medium transition-colors group-hover/row:text-[#f5f0e8]">Divine paid rent</span>
-                    <span className="clash-display font-bold text-lg text-[#F7F3EC]">500 <span className="text-[10px] dm-mono opacity-30 font-normal">cUSD</span></span>
+                    <span className="clash-display font-bold text-lg text-[#F7F3EC]">500 <span className="text-[10px] dm-mono opacity-30 font-normal">usdm</span></span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[#8A8A8A] text-[14px] font-medium">John owes you</span>
-                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">cUSD</span></span>
+                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">usdm</span></span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[#8A8A8A] text-[14px] font-medium">Sarah owes you</span>
-                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">cUSD</span></span>
+                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">usdm</span></span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[#8A8A8A] text-[14px] font-medium">Mike owes you</span>
-                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">cUSD</span></span>
+                    <span className="text-[#00C896] font-bold text-lg">+166 <span className="text-[10px] dm-mono opacity-40 font-normal">usdm</span></span>
                   </div>
                 </div>
 
@@ -145,7 +145,7 @@ export const Hero = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="clash-display font-bold text-4xl text-[#00C896] tracking-tight">+498 <span className="text-xs dm-mono opacity-50 font-medium">cUSD</span></span>
+                    <span className="clash-display font-bold text-4xl text-[#00C896] tracking-tight">+498 <span className="text-xs dm-mono opacity-50 font-medium">usdm</span></span>
                   </div>
                 </div>
               </div>

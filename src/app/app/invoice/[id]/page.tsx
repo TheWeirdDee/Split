@@ -202,7 +202,7 @@ export default function InvoicePage() {
   const payerProfile = getProfileInfo(expense.paid_by);
   const payerName = payerProfile.display_name || truncateAddress(expense.paid_by);
 
-  // Generate standard Celo transfer cUSD payment URI
+  // Generate standard Celo transfer usdm payment URI
   // Syntax: celo:0x765DE816845861e75A25fCA122bb6898B8B1282a/transfer?address=[PAYER_ADDRESS]&amount=[SHARE_AMOUNT]
   const payShareAmount = selectedSplit ? Number(selectedSplit.amount) : 0;
   const celoPaymentUri = selectedSplit 
@@ -408,7 +408,7 @@ export default function InvoicePage() {
                     Scan with Valora or MetaMask
                   </p>
                   <p className="text-[10px] text-[#8A8A8A]">
-                    Transfer exactly {formatAmount(payShareAmount)} cUSD to the creator
+                    Transfer exactly {formatAmount(payShareAmount)} usdm to the creator
                   </p>
                 </div>
               </div>

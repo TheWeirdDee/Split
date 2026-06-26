@@ -5,7 +5,7 @@ import { SplitGroup, MockERC20 } from "../typechain-types";
 
 describe("SplitGroup Contract", function () {
   let splitGroup: SplitGroup;
-  let mockCUSD: MockERC20;
+  let mockusdm: MockERC20;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -16,25 +16,25 @@ describe("SplitGroup Contract", function () {
   beforeEach(async function () {
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-    // Deploy Mock cUSD
+    // Deploy Mock usdm
     const MockERC20Factory = await ethers.getContractFactory("MockERC20");
-    mockCUSD = (await MockERC20Factory.deploy("Mock cUSD", "cUSD", INITIAL_SUPPLY)) as MockERC20;
-    await mockCUSD.waitForDeployment();
+    mockusdm = (await MockERC20Factory.deploy("Mock usdm", "usdm", INITIAL_SUPPLY)) as MockERC20;
+    await mockusdm.waitForDeployment();
 
     // Deploy SplitGroup
     const SplitGroupFactory = await ethers.getContractFactory("SplitGroup");
-    splitGroup = (await SplitGroupFactory.deploy(await mockCUSD.getAddress())) as SplitGroup;
+    splitGroup = (await SplitGroupFactory.deploy(await mockusdm.getAddress())) as SplitGroup;
     await splitGroup.waitForDeployment();
 
-    // Distribute some cUSD to other addresses for testing
-    await mockCUSD.transfer(addr1.address, ethers.parseEther("100"));
-    await mockCUSD.transfer(addr2.address, ethers.parseEther("100"));
-    await mockCUSD.transfer(addr3.address, ethers.parseEther("100"));
+    // Distribute some usdm to other addresses for testing
+    await mockusdm.transfer(addr1.address, ethers.parseEther("100"));
+    await mockusdm.transfer(addr2.address, ethers.parseEther("100"));
+    await mockusdm.transfer(addr3.address, ethers.parseEther("100"));
   });
 
   describe("Deployment", function () {
-    it("Should set the correct cUSD token address", async function () {
-      expect(await splitGroup.cUSD()).to.equal(await mockCUSD.getAddress());
+    it("Should set the correct usdm token address", async function () {
+      expect(await splitGroup.usdm()).to.equal(await mockusdm.getAddress());
     });
   });
 
@@ -98,12 +98,12 @@ describe("SplitGroup Contract", function () {
     });
 
     it("Should record an expense and update balances correctly (equal split)", async function () {
-      const amount = ethers.parseEther("30"); // 30 cUSD
+      const amount = ethers.parseEther("30"); // 30 usdm
       const desc = "Pizza Dinner";
       const members = [owner.address, addr1.address, addr2.address];
-      const splits = [ethers.parseEther("10"), ethers.parseEther("10"), ethers.parseEther("10")]; // 10 cUSD each
+      const splits = [ethers.parseEther("10"), ethers.parseEther("10"), ethers.parseEther("10")]; // 10 usdm each
 
-      // Owner pays 30 cUSD, splits it equally among owner, addr1, addr2
+      // Owner pays 30 usdm, splits it equally among owner, addr1, addr2
       await expect(splitGroup.connect(owner).addExpense(1, amount, desc, members, splits))
         .to.emit(splitGroup, "ExpenseAdded")
         .withArgs(1, 1, owner.address, amount, desc);
@@ -116,9 +116,9 @@ describe("SplitGroup Contract", function () {
       // balances[addr2] -= 10
       // then balances[owner] -= 30 (total amount paid by owner)
       // Result net balances:
-      // owner: +20 cUSD (others owe owner 20)
-      // addr1: -10 cUSD
-      // addr2: -10 cUSD
+      // owner: +20 usdm (others owe owner 20)
+      // addr1: -10 usdm
+      // addr2: -10 usdm
       expect(await splitGroup.getMemberBalance(1, owner.address)).to.equal(ethers.parseEther("20"));
       expect(await splitGroup.getMemberBalance(1, addr1.address)).to.equal(ethers.parseEther("-10"));
       expect(await splitGroup.getMemberBalance(1, addr2.address)).to.equal(ethers.parseEther("-10"));
@@ -170,7 +170,7 @@ describe("SplitGroup Contract", function () {
       // Create group with owner, addr1, addr2
       await splitGroup.connect(owner).createGroup("SettleTest", [addr1.address, addr2.address]);
 
-      // Add expense of 30 cUSD paid by owner, split equally
+      // Add expense of 30 usdm paid by owner, split equally
       const amount = ethers.parseEther("30");
       await splitGroup.connect(owner).addExpense(
         1,
@@ -182,26 +182,26 @@ describe("SplitGroup Contract", function () {
     });
 
     it("Should allow a member to settle debt and update balances onchain", async function () {
-      // addr1 owes owner 10 cUSD. Let's settle it.
+      // addr1 owes owner 10 usdm. Let's settle it.
       const settleAmount = ethers.parseEther("10");
 
-      // Approve cUSD transfer
-      await mockCUSD.connect(addr1).approve(await splitGroup.getAddress(), settleAmount);
+      // Approve usdm transfer
+      await mockusdm.connect(addr1).approve(await splitGroup.getAddress(), settleAmount);
 
-      const balOwnerBefore = await mockCUSD.balanceOf(owner.address);
-      const balAddr1Before = await mockCUSD.balanceOf(addr1.address);
+      const balOwnerBefore = await mockusdm.balanceOf(owner.address);
+      const balAddr1Before = await mockusdm.balanceOf(addr1.address);
 
       await expect(splitGroup.connect(addr1).settleDebt(1, owner.address, settleAmount))
         .to.emit(splitGroup, "DebtSettled")
         .withArgs(1, addr1.address, owner.address, settleAmount);
 
       // ERC20 balance transfers
-      expect(await mockCUSD.balanceOf(owner.address)).to.equal(balOwnerBefore + settleAmount);
-      expect(await mockCUSD.balanceOf(addr1.address)).to.equal(balAddr1Before - settleAmount);
+      expect(await mockusdm.balanceOf(owner.address)).to.equal(balOwnerBefore + settleAmount);
+      expect(await mockusdm.balanceOf(addr1.address)).to.equal(balAddr1Before - settleAmount);
 
       // Net balances onchain update
-      // owner balance goes from +20 cUSD to +10 cUSD (since they got paid 10)
-      // addr1 balance goes from -10 cUSD to 0 cUSD (since they paid 10)
+      // owner balance goes from +20 usdm to +10 usdm (since they got paid 10)
+      // addr1 balance goes from -10 usdm to 0 usdm (since they paid 10)
       expect(await splitGroup.getMemberBalance(1, owner.address)).to.equal(ethers.parseEther("10"));
       expect(await splitGroup.getMemberBalance(1, addr1.address)).to.equal(0n);
       expect(await splitGroup.getMemberBalance(1, addr2.address)).to.equal(ethers.parseEther("-10"));

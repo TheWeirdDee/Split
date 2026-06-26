@@ -73,7 +73,7 @@ export function ReceiptScanner({ members, currentUserAddress, onScanComplete, on
     setMerchant(detectedMerchant || 'Unknown Merchant');
 
     // Simple heuristic for line items: description followed by a price
-    const priceRegex = /(?:\$|cUSD)?\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})$/i;
+    const priceRegex = /(?:\$|usdm)?\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})$/i;
     
     lines.forEach((line, index) => {
       const match = line.match(priceRegex);

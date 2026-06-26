@@ -14,7 +14,7 @@ import { isAddress } from 'viem';
 
 /** Settings page (route `/app/settings`): profile, address book, disconnect. */
 export default function SettingsPage() {
-  const { address, cUSDBalance, disconnect, connect } = useWallet();
+  const { address, usdmBalance, disconnect, connect } = useWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { profile, updateDisplayName } = useProfile();
   const { preferences, updatePreferences } = useNotificationPreferences();
@@ -431,9 +431,9 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif' }}>cUSD Balance</span>
+            <span style={{ fontSize: '14px', color: '#8A8A8A', fontFamily: 'DM Sans, sans-serif' }}>usdm Balance</span>
             <span style={{ fontSize: '16px', fontWeight: '600', color: '#00C896', fontFamily: 'DM Mono, monospace' }}>
-              {(isNaN(parseFloat(cUSDBalance)) ? '0.00' : parseFloat(cUSDBalance).toFixed(2))} cUSD
+              {(isNaN(parseFloat(usdmBalance)) ? '0.00' : parseFloat(usdmBalance).toFixed(2))} usdm
             </span>
           </div>
         </div>
@@ -444,7 +444,7 @@ export default function SettingsPage() {
           fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '600',
           color: '#4A4A4A', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 12px',
         }}>
-          Receive cUSD
+          Receive usdm
         </h2>
         <div style={{
           background: '#161616', border: '1px solid #2C2C2C', borderRadius: '16px',
@@ -457,7 +457,7 @@ export default function SettingsPage() {
             {address}
           </p>
           <p style={{ margin: 0, fontSize: '12px', color: '#4A4A4A', fontFamily: 'DM Mono, monospace', textAlign: 'center' }}>
-            Share your address to receive cUSD
+            Share your address to receive usdm
           </p>
         </div>
       </section>

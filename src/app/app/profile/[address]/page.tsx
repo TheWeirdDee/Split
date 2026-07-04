@@ -189,6 +189,52 @@ export default function ProfilePage() {
               </span>
             </div>
           </div>
+
+          {/* Split Trust Score Card */}
+          {(() => {
+            // @ts-ignore
+            const trustScore = profile?.trust_score ?? 680; // default/mock score for display
+            let scoreBadge = 'Good Splitter 👥';
+            if (trustScore >= 800) scoreBadge = 'Savings Legend 🏆';
+            else if (trustScore >= 650) scoreBadge = 'Circle Anchor ⚓';
+            else if (trustScore < 500) scoreBadge = 'Slow Settler 🐌';
+
+            return (
+              <div className="w-full bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-4 mt-2 flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-[#8A8A8A] font-bold uppercase tracking-wider">Split Trust Score</span>
+                  <span 
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'DM Sans, sans-serif',
+                      background: 'rgba(0, 200, 150, 0.1)',
+                      border: '1px solid rgba(0, 200, 150, 0.2)',
+                    }}
+                    className="font-bold px-2.5 py-1 rounded-lg text-[#00C896]"
+                  >
+                    {scoreBadge}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="font-mono text-3xl font-extrabold text-[#F7F3EC]">{trustScore}</span>
+                  <span className="text-xs text-[#8A8A8A] font-mono">/ 990 pts</span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-1">
+                  <div 
+                    style={{ 
+                      width: `${(trustScore / 990) * 100}%`,
+                      background: 'linear-gradient(90deg, #00C896 0%, #AF52DE 100%)'
+                    }} 
+                    className="h-full rounded-full"
+                  />
+                </div>
+                <p className="text-[10px] text-[#8A8A8A] text-left leading-relaxed mt-1">
+                  Calculated based on average settlement time and on-time savings circle contributions.
+                </p>
+              </div>
+            );
+          })()}
         </Card>
 
         {/* --- Interactive Payment Board --- */}

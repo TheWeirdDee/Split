@@ -183,24 +183,43 @@ export default function GroupDetailPage() {
     }
   };
 
-  const handleRemind = async (targetAddress: string, amount: number) => {
+  const handleNudge = async (targetAddress: string, amount: number, nudgeType: 'broom' | 'runner' | 'bell') => {
     const { address } = walletRef.current;
     if (!address) return;
     try {
       const senderName = getMemberDisplayName(address);
       const targetName = getMemberDisplayName(targetAddress);
+      
+      let title = 'Payment Nudge';
+      let body = `${senderName} nudged you to pay ${amount.toFixed(2)} usdm in "${group?.name}".`;
+      let type = 'reminder';
+
+      if (nudgeType === 'broom') {
+        title = '🧹 Sweep Up!';
+        body = `${senderName} is sweeping you to pay ${amount.toFixed(2)} usdm in "${group?.name}".`;
+        type = 'nudge_broom';
+      } else if (nudgeType === 'runner') {
+        title = '🏃‍♂️ Chasing You!';
+        body = `${senderName} is chasing you for ${amount.toFixed(2)} usdm in "${group?.name}".`;
+        type = 'nudge_runner';
+      } else if (nudgeType === 'bell') {
+        title = '🔔 Ring Ring!';
+        body = `${senderName} is ringing a bell for ${amount.toFixed(2)} usdm in "${group?.name}".`;
+        type = 'nudge_bell';
+      }
+
       await createNotificationSafe({
         userAddress: targetAddress,
         groupId: groupId as string,
-        type: 'reminder',
-        title: 'Payment Reminder',
-        body: `${senderName} reminds you to pay ${amount.toFixed(2)} usdm in "${group?.name}".`,
+        type,
+        title,
+        body,
         actor: address?.toLowerCase(),
         actionUrl: `/app/group/${groupId}`,
       });
-      showToast(`Reminder sent to ${targetName}!`, 'success');
+      showToast(`Nudge sent to ${targetName}!`, 'success');
     } catch {
-      showToast('Failed to send reminder.', 'error');
+      showToast('Failed to send nudge.', 'error');
     }
   };
 
@@ -921,7 +940,7 @@ export default function GroupDetailPage() {
             requireConnection={requireConnection}
             handleSettleAll={handleSettleAll}
             settleAllLoading={settleAllLoading}
-            handleRemind={handleRemind}
+            handleNudge={handleNudge}
             isAdding={isAdding}
             setIsAdding={setIsAdding}
             manualAddress={manualAddress}

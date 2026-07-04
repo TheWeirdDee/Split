@@ -33,7 +33,7 @@ interface BalancesTabProps {
   requireConnection: (action: () => void) => void;
   handleSettleAll: () => void;
   settleAllLoading: boolean;
-  handleRemind: (targetAddress: string, amount: number) => void;
+  handleNudge: (targetAddress: string, amount: number, nudgeType: 'broom' | 'runner' | 'bell') => void;
   isAdding: boolean;
   setIsAdding: React.Dispatch<React.SetStateAction<boolean>>;
   manualAddress: string;
@@ -59,7 +59,7 @@ export function BalancesTab({
   requireConnection,
   handleSettleAll,
   settleAllLoading,
-  handleRemind,
+  handleNudge,
   isAdding,
   setIsAdding,
   manualAddress,
@@ -138,7 +138,7 @@ export function BalancesTab({
                       amount={balance.amount}
                       type={isUserFrom ? 'owe' : 'owed'}
                       groupId={groupId as string}
-                      onRemind={!isUserFrom ? () => requireConnection(() => handleRemind(balance.from, balance.amount)) : undefined}
+                      onNudge={!isUserFrom ? (type) => requireConnection(() => handleNudge(balance.from, balance.amount, type)) : undefined}
                     />
                   </div>
                 );

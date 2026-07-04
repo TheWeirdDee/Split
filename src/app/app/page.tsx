@@ -14,6 +14,8 @@ import { PiggyBank, AlertTriangle } from 'lucide-react';
 import { formatEther } from 'viem';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useRecurringCheck } from '@/hooks/useRecurringCheck';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useRouter } from 'next/navigation';
 
 /** Authenticated home dashboard (route `/app`): net balance, groups, check-in. */
 export default function AppHome() {
@@ -33,9 +35,15 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
   const { circles, loading: circlesLoading } = useSavingsCircle();
   const { totalOwed, totalOwing } = useUserBalance();
   const { formatAmount } = useCurrency();
+  const { notifications, markAsRead } = useNotifications();
+  const router = useRouter();
 
   const groupIds = React.useMemo(() => groups.map((g) => g.id), [groups]);
   const { pendingRuns } = useRecurringCheck(groupIds, isConnected);
+
+  const unreadNudge = React.useMemo(() => {
+    return notifications.find(n => !n.is_read && n.type.startsWith('nudge_'));
+  }, [notifications]);
 
   return (
     <div style={{ padding: '0 16px', paddingTop: '0px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -207,6 +215,123 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
           </span>
         </div>
       </Link>
+
+      {unreadNudge && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(13,13,13,0.95)',
+            backdropFilter: 'blur(12px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '380px',
+              background: '#161616',
+              border: '1px solid #2C2C2C',
+              borderRadius: '28px',
+              padding: '32px 24px',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '20px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            }}
+            className="animate-fade-in"
+          >
+            <div
+              style={{
+                width: '96px',
+                height: '96px',
+                background: 'rgba(0, 200, 150, 0.08)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '48px',
+                border: '1px solid rgba(0, 200, 150, 0.15)',
+              }}
+              className={
+                unreadNudge.type === 'nudge_broom'
+                  ? 'animate-spin'
+                  : unreadNudge.type === 'nudge_runner'
+                  ? 'animate-bounce'
+                  : 'animate-pulse'
+              }
+            >
+              {unreadNudge.type === 'nudge_broom' && '🧹'}
+              {unreadNudge.type === 'nudge_runner' && '🏃‍♂️'}
+              {unreadNudge.type === 'nudge_bell' && '🔔'}
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  fontFamily: 'Clash Display, sans-serif',
+                  fontWeight: '700',
+                  fontSize: '22px',
+                  color: '#F7F3EC',
+                  margin: 0,
+                }}
+              >
+                {unreadNudge.title}
+              </h3>
+              <p
+                style={{
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontSize: '13px',
+                  color: '#8A8A8A',
+                  margin: '8px 0 0',
+                  lineHeight: '1.5',
+                }}
+              >
+                {unreadNudge.body}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+              <Button
+                size="lg"
+                className="w-full h-12 rounded-xl text-black bg-[#00C896] hover:bg-[#009E78] font-bold text-sm"
+                onClick={async () => {
+                  await markAsRead(unreadNudge.id);
+                  if (unreadNudge.action_url) {
+                    router.push(unreadNudge.action_url);
+                  }
+                }}
+              >
+                Settle up now
+              </Button>
+              <button
+                onClick={() => markAsRead(unreadNudge.id)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#8A8A8A',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  fontFamily: 'DM Sans, sans-serif',
+                }}
+              >
+                Dismiss Nudge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

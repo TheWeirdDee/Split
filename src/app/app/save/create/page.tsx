@@ -159,6 +159,43 @@ export default function CreateCirclePage() {
               onChange={(e) => setName(e.target.value)}
             />
 
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Or Use a Template</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setName('Daily Speedrun 🚀');
+                  setMode(0);
+                  setContribution('0.2');
+                  setFrequencyType('daily');
+                  setMaxMembers('5');
+                  setGraceHours('12');
+                  setMaxMissed(1);
+                  setStep(4); // Skip to review step directly
+                  showToast('Daily Speedrun template loaded!', 'success');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '16px',
+                  background: 'rgba(0,200,150,0.06)',
+                  border: '1px dashed #00C896',
+                  color: '#00C896',
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                🚀 Start 5-Day Daily Speedrun (0.2 usdm/day)
+              </button>
+            </div>
+
             <div className="space-y-3">
               <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Savings Mode</label>
               <div className="grid grid-cols-2 gap-4">

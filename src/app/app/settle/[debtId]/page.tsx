@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { Button } from '@/components/common/Button';
@@ -10,7 +10,9 @@ import { AmountDisplay } from '@/components/common/AmountDisplay';
 import { useWallet } from '@/context/WalletContext';
 import { useSettle } from '@/hooks/useSettle';
 import { truncateAddress } from '@/lib/utils';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Dices } from 'lucide-react';
+import { SettleRoulette } from '@/components/app/SettleRoulette';
+import { CashbackScratchcard } from '@/components/app/CashbackScratchcard';
 
 // Built outside the component so the impure `Date.now()` call isn't evaluated
 // during render (React purity rule); this only runs from the settle handler.
@@ -45,9 +47,18 @@ export default function SettlePage() {
   
   const [localStep, setLocalStep] = useState<string | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
+  const [useRoulette, setUseRoulette] = useState(false);
+  const [isRouletteOpen, setIsRouletteOpen] = useState(false);
+  const [isScratchcardOpen, setIsScratchcardOpen] = useState(false);
 
   const displayStep = groupId?.startsWith('local-') ? (localStep || 'pending') : step;
   const displayLoading = groupId?.startsWith('local-') ? localLoading : settleLoading;
+
+  useEffect(() => {
+    if (displayStep === 'confirmed') {
+      setIsScratchcardOpen(true);
+    }
+  }, [displayStep]);
 
   // A settlement needs a positive amount; guard the action so an absent or
   // malformed `amount` query param can't trigger a no-op/failed payment.
@@ -55,6 +66,11 @@ export default function SettlePage() {
   const hasValidAmount = Number.isFinite(parsedAmount) && parsedAmount > 0;
 
   const handleSettle = async () => {
+    if (useRoulette) {
+      setIsRouletteOpen(true);
+      return;
+    }
+    
     if (groupId?.startsWith('local-')) {
       if (!groupId || !creditorAddress || !amount) return;
       setLocalLoading(true);
@@ -109,7 +125,7 @@ export default function SettlePage() {
     <>
       <AppHeader />
       
-      <div className="px-6 pt-24 space-y-12 animate-fade-in">
+      <div className="px-6 pt-24 space-y-10 animate-fade-in">
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-4 w-full justify-center">
             <div className="flex flex-col items-center gap-2">
@@ -152,6 +168,48 @@ export default function SettlePage() {
           </div>
         </Card>
 
+        {/* Settle Roulette option card */}
+        <div 
+          onClick={() => setUseRoulette(!useRoulette)}
+          style={{
+            background: useRoulette ? "rgba(0,200,150,0.06)" : "#161616",
+            border: useRoulette ? "1px solid rgba(0,200,150,0.3)" : "1px solid #2C2C2C",
+            borderRadius: "16px",
+            padding: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "between",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+            <div style={{
+              width: "36px", height: "36px",
+              background: useRoulette ? "rgba(0,200,150,0.12)" : "rgba(255,255,255,0.02)",
+              borderRadius: "10px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Dices style={{ width: "18px", height: "18px", color: useRoulette ? "#00C896" : "#8A8A8A" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "#F7F3EC" }}>Settle Roulette</span>
+              <span style={{ fontSize: "11px", color: "#8A8A8A" }}>Randomly adjusts your split by ±5%</span>
+            </div>
+          </div>
+          <input 
+            type="checkbox" 
+            checked={useRoulette} 
+            onChange={(e) => e.stopPropagation()} // Let card click handle toggle
+            onClick={() => setUseRoulette(!useRoulette)}
+            style={{
+              width: "16px", height: "16px",
+              accentColor: "#00C896",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
         <div className="space-y-4">
           <Button 
             size="lg" 
@@ -162,11 +220,13 @@ export default function SettlePage() {
           >
             {groupId?.startsWith('local-') 
               ? 'Confirm & Settle Offline' 
-              : step === 'approving' 
-                ? 'Approving usdm...' 
-                : step === 'sending' 
-                  ? 'Sending Payment...' 
-                  : 'Confirm & Pay'}
+              : useRoulette 
+                ? 'Spin & Settle'
+                : step === 'approving' 
+                  ? 'Approving usdm...' 
+                  : step === 'sending' 
+                    ? 'Sending Payment...' 
+                    : 'Confirm & Pay'}
           </Button>
           
           <button 
@@ -177,6 +237,41 @@ export default function SettlePage() {
           </button>
         </div>
       </div>
+
+      <SettleRoulette
+        isOpen={isRouletteOpen}
+        onClose={() => setIsRouletteOpen(false)}
+        originalAmount={parseFloat(amount || '0')}
+        onConfirm={async (adjusted) => {
+          setIsRouletteOpen(false);
+          if (groupId?.startsWith('local-')) {
+            setLocalLoading(true);
+            try {
+              const newSettlement = createLocalSettlement(groupId, creditorAddress as string, adjusted.toString());
+              const allSettlements = JSON.parse(localStorage.getItem('split_local_settlements') || '[]');
+              localStorage.setItem('split_local_settlements', JSON.stringify([...allSettlements, newSettlement]));
+              setLocalStep('confirmed');
+            } catch (err) {
+              console.error(err);
+            } finally {
+              setLocalLoading(false);
+            }
+          } else {
+            const { address } = walletRef.current;
+            if (!address || !groupId || !creditorAddress) return;
+            try {
+              await settle(groupId, creditorAddress as string, adjusted);
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        }}
+      />
+
+      <CashbackScratchcard
+        isOpen={isScratchcardOpen}
+        onClose={() => setIsScratchcardOpen(false)}
+      />
     </>
   );
 }

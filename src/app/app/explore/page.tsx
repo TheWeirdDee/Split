@@ -68,6 +68,7 @@ export default function ExplorePage() {
 
   const communityGoals = useMemo(() => {
     const seen = new Set<string>();
+    let count = 0;
     return activeCircles
       .filter((c: any) => c.mode === 1)
       .map((c: any) => ({
@@ -75,14 +76,23 @@ export default function ExplorePage() {
         title: (c.name && c.name.trim()) ? c.name : `Savings Goal #${c.id}`,
       }))
       .filter((c: any) => {
+        if (count >= 3) return false;
+        
+        const isHexSpam = /^save-[a-f0-9]+$/i.test(c.title);
+        if (isHexSpam && seen.has('hex-spam-goal')) return false;
+        
         if (seen.has(c.title)) return false;
+        
         seen.add(c.title);
+        if (isHexSpam) seen.add('hex-spam-goal');
+        count++;
         return true;
       });
   }, [activeCircles]);
 
   const rotatingCircles = useMemo(() => {
     const seen = new Set<string>();
+    let count = 0;
     return activeCircles
       .filter((c: any) => c.mode === 0)
       .map((c: any) => ({
@@ -90,8 +100,16 @@ export default function ExplorePage() {
         title: (c.name && c.name.trim()) ? c.name : `Rotating Circle #${c.id}`,
       }))
       .filter((c: any) => {
+        if (count >= 3) return false;
+        
+        const isHexSpam = /^save-[a-f0-9]+$/i.test(c.title);
+        if (isHexSpam && seen.has('hex-spam-rotating')) return false;
+        
         if (seen.has(c.title)) return false;
+        
         seen.add(c.title);
+        if (isHexSpam) seen.add('hex-spam-rotating');
+        count++;
         return true;
       });
   }, [activeCircles]);

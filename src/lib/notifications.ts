@@ -1,4 +1,4 @@
-type NotificationType =
+export type NotificationType =
   | 'reminder'
   | 'payment'
   | 'join'
@@ -6,7 +6,10 @@ type NotificationType =
   | 'system'
   | 'message'
   | 'settlement'
-  | 'group_joined';
+  | 'group_joined'
+  | 'nudge_broom'
+  | 'nudge_runner'
+  | 'nudge_bell';
 
 interface CreateNotificationInput {
   userAddress: string;

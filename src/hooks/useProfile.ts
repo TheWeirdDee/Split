@@ -8,6 +8,7 @@ export interface UserProfile {
   avatar_emoji: string | null;
   streak_count: number;
   last_checkin: string | null;
+  trust_score?: number;
 }
 
 /**

@@ -1,4 +1,4 @@
-type NotificationType =
+export type NotificationType =
   | 'reminder'
   | 'payment'
   | 'join'

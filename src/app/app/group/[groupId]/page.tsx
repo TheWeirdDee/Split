@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { generateInviteLink, copyToClipboard } from '@/lib/inviteLinks';
-import { createNotificationSafe } from '@/lib/notifications';
+import { createNotificationSafe, NotificationType } from '@/lib/notifications';
 import { useAddressBook } from '@/hooks/useAddressBook';
 import { useSettle } from '@/hooks/useSettle';
 import { CONTRACT_ADDRESS, SPLIT_ABI } from '@/lib/contract';
@@ -192,7 +192,7 @@ export default function GroupDetailPage() {
       
       let title = 'Payment Nudge';
       let body = `${senderName} nudged you to pay ${amount.toFixed(2)} usdm in "${group?.name}".`;
-      let type = 'reminder';
+      let type: NotificationType = 'reminder';
 
       if (nudgeType === 'broom') {
         title = '🧹 Sweep Up!';

@@ -289,3 +289,20 @@ ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS trust_score INTEGER DEFAULT 6
 ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS settlements_count INTEGER DEFAULT 0;
 ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS on_time_contributions INTEGER DEFAULT 0;
 ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS missed_contributions INTEGER DEFAULT 0;
+
+-- --- BUDGET CHALLENGES MIGRATION ---
+CREATE TABLE IF NOT EXISTS group_budget_challenges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  amount DECIMAL(18,6) NOT NULL,
+  category TEXT NOT NULL DEFAULT 'all',
+  start_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  end_date TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE group_budget_challenges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all" ON group_budget_challenges;
+CREATE POLICY "Allow all" ON group_budget_challenges FOR ALL USING (true);

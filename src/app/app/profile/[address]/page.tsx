@@ -25,6 +25,10 @@ interface ProfileRecord {
   avatar_emoji: string | null;
   streak_count: number;
   created_at: string;
+  trust_score?: number;
+  settlements_count?: number;
+  on_time_contributions?: number;
+  missed_contributions?: number;
 }
 
 export default function ProfilePage() {
@@ -63,7 +67,11 @@ export default function ProfilePage() {
             display_name: null,
             avatar_emoji: '👤',
             streak_count: 0,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            trust_score: 680,
+            settlements_count: 0,
+            on_time_contributions: 0,
+            missed_contributions: 0
           });
         }
       } catch (err) {
@@ -172,55 +180,92 @@ export default function ProfilePage() {
           </div>
 
           {/* Statistics Grid */}
-          <div className="w-full grid grid-cols-2 gap-3 mt-2 border-t border-[#2C2C2C]/50 pt-4">
-            <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-3 flex flex-col justify-center items-center text-center">
-              <span className="text-[9px] text-[#4A4A4A] font-bold uppercase tracking-wider block mb-0.5">CHECK-IN STREAK</span>
-              <span className="font-mono text-sm font-bold text-[#00C896] flex items-center gap-1">
-                <Flame className="w-4 h-4 text-orange-500" />
-                {streak} {streak === 1 ? 'day' : 'days'}
+          <div className="w-full grid grid-cols-3 gap-2 mt-2 border-t border-[#2C2C2C]/50 pt-4">
+            <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-2 flex flex-col justify-center items-center text-center">
+              <span className="text-[8px] text-[#4A4A4A] font-bold uppercase tracking-wider block mb-0.5">STREAK</span>
+              <span className="font-mono text-xs font-bold text-[#FF9500] flex items-center gap-0.5">
+                <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500/20" />
+                {streak}d
               </span>
             </div>
 
-            <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-3 flex flex-col justify-center items-center text-center">
-              <span className="text-[9px] text-[#4A4A4A] font-bold uppercase tracking-wider block mb-0.5">MEMBER SINCE</span>
-              <span className="font-mono text-xs font-bold text-[#F7F3EC] flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-[#8A8A8A]" />
-                {joinDate}
+            <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-2 flex flex-col justify-center items-center text-center">
+              <span className="text-[8px] text-[#4A4A4A] font-bold uppercase tracking-wider block mb-0.5">SETTLED</span>
+              <span className="font-mono text-xs font-bold text-[#00C896] flex items-center gap-0.5">
+                <Check className="w-3.5 h-3.5 text-[#00C896]" />
+                {profile?.settlements_count ?? 0}
+              </span>
+            </div>
+
+            <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-2 flex flex-col justify-center items-center text-center">
+              <span className="text-[8px] text-[#4A4A4A] font-bold uppercase tracking-wider block mb-0.5">SAVINGS RATE</span>
+              <span className="font-mono text-xs font-bold text-[#5AC8FA] flex items-center gap-0.5">
+                {(() => {
+                  const totalCircleActs = (profile?.on_time_contributions ?? 0) + (profile?.missed_contributions ?? 0);
+                  const rate = totalCircleActs > 0
+                    ? Math.round(((profile?.on_time_contributions ?? 0) / totalCircleActs) * 100)
+                    : 100;
+                  return `${rate}%`;
+                })()}
               </span>
             </div>
           </div>
 
           {/* Split Trust Score Card */}
           {(() => {
-            // @ts-ignore
-            const trustScore = profile?.trust_score ?? 680; // default/mock score for display
+            const trustScore = profile?.trust_score ?? 680;
             let scoreBadge = 'Good Splitter 👥';
-            if (trustScore >= 800) scoreBadge = 'Savings Legend 🏆';
-            else if (trustScore >= 650) scoreBadge = 'Circle Anchor ⚓';
-            else if (trustScore < 500) scoreBadge = 'Slow Settler 🐌';
+            let badgeBg = 'rgba(0, 200, 150, 0.08)';
+            let badgeBorder = 'rgba(0, 200, 150, 0.2)';
+            let badgeColor = '#00C896';
+
+            if (trustScore >= 800) {
+              scoreBadge = 'Savings Legend 🏆';
+              badgeBg = 'rgba(255, 149, 0, 0.08)';
+              badgeBorder = 'rgba(255, 149, 0, 0.2)';
+              badgeColor = '#FF9500';
+            } else if (trustScore >= 700) {
+              scoreBadge = 'Punctual Splitter ⚡';
+              badgeBg = 'rgba(90, 200, 250, 0.08)';
+              badgeBorder = 'rgba(90, 200, 250, 0.2)';
+              badgeColor = '#5AC8FA';
+            } else if (trustScore >= 600) {
+              scoreBadge = 'Circle Anchor ⚓';
+              badgeBg = 'rgba(175, 82, 222, 0.08)';
+              badgeBorder = 'rgba(175, 82, 222, 0.2)';
+              badgeColor = '#AF52DE';
+            } else if (trustScore < 500) {
+              scoreBadge = 'Slow Settler 🐌';
+              badgeBg = 'rgba(255, 92, 92, 0.08)';
+              badgeBorder = 'rgba(255, 92, 92, 0.2)';
+              badgeColor = '#FF5C5C';
+            }
 
             return (
-              <div className="w-full bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-4 mt-2 flex flex-col gap-2">
+              <div className="w-full bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl p-4 mt-2 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-[#8A8A8A] font-bold uppercase tracking-wider">Split Trust Score</span>
                   <span 
                     style={{
                       fontSize: '10px',
                       fontFamily: 'DM Sans, sans-serif',
-                      background: 'rgba(0, 200, 150, 0.1)',
-                      border: '1px solid rgba(0, 200, 150, 0.2)',
+                      background: badgeBg,
+                      border: `1px solid ${badgeBorder}`,
+                      color: badgeColor,
                     }}
-                    className="font-bold px-2.5 py-1 rounded-lg text-[#00C896]"
+                    className="font-bold px-2.5 py-1 rounded-lg"
                   >
                     {scoreBadge}
                   </span>
                 </div>
-                <div className="flex items-baseline gap-1 mt-1">
+                
+                <div className="flex items-baseline gap-1">
                   <span className="font-mono text-3xl font-extrabold text-[#F7F3EC]">{trustScore}</span>
                   <span className="text-xs text-[#8A8A8A] font-mono">/ 990 pts</span>
                 </div>
+
                 {/* Progress bar */}
-                <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-1">
+                <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden">
                   <div 
                     style={{ 
                       width: `${(trustScore / 990) * 100}%`,
@@ -229,9 +274,45 @@ export default function ProfilePage() {
                     className="h-full rounded-full"
                   />
                 </div>
-                <p className="text-[10px] text-[#8A8A8A] text-left leading-relaxed mt-1">
-                  Calculated based on average settlement time and on-time savings circle contributions.
-                </p>
+
+                {/* Reputation Achievements List */}
+                <div className="border-t border-[#2C2C2C]/50 pt-3 mt-1 space-y-2">
+                  <span className="text-[9px] text-[#4A4A4A] font-bold uppercase tracking-wider block">UNLOCKED REPUTATION CARD</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="text-[10px] px-2.5 py-1 rounded-lg bg-[#161616] border border-[#2C2C2C] text-[#F7F3EC] font-medium flex items-center gap-1">
+                      {trustScore >= 800 ? '🏆' : trustScore >= 700 ? '⚡' : '👥'} {scoreBadge.split(' ')[0]}
+                    </span>
+                    {(profile?.settlements_count ?? 0) > 0 && (
+                      <span className="text-[10px] px-2.5 py-1 rounded-lg bg-[#161616] border border-[#2C2C2C] text-[#00C896] font-medium flex items-center gap-1">
+                        ⚡ Quick Payer
+                      </span>
+                    )}
+                    {streak >= 3 && (
+                      <span className="text-[10px] px-2.5 py-1 rounded-lg bg-[#161616] border border-[#2C2C2C] text-[#FF9500] font-medium flex items-center gap-1">
+                        🔥 Habit Builder
+                      </span>
+                    )}
+                    <span className="text-[10px] px-2.5 py-1 rounded-lg bg-[#161616] border border-[#2C2C2C] text-[#8A8A8A] font-medium flex items-center gap-1">
+                      🌱 Pioneer
+                    </span>
+                  </div>
+                </div>
+
+                {/* Breakdown details */}
+                <div className="grid grid-cols-3 gap-2 mt-1 bg-[#161616]/30 border border-[#2C2C2C]/35 rounded-xl p-2 text-center text-[10px] font-mono text-[#8A8A8A]">
+                  <div>
+                    <span className="block text-[8px] text-[#4A4A4A]">SETTLED</span>
+                    <span className="text-[#F7F3EC] font-bold">{profile?.settlements_count ?? 0}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[8px] text-[#4A4A4A]">ON-TIME</span>
+                    <span className="text-[#00C896] font-bold">{profile?.on_time_contributions ?? 0}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[8px] text-[#4A4A4A]">MISSED</span>
+                    <span className="text-[#FF5C5C] font-bold">{profile?.missed_contributions ?? 0}</span>
+                  </div>
+                </div>
               </div>
             );
           })()}

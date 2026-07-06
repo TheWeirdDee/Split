@@ -3,6 +3,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { celo } from 'viem/chains';
 import { SAVINGS_CIRCLE_ADDRESS, SAVINGS_CIRCLE_ABI } from '@/lib/contract';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(req: NextRequest) {
   // 1. Authorize the request via CRON_SECRET bearer token if set
@@ -47,6 +48,11 @@ export async function GET(req: NextRequest) {
       http('https://celo.drpc.org'),
     ]),
   });
+
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   try {
     // 3. Read total circleCount from the contract
@@ -139,6 +145,30 @@ export async function GET(req: NextRequest) {
                   });
                   await publicClient.waitForTransactionReceipt({ hash });
                   markedMissedAddrs.push(addr);
+
+                  // Deduct trust score (-50) and increment missed contributions count
+                  try {
+                    const targetAddr = addr.toLowerCase();
+                    const { data: profile } = await supabaseAdmin
+                      .from('user_profiles')
+                      .select('trust_score, missed_contributions')
+                      .eq('wallet_address', targetAddr)
+                      .maybeSingle();
+
+                    const currentScore = profile?.trust_score ?? 680;
+                    const currentMissed = profile?.missed_contributions ?? 0;
+                    const newScore = Math.max(300, currentScore - 50);
+
+                    await supabaseAdmin
+                      .from('user_profiles')
+                      .update({
+                        trust_score: newScore,
+                        missed_contributions: currentMissed + 1,
+                      })
+                      .eq('wallet_address', targetAddr);
+                  } catch (dbErr) {
+                    console.error(`Failed to update trust score for missed member ${addr}:`, dbErr);
+                  }
                 } catch (markErr: any) {
                   console.error(`Failed to mark missed for circle ${i}, member ${addr}:`, markErr);
                 }

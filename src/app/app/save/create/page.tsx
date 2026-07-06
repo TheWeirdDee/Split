@@ -169,7 +169,7 @@ export default function CreateCirclePage() {
                   setContribution('0.2');
                   setFrequencyType('daily');
                   setMaxMembers('5');
-                  setGraceHours('12');
+                  setGraceHours('0');
                   setMaxMissed(1);
                   setStep(4); // Skip to review step directly
                   showToast('Daily Speedrun template loaded!', 'success');

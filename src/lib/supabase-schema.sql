@@ -283,3 +283,9 @@ CREATE TABLE IF NOT EXISTS circle_settings (
 ALTER TABLE circle_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all" ON circle_settings;
 CREATE POLICY "Allow all" ON circle_settings FOR ALL USING (true);
+
+-- --- TRUST SCORE MIGRATION ---
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS trust_score INTEGER DEFAULT 680;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS settlements_count INTEGER DEFAULT 0;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS on_time_contributions INTEGER DEFAULT 0;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS missed_contributions INTEGER DEFAULT 0;

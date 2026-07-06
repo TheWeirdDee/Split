@@ -151,6 +151,9 @@ export default function NotificationsPage() {
                 position: 'relative',
               }}>
                 {(() => {
+                  if (n.type === 'nudge_broom') return <span style={{ fontSize: '18px' }}>🧹</span>;
+                  if (n.type === 'nudge_runner') return <span style={{ fontSize: '18px' }}>🏃‍♂️</span>;
+                  if (n.type === 'nudge_bell') return <span style={{ fontSize: '18px' }}>🔔</span>;
                   const IconComp = TYPE_ICON[n.type] ?? Bell;
                   return <IconComp style={{ width: '18px', height: '18px', color: '#00C896' }} />;
                 })()}

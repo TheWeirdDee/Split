@@ -77,3 +77,16 @@ export interface SavingsMember {
   hasReceivedPayout: boolean;
   hasContributedThisCycle: boolean;
 }
+
+/** An active group budget challenge. */
+export interface BudgetChallenge {
+  id: string;
+  group_id: string;
+  name: string;
+  amount: number;
+  category: string; // 'all' or category ID
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'completed' | 'exceeded';
+  created_at?: string;
+}

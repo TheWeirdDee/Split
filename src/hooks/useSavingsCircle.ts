@@ -6,6 +6,7 @@ import { getCached, setCached, clearCached } from '@/lib/onchainCache';
 import type { SavingsCircle, SavingsMember } from '@/types/models';
 import { celo } from 'viem/chains';
 import { erc20Abi } from 'viem';
+import { supabase } from '@/lib/supabase';
 
 /**
  * On-chain interface to the SavingsCircle contract: lists circles and, when a
@@ -355,6 +356,29 @@ export const useSavingsCircle = (circleId?: string) => {
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: contributeTx });
       clearCached('circles');
+      
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('trust_score, on_time_contributions')
+          .eq('wallet_address', address.toLowerCase())
+          .maybeSingle();
+
+        const currentScore = profile?.trust_score ?? 680;
+        const currentContribs = profile?.on_time_contributions ?? 0;
+        const newScore = Math.min(990, currentScore + 15);
+
+        await supabase
+          .from('user_profiles')
+          .update({
+            trust_score: newScore,
+            on_time_contributions: currentContribs + 1,
+          })
+          .eq('wallet_address', address.toLowerCase());
+      } catch (dbErr) {
+        console.error('Failed to update trust score on contribution:', dbErr);
+      }
+
       await fetchCircleDetails({ force: true });
       return { tx: contributeTx, receipt };
     } catch (err: any) {

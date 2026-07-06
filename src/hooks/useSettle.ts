@@ -63,10 +63,22 @@ export const useSettle = () => {
 
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('display_name')
+        .select('display_name, trust_score, settlements_count')
         .eq('wallet_address', address.toLowerCase())
         .maybeSingle();
+
       const debtorName = profile?.display_name || 'Someone';
+      const currentScore = profile?.trust_score ?? 680;
+      const currentSettleCount = profile?.settlements_count ?? 0;
+      const newScore = Math.min(990, currentScore + 10);
+
+      await supabase
+        .from('user_profiles')
+        .update({
+          trust_score: newScore,
+          settlements_count: currentSettleCount + 1,
+        })
+        .eq('wallet_address', address.toLowerCase());
 
       await createNotificationSafe({
         userAddress: creditor.toLowerCase(),

@@ -9,7 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 type NotificationType =
   | 'reminder' | 'payment' | 'join' | 'expense'
-  | 'system' | 'message' | 'settlement' | 'group_joined';
+  | 'system' | 'message' | 'settlement' | 'group_joined'
+  | 'nudge_broom' | 'nudge_runner' | 'nudge_bell';
 
 const mapTypeToPreference = (type: NotificationType) => {
   if (type === 'reminder') return 'allow_reminders';

@@ -110,12 +110,15 @@ export default function CreateGroupPage() {
     if (!walletAddr) return;
     setLoading(true);
 
+    // --- Step 1: create the group on-chain ---
+    let onchainGroupId = '';
+    let tx: `0x${string}`;
     try {
       // No explicit nonce — let the wallet manage it (public RPC nonce can be stale).
       const gasParams = await buildGasParams(publicClient, isMiniPay);
 
       setLoadingText('Creating Group...');
-      const tx = await walletClient.writeContract({
+      tx = await walletClient.writeContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: SPLIT_ABI,
         functionName: 'createGroup',
@@ -127,7 +130,6 @@ export default function CreateGroupPage() {
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
 
-      let onchainGroupId = '';
       for (const log of receipt.logs) {
         try {
           const decoded = decodeEventLog({
@@ -140,13 +142,10 @@ export default function CreateGroupPage() {
             onchainGroupId = (decoded.args as any).groupId.toString();
             break;
           }
-        } catch {
-
-        }
+        } catch {}
       }
 
       if (!onchainGroupId) {
-         
         const count = await publicClient.readContract({
           address: CONTRACT_ADDRESS as `0x${string}`,
           abi: SPLIT_ABI,
@@ -154,7 +153,16 @@ export default function CreateGroupPage() {
         });
         onchainGroupId = count.toString();
       }
+    } catch (err) {
+      console.error('On-chain group creation failed:', err);
+      showToast('Couldn’t create the group on-chain. Make sure you have a little cUSD/usdm for gas, then try again.', 'error');
+      setLoading(false);
+      setLoadingText('Creating Onchain (usdm)...');
+      return;
+    }
 
+    // --- Step 2: save the group details to Supabase (separate failure mode) ---
+    try {
       const { error: groupError } = await supabase.from('groups').insert({
         id: onchainGroupId,
         name: trimmedName,
@@ -163,7 +171,6 @@ export default function CreateGroupPage() {
         created_by: walletAddr.toLowerCase(),
         onchain_tx: tx,
       });
-
       if (groupError) throw groupError;
 
       // Register the creator as a member so the group's member list (used by the
@@ -176,9 +183,11 @@ export default function CreateGroupPage() {
       if (memberError) console.error('Failed to add creator as member:', memberError);
 
       router.push(`/app/group/${onchainGroupId}`);
-    } catch (err) {
-      console.error('Group creation failed:', err);
-      showToast('Failed to create group onchain. Please check your balance and try again.', 'error');
+    } catch (dbErr) {
+      // The group IS on-chain; only the off-chain save failed (e.g. Supabase
+      // unreachable/paused). Say so accurately instead of blaming the balance.
+      console.error('Group created on-chain but failed to save details:', dbErr);
+      showToast('Group created on-chain, but saving its details failed — check your internet / database and try again.', 'error');
     } finally {
       setLoading(false);
       setLoadingText('Creating Onchain (usdm)...');

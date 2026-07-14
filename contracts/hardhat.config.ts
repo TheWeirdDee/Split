@@ -21,6 +21,11 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 42220,
     },
+    celoMainnet: {
+      url: "https://forno.celo.org",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 42220,
+    },
     alfajores: {
       url: "https://alfajores-forno.celo-testnet.org",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
@@ -28,10 +33,14 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: process.env.CELOSCAN_API_KEY || "",
+    apiKey: {
+      celo: process.env.CELOSCAN_API_KEY || "",
+      celoMainnet: process.env.CELOSCAN_API_KEY || "",
+      alfajores: process.env.CELOSCAN_API_KEY || "",
+    },
     customChains: [
       {
-        network: "celo",
+        network: "celoMainnet",
         chainId: 42220,
         urls: {
           apiURL: "https://api.celoscan.io/api",

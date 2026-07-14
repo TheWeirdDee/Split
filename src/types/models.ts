@@ -90,3 +90,19 @@ export interface BudgetChallenge {
   status: 'active' | 'completed' | 'exceeded';
   created_at?: string;
 }
+
+/** A prediction market for micro-betting. */
+export interface PredictionMarket {
+  id: string; // on-chain index or "local-..."
+  groupId: string;
+  question: string;
+  endTime: number; // timestamp in seconds
+  creator: string;
+  outcome: number; // 0 = unresolved, 1 = Yes, 2 = No, 3 = Cancelled
+  totalYesPool: number; // standard decimal amount (e.g. 10.0 usdm)
+  totalNoPool: number;  // standard decimal amount
+  resolved: boolean;
+  userYesBet?: number; // current user's YES stake
+  userNoBet?: number;  // current user's NO stake
+  hasClaimed?: boolean;
+}

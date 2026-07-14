@@ -8,6 +8,139 @@ import { keccak256, toBytes } from 'viem';
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SPLIT_CONTRACT as `0x${string}`;
 export const SAVINGS_CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_SAVINGS_CIRCLE_ADDRESS as `0x${string}`;
 export const usdm_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
+export const PREDICTION_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_PREDICTION_CONTRACT as `0x${string}`;
+
+export const PREDICTION_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "_usdm", type: "address" },
+      { internalType: "address", name: "_splitGroup", type: "address" }
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "id", type: "uint256" },
+      { indexed: true, name: "groupId", type: "uint256" },
+      { indexed: false, name: "question", type: "string" },
+      { indexed: false, name: "endTime", type: "uint256" },
+      { indexed: true, name: "creator", type: "address" }
+    ],
+    name: "MarketCreated",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "id", type: "uint256" },
+      { indexed: true, name: "user", type: "address" },
+      { indexed: false, name: "isYes", type: "bool" },
+      { indexed: false, name: "amount", type: "uint256" }
+    ],
+    name: "BetPlaced",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "id", type: "uint256" },
+      { indexed: false, name: "outcome", type: "uint8" }
+    ],
+    name: "MarketResolved",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "id", type: "uint256" },
+      { indexed: true, name: "user", type: "address" },
+      { indexed: false, name: "amount", type: "uint256" }
+    ],
+    name: "WinningsClaimed",
+    type: "event"
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "groupId", type: "uint256" },
+      { internalType: "string", name: "question", type: "string" },
+      { internalType: "uint256", name: "duration", type: "uint256" }
+    ],
+    name: "createMarket",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "marketId", type: "uint256" },
+      { internalType: "bool", name: "isYes", type: "bool" },
+      { internalType: "uint256", name: "amount", type: "uint256" }
+    ],
+    name: "placeBet",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "marketId", type: "uint256" },
+      { internalType: "uint8", name: "outcomeVal", type: "uint8" }
+    ],
+    name: "resolveMarket",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "marketId", type: "uint256" }
+    ],
+    name: "claimWinnings",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "marketCount",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "marketId", type: "uint256" }],
+    name: "getMarket",
+    outputs: [
+      { internalType: "uint256", name: "id", type: "uint256" },
+      { internalType: "uint256", name: "groupId", type: "uint256" },
+      { internalType: "string", name: "question", type: "string" },
+      { internalType: "uint256", name: "endTime", type: "uint256" },
+      { internalType: "address", name: "creator", type: "address" },
+      { internalType: "uint8", name: "outcome", type: "uint8" },
+      { internalType: "uint256", name: "totalYesPool", type: "uint256" },
+      { internalType: "uint256", name: "totalNoPool", type: "uint256" },
+      { internalType: "bool", name: "resolved", type: "bool" }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "marketId", type: "uint256" },
+      { internalType: "address", name: "user", type: "address" }
+    ],
+    name: "getUserBet",
+    outputs: [
+      { internalType: "uint256", name: "yesBet", type: "uint256" },
+      { internalType: "uint256", name: "noBet", type: "uint256" },
+      { internalType: "bool", name: "hasClaimed", type: "bool" }
+    ],
+    stateMutability: "view",
+    type: "function"
+  }
+];
 
 export const SPLIT_ABI = [
   {

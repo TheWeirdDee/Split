@@ -120,6 +120,14 @@ describe("SplitPrediction Contract", function () {
         splitPrediction.connect(addr3).placeBet(1, true, ethers.parseEther("5"))
       ).to.be.revertedWithCustomError(splitPrediction, "NotGroupMember");
     });
+
+    it("Should allow only one bet per member per market", async function () {
+      await splitPrediction.connect(addr1).placeBet(1, true, ethers.parseEther("5"));
+
+      await expect(
+        splitPrediction.connect(addr1).placeBet(1, false, ethers.parseEther("5"))
+      ).to.be.revertedWithCustomError(splitPrediction, "AlreadyBet");
+    });
   });
 
   describe("Market Resolution & Winnings Claim", function () {

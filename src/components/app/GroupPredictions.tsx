@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useWallet } from "@/context/WalletContext";
 import { usePredictions } from "@/hooks/usePredictions";
 import { Button } from "@/components/common/Button";
@@ -14,7 +14,6 @@ import {
   Trophy, 
   HelpCircle, 
   AlertCircle, 
-  Coins, 
   Check, 
   X,
   Sparkles
@@ -23,6 +22,44 @@ import {
 interface GroupPredictionsProps {
   groupId: string;
 }
+
+type CustomDurationUnit = 'minutes' | 'hours' | 'days';
+
+const DURATION_MULTIPLIERS: Record<CustomDurationUnit, number> = {
+  minutes: 60,
+  hours: 60 * 60,
+  days: 24 * 60 * 60,
+};
+
+const resolveDurationSeconds = (
+  duration: string,
+  customDuration: string,
+  customDurationUnit: CustomDurationUnit,
+): number | null => {
+  if (duration !== 'custom') {
+    const seconds = Number(duration);
+    return Number.isSafeInteger(seconds) && seconds >= 60 ? seconds : null;
+  }
+
+  const value = Number(customDuration);
+  const seconds = Math.floor(value * DURATION_MULTIPLIERS[customDurationUnit]);
+  return Number.isFinite(value) && value > 0 && Number.isSafeInteger(seconds) && seconds >= 60
+    ? seconds
+    : null;
+};
+
+const formatRemainingTime = (seconds: number): string => {
+  if (seconds >= 86400) {
+    const days = Math.ceil(seconds / 86400);
+    return `${days} ${days === 1 ? 'day' : 'days'}`;
+  }
+  if (seconds >= 3600) {
+    const hours = Math.ceil(seconds / 3600);
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  }
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+  return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+};
 
 export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
   const { address } = useWallet();
@@ -42,29 +79,40 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
   // Create Form State
   const [question, setQuestion] = useState("");
   const [duration, setDuration] = useState("86400"); // 1 day default
-  const [initialBet, setInitialBet] = useState("");
-  const [isYesInitial, setIsYesInitial] = useState(true);
+  const [customDuration, setCustomDuration] = useState("");
+  const [customDurationUnit, setCustomDurationUnit] = useState<CustomDurationUnit>('hours');
 
   // Bet Form State per Market
   const [betAmounts, setBetAmounts] = useState<{ [marketId: string]: string }>({});
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    const updateNow = () => setNow(Math.floor(Date.now() / 1000));
+    const initialTimer = window.setTimeout(updateNow, 0);
+    const interval = window.setInterval(updateNow, 30_000);
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(interval);
+    };
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
 
     try {
-      const dur = parseInt(duration);
+      const dur = resolveDurationSeconds(duration, customDuration, customDurationUnit);
+      if (!dur) {
+        alert('Enter a custom duration of at least 1 minute.');
+        return;
+      }
+
       const isCreated = await createPrediction(question, dur);
       if (isCreated) {
-        // If there's an initial bet, place it
-        const betVal = parseFloat(initialBet);
-        if (!isNaN(betVal) && betVal > 0) {
-          // Find the newest prediction ID. Since we refreshed, the newest should be in the predictions list
-          // But to be safe, we can just let users place bets directly from the UI card once created.
-          // For simplicity, we just create the prediction, and clear the form.
-        }
         setQuestion("");
-        setInitialBet("");
+        setDuration('86400');
+        setCustomDuration('');
+        setCustomDurationUnit('hours');
         setIsModalOpen(false);
       }
     } catch (err) {
@@ -116,8 +164,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
 
   // Filter Predictions
   const filteredPredictions = predictions.filter((p) => {
-    const now = Math.floor(Date.now() / 1000);
-    const isClosed = now >= p.endTime;
+    const isClosed = now > 0 && now >= p.endTime;
     const isMarketActive = !p.resolved && !isClosed;
 
     if (activeTab === "active") {
@@ -129,7 +176,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full">
       {/* Header card with glassmorphism */}
       <div 
         style={{
@@ -141,9 +188,13 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
           justifyContent: "space-between",
           alignItems: "center",
           gap: "16px",
+          flexWrap: "wrap",
+          width: "100%",
+          minWidth: 0,
+          boxSizing: "border-box",
         }}
       >
-        <div>
+        <div style={{ minWidth: 0, flex: '1 1 220px' }}>
           <h2 className="text-xl font-display font-bold text-text-primary flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-brand" />
             Social Micro-Bets
@@ -156,7 +207,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
           variant="primary" 
           size="sm" 
           onClick={() => setIsModalOpen(true)}
-          className="rounded-full shadow-lg hover:shadow-brand/20 transition-all flex items-center gap-1.5 flex-shrink-0"
+          className="w-full rounded-full shadow-lg hover:shadow-brand/20 transition-all flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" /> Create Bet
         </Button>
@@ -206,10 +257,9 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 min-w-0">
           {filteredPredictions.map((market) => {
-            const now = Math.floor(Date.now() / 1000);
-            const isClosed = now >= market.endTime;
+            const isClosed = now > 0 && now >= market.endTime;
             const totalBets = market.totalYesPool + market.totalNoPool;
             const yesPercent = totalBets > 0 ? Math.round((market.totalYesPool / totalBets) * 100) : 50;
             const noPercent = totalBets > 0 ? 100 - yesPercent : 50;
@@ -231,6 +281,11 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
                   flexDirection: "column",
                   gap: "16px",
                   position: "relative",
+                  width: "100%",
+                  maxWidth: "100%",
+                  minWidth: 0,
+                  boxSizing: "border-box",
+                  overflow: "hidden",
                 }}
               >
                 {/* Badge Header */}
@@ -267,7 +322,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
                 </div>
 
                 {/* Question */}
-                <h3 className="font-display font-bold text-text-primary text-base leading-snug">
+                <h3 className="font-display font-bold text-text-primary text-base leading-snug break-words min-w-0">
                   {market.question}
                 </h3>
 
@@ -278,7 +333,9 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
                     <span>
                       {isClosed 
                         ? "Closed" 
-                        : `Closes in ${Math.round((market.endTime - now) / 60)} minutes`}
+                        : now === 0
+                          ? "Checking deadline..."
+                          : `Closes in ${formatRemainingTime(market.endTime - now)}`}
                     </span>
                   </div>
                 )}
@@ -301,7 +358,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
 
                 {/* User Bets Summary */}
                 {hasVoted && (
-                  <div className="bg-surface-2/40 border border-border/50 rounded-xl p-3 flex justify-between items-center text-xs">
+                  <div className="bg-surface-2/40 border border-border/50 rounded-xl p-3 flex flex-wrap justify-between items-center gap-2 text-xs min-w-0">
                     <span className="text-text-secondary">Your Bet:</span>
                     <span className="font-medium text-text-primary flex items-center gap-1">
                       {market.userYesBet && market.userYesBet > 0 ? (
@@ -323,7 +380,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
                 {/* Action Panels */}
                 <div className="pt-2 mt-auto border-t border-border/40 space-y-3">
                   {/* Scenario A: Market is Active & open for betting */}
-                  {!market.resolved && !isClosed && (
+                  {!market.resolved && !isClosed && !hasVoted && (
                     <div className="space-y-2.5">
                       <div className="flex gap-2">
                         <Input
@@ -355,6 +412,12 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
                           Bet NO
                         </Button>
                       </div>
+                    </div>
+                  )}
+
+                  {!market.resolved && !isClosed && hasVoted && (
+                    <div className="flex items-center justify-center gap-1.5 rounded-xl border border-brand/20 bg-brand/5 px-3 py-2 text-xs font-medium text-brand">
+                      <Check className="h-4 w-4" /> Bet locked in — one bet per prediction.
                     </div>
                   )}
 
@@ -445,6 +508,8 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
             style={{
               width: "100%",
               maxWidth: "440px",
+              maxHeight: "calc(100dvh - 40px)",
+              overflowY: "auto",
               background: "#161616",
               border: "1px solid #2C2C2C",
               borderRadius: "24px",
@@ -452,6 +517,7 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
               display: "flex",
               flexDirection: "column",
               gap: "20px",
+              boxSizing: "border-box",
             }}
           >
             <div className="flex justify-between items-center">
@@ -484,12 +550,36 @@ export const GroupPredictions = ({ groupId }: GroupPredictionsProps) => {
                   onChange={(e) => setDuration(e.target.value)}
                   className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-base text-text-primary focus:outline-none focus:border-brand transition-colors"
                 >
-                  <option value="600">10 minutes (Testing)</option>
                   <option value="3600">1 hour</option>
                   <option value="86400">1 day</option>
                   <option value="259200">3 days</option>
                   <option value="604800">1 week</option>
+                  <option value="custom">Custom duration</option>
                 </select>
+                {duration === 'custom' && (
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 pt-1">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      step="1"
+                      placeholder="Duration"
+                      value={customDuration}
+                      onChange={(e) => setCustomDuration(e.target.value)}
+                      className="min-w-0 w-full bg-surface border border-border rounded-xl px-4 py-3 text-base text-text-primary focus:outline-none focus:border-brand"
+                      required
+                    />
+                    <select
+                      value={customDurationUnit}
+                      onChange={(e) => setCustomDurationUnit(e.target.value as CustomDurationUnit)}
+                      className="bg-surface border border-border rounded-xl px-3 py-3 text-sm text-text-primary focus:outline-none focus:border-brand"
+                    >
+                      <option value="minutes">Minutes</option>
+                      <option value="hours">Hours</option>
+                      <option value="days">Days</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 flex justify-end gap-2">

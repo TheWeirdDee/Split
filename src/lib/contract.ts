@@ -20,6 +20,11 @@ export const PREDICTION_ABI = [
     type: "constructor"
   },
   {
+    inputs: [],
+    name: "AlreadyBet",
+    type: "error"
+  },
+  {
     anonymous: false,
     inputs: [
       { indexed: true, name: "id", type: "uint256" },

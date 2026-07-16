@@ -96,7 +96,7 @@ export const usePredictions = (groupId: string) => {
           args: [BigInt(i)],
         });
 
-        const [id, mGroupId, question, endTime, creator, outcome, totalYesPool, totalNoPool, resolved] = marketData as [
+        const [, mGroupId, question, endTime, creator, outcome, totalYesPool, totalNoPool, resolved] = marketData as [
           bigint, bigint, string, bigint, string, number, bigint, bigint, boolean
         ];
 
@@ -205,10 +205,17 @@ export const usePredictions = (groupId: string) => {
         const localList = JSON.parse(localStorage.getItem('split_local_predictions') || '[]');
         const currentAddr = walletRef.current.address?.toLowerCase() || '0xlocal';
 
+        const market = localList.find((p: any) => p.id === marketId);
+        const existingYesBet = Number(market?.yesBets?.[currentAddr] || 0);
+        const existingNoBet = Number(market?.noBets?.[currentAddr] || 0);
+        if (existingYesBet > 0 || existingNoBet > 0) {
+          throw new Error('You have already placed a bet on this prediction.');
+        }
+
         const updated = localList.map((p: any) => {
           if (p.id === marketId) {
-            const bets = isYes ? (p.yesBets || {}) : (p.noBets || {});
-            bets[currentAddr] = (Number(bets[currentAddr] || 0) + amount).toString();
+            const bets = { ...(isYes ? (p.yesBets || {}) : (p.noBets || {})) };
+            bets[currentAddr] = amount.toString();
             return {
               ...p,
               [isYes ? 'yesBets' : 'noBets']: bets,
@@ -224,6 +231,16 @@ export const usePredictions = (groupId: string) => {
 
       const { address, walletClient, publicClient, isMiniPay, refreshBalance } = walletRef.current;
       if (!address || !walletClient || !publicClient) throw new Error('Wallet not connected');
+
+      const [existingYesBet, existingNoBet] = await publicClient.readContract({
+        address: PREDICTION_CONTRACT_ADDRESS,
+        abi: PREDICTION_ABI,
+        functionName: 'getUserBet',
+        args: [BigInt(marketId), address],
+      }) as readonly [bigint, bigint, boolean];
+      if (existingYesBet > 0n || existingNoBet > 0n) {
+        throw new Error('You have already placed a bet on this prediction.');
+      }
 
       const amountRaw = parseEther(amount.toString());
       const gasParams = await buildGasParams(publicClient, isMiniPay);

@@ -1016,19 +1016,21 @@ export default function GroupDetailPage() {
         )}
       </div>
 
-      <div style={{
-        position: 'fixed', bottom: '88px', left: '50%', transform: 'translateX(-50%)',
-        width: 'calc(100% - 48px)', maxWidth: '382px', pointerEvents: 'none',
-      }}>
-        <Button
-          className="w-full h-14 rounded-2xl shadow-xl"
-          onClick={() => requireConnection(() => router.push(`/app/group/${groupId}/add`))}
-          style={{ background: '#00C896', color: '#000', fontWeight: '700', pointerEvents: 'auto', touchAction: 'manipulation' }}
-        >
-          <Plus style={{ width: '22px', height: '22px', marginRight: '8px' }} />
-          Add Expense
-        </Button>
-      </div>
+      {activeTab !== 'predictions' && (
+        <div style={{
+          position: 'fixed', bottom: '88px', left: '50%', transform: 'translateX(-50%)',
+          width: 'calc(100% - 48px)', maxWidth: '382px', pointerEvents: 'none',
+        }}>
+          <Button
+            className="w-full h-14 rounded-2xl shadow-xl"
+            onClick={() => requireConnection(() => router.push(`/app/group/${groupId}/add`))}
+            style={{ background: '#00C896', color: '#000', fontWeight: '700', pointerEvents: 'auto', touchAction: 'manipulation' }}
+          >
+            <Plus style={{ width: '22px', height: '22px', marginRight: '8px' }} />
+            Add Expense
+          </Button>
+        </div>
+      )}
     </>
   );
 }

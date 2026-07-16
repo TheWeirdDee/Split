@@ -10,7 +10,7 @@ import { BalanceSummaryCard } from '@/components/app/BalanceSummaryCard';
 import { GroupCard } from '@/components/app/GroupCard';
 import { Button } from '@/components/common/Button';
 import { DailyCheckIn } from '@/components/app/DailyCheckIn';
-import { PiggyBank, AlertTriangle } from 'lucide-react';
+import { PiggyBank, AlertTriangle, Dices, ArrowRight } from 'lucide-react';
 import { formatEther } from 'viem';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useRecurringCheck } from '@/hooks/useRecurringCheck';
@@ -165,6 +165,37 @@ function DashboardContent({ hasNoCelo }: { hasNoCelo: boolean }) {
           totalOwing={totalOwing}
         />
       </div>
+
+      {!groupsLoading && (
+        <Link
+          href={groups.length > 0 ? `/app/group/${groups[0].id}?tab=predictions` : '/app/create'}
+          className={'block animate-fade-in'}
+          style={{ animationDelay: '0.15s' }}
+        >
+          <div className={'relative overflow-hidden rounded-2xl border border-[#00C896]/25 bg-[#00C896]/[0.06] p-4'}>
+            <div className={'absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[#00C896]/10 blur-2xl'} />
+            <div className={'relative flex items-center gap-3'}>
+              <div className={'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#00C896]/10 text-[#00C896]'}>
+                <Dices className={'h-5 w-5'} />
+              </div>
+              <div className={'min-w-0 flex-1'}>
+                <div className={'mb-1 flex items-center gap-2'}>
+                  <span className={'text-[9px] font-bold uppercase tracking-[0.16em] text-[#00C896]'}>New game</span>
+                  <span className={'rounded-full bg-[#00C896]/10 px-2 py-0.5 text-[8px] font-bold uppercase text-[#00C896]'}>Live</span>
+                </div>
+                <h2 className={'text-sm font-bold text-[#F7F3EC]'}>Group Bets</h2>
+                <p className={'mt-0.5 text-[11px] leading-relaxed text-[#8A8A8A]'}>
+                  Predict group outcomes and place social micro-bets in usdm.
+                </p>
+              </div>
+              <div className={'flex shrink-0 items-center gap-1 text-[10px] font-bold text-[#00C896]'}>
+                <span>{groups.length > 0 ? 'Play' : 'Create group'}</span>
+                <ArrowRight className={'h-3.5 w-3.5'} />
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* GROUPS LIST */}
       <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>

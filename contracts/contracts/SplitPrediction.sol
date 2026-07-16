@@ -46,6 +46,7 @@ contract SplitPrediction is ReentrancyGuard {
     error NotGroupMember();
     error MarketClosed();
     error AlreadyResolved();
+    error AlreadyBet();
     error NotCreator();
     error InvalidOutcome();
     error MarketNotResolved();
@@ -96,6 +97,7 @@ contract SplitPrediction is ReentrancyGuard {
         if (block.timestamp >= m.endTime) revert MarketClosed();
         if (m.resolved) revert AlreadyResolved();
         if (!splitGroup.isMember(m.groupId, msg.sender)) revert NotGroupMember();
+        if (yesBets[marketId][msg.sender] != 0 || noBets[marketId][msg.sender] != 0) revert AlreadyBet();
         
         if (!usdm.transferFrom(msg.sender, address(this), amount)) revert TransferFailed();
 

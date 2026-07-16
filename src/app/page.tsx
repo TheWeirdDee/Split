@@ -98,7 +98,7 @@ export default function LandingPage() {
             <div className="relative z-10 flex flex-col items-center gap-6">
               <Link href="/app">
                 <Button className="bg-black text-[#00C896] px-[32px] py-[12px] text-[15px] font-bold hover:bg-black/85 hover:scale-105 border-none">
-                  Open Split →
+                  <span style={{ color: '#00C896' }}>Open Split →</span>
                 </Button>
               </Link>
               <div className="flex flex-col items-center gap-3">

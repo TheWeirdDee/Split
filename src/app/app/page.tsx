@@ -21,7 +21,23 @@ export default function AppHome() {
   const { isInitialLoading, hasNoCelo } = useWallet();
 
   if (isInitialLoading) {
-    return <div style={{ minHeight: '100vh', background: '#0D0D0D' }} />;
+    return (
+      <div
+        role={'status'}
+        aria-live={'polite'}
+        style={{
+          minHeight: 'calc(100vh - 136px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#8A8A8A',
+          fontSize: '12px',
+          background: '#0D0D0D',
+        }}
+      >
+        Loading Split...
+      </div>
+    );
   }
 
   return <DashboardContent hasNoCelo={hasNoCelo} />;

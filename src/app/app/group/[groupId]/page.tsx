@@ -48,6 +48,8 @@ const downloadFile = (filename: string, content: string, type = 'text/csv;charse
   URL.revokeObjectURL(url);
 };
 
+type GroupTab = 'balances' | 'expenses' | 'chat' | 'budget' | 'predictions';
+
 export default function GroupDetailPage() {
   const { groupId } = useParams();
   const router = useRouter();
@@ -68,7 +70,7 @@ export default function GroupDetailPage() {
   const { getNickname } = useAddressBook();
   const { settle } = useSettle();
 
-  const [activeTab, setActiveTab] = useState<'balances' | 'expenses' | 'chat' | 'budget' | 'predictions'>('balances');
+  const [activeTab, setActiveTab] = useState<GroupTab>('balances');
   const [manualAddress, setManualAddress] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
   const [newMessage, setNewMessage] = useState('');
@@ -90,6 +92,11 @@ export default function GroupDetailPage() {
   const [showAudit, setShowAudit] = useState(false);
   const [auditFilter, setAuditFilter] = useState<'all' | 'my'>('all');
   const [syncingGroup, setSyncingGroup] = useState(false);
+
+  React.useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    if (requestedTab === 'predictions') setActiveTab('predictions');
+  }, []);
 
   const inviteLink = generateInviteLink(groupId as string);
   const isCreator = (groupId as string).startsWith('local-') || group?.created_by?.toLowerCase() === address?.toLowerCase();
@@ -911,20 +918,23 @@ export default function GroupDetailPage() {
         <div style={{
           display: 'flex', padding: '4px', background: '#161616',
           borderRadius: '16px', border: '1px solid #2C2C2C',
+          overflowX: 'auto', scrollbarWidth: 'none',
         }}>
-          {(['balances', 'expenses', 'budget', 'predictions', ...(members.length > 1 ? ['chat'] : [])] as const).map((tab) => (
+          {(['balances', 'expenses', 'budget', 'predictions', ...(members.length > 1 ? ['chat'] : [])] as GroupTab[]).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab)}
               style={{
-                flex: 1, padding: '9px 0', fontSize: '14px', fontWeight: '600',
+                flex: '1 0 auto', minWidth: '72px', padding: '9px 10px', fontSize: '12px', fontWeight: '600',
                 borderRadius: '12px', transition: 'all 0.2s', border: 'none',
                 cursor: 'pointer', touchAction: 'manipulation',
                 fontFamily: 'DM Sans, sans-serif',
                 background: activeTab === tab ? '#2C2C2C' : 'transparent',
-                color: activeTab === tab ? '#00C896' : '#8A8A8A',
+                color: activeTab === tab || tab === 'predictions' ? '#00C896' : '#8A8A8A',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
               }}
             >
+              {tab === 'predictions' && <Zap style={{ width: '12px', height: '12px' }} />}
               {tab === 'predictions' ? 'Bets' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}

@@ -281,35 +281,35 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkConnection = async () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        const isMP = detectMiniPay(window.ethereum);
-        setIsMiniPay(isMP);
+      try {
+        if (typeof window === 'undefined' || !window.ethereum) return;
 
-        const wasManualDisconnect = localStorage.getItem('manualDisconnect') === 'true';
-        if (wasManualDisconnect && !isMP) {
-          setIsInitialLoading(false);
-          return;
-        }
+        const provider = window.ethereum;
+        const isMP = detectMiniPay(provider);
+        if (!cancelled) setIsMiniPay(isMP);
 
+        // MiniPay is an embedded wallet and is expected to connect automatically.
+        // Regular browser wallets must only be queried after a user action. Calling
+        // eth_accounts here makes multi-wallet browsers show their provider chooser
+        // on every page load and can leave the dashboard stuck in its loading state.
         if (isMP) {
-          await connect(window.ethereum).catch(() => {});
-        } else {
-          const [addr] = await window.ethereum.request({ method: 'eth_accounts' }).catch(() => []);
-          if (addr) {
-            // Silent restore — wallet already authorized, skip wallet_requestPermissions
-            try {
-              const { createWalletClient: cwc, custom: cust } = await import('viem');
-              const client = cwc({ chain: celo, transport: cust(window.ethereum) });
-              setAddress(addr as `0x${string}`);
-              setWalletClient(client);
-            } catch {}
-          }
+          await connect(provider).catch(() => {});
         }
+      } catch (error) {
+        console.error('Wallet initialization failed:', error);
+      } finally {
+        if (!cancelled) setIsInitialLoading(false);
       }
-      setIsInitialLoading(false);
     };
+
     checkConnection();
+
+    return () => {
+      cancelled = true;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
